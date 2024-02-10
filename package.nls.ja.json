@@ -1,0 +1,12 @@
+{
+    "extension.description": "あなたのAI共同Markdown編集者",
+    "command.editing.continue.title": "Markdown Copilot: 続ける",
+    "command.editing.continue.detail": "文脈に基づいて編集を続ける",
+    "command.editing.indentQuote.title": "Markdown Copilot: 引用行をインデント",
+    "command.editing.outdentQuote.title": "Markdown Copilot: 引用行をアンインデント",
+    "config.decorations.inactiveContextOpacity.description": "非アクティブコンテキストの不透明度を制御し、`0.0`は完全に透明で`1.0`は完全に不透明になります。",
+    "config.openAI.apiKey.description": "OpenAIのAPIキー。<https://platform.openai.com/api-keys>から取得できます。",
+    "config.openAI.model.description": "[Models](https://platform.openai.com/docs/models)にリストされているモデルを指定できます。",
+    "config.openAI.systemMessage.description": "Copilotの動作を制御し、性格や特定の動作指示を変更できるようにします。",
+    "config.openAI.temperature.description": "`0.0`から`1.0`の間で値を指定できます。`0.8`のような高い値を設定すると出力はよりランダムになり、`0.2`のような低い値を設定すると出力はより集中して決定的になります。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)が値の決定に役立ちます。"
+}

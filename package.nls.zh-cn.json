@@ -1,0 +1,12 @@
+{
+    "extension.description": "您的AI配对Markdown编辑",
+    "command.editing.continue.title": "Markdown Copilot: 继续",
+    "command.editing.continue.detail": "根据上下文继续编辑",
+    "command.editing.indentQuote.title": "Markdown Copilot: 缩进引号行",
+    "command.editing.outdentQuote.title": "Markdown Copilot: 减少缩进报价行",
+    "config.decorations.inactiveContextOpacity.description": "控制非活动上下文线条的不透明度, `0.0`表示完全透明, `1.0`表示完全不透明。",
+    "config.openAI.apiKey.description": "您的OpenAI API密钥。可以从 <https://platform.openai.com/api-keys> 处获得。",
+    "config.openAI.model.description": "可指定[Models](https://platform.openai.com/docs/models)中列出的模型。",
+    "config.openAI.systemMessage.description": "自定义Copilot的行为, 允许更改其个性或特定行为指令。",
+    "config.openAI.temperature.description": "可指定一个介于`0.0`和`1.0`之间的值。`0.8`这样的较高值会使输出更加随机，而`0.2`这样的较低值会使输出更加集中和确定。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)有助于确定该值。"
+}
