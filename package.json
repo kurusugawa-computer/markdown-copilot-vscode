@@ -57,8 +57,8 @@
         "markdown.copilot.decorations.inactiveContextOpacity": {
           "type": "number",
           "default": 0.5,
-          "minimum": 0.0,
-          "maximum": 1.0,
+          "minimum": 0,
+          "maximum": 1,
           "markdownDescription": "%config.decorations.inactiveContextOpacity.description%"
         },
         "markdown.copilot.openAI.apiKey": {
@@ -96,8 +96,8 @@
         "markdown.copilot.openAI.temperature": {
           "type": "number",
           "default": 0.1,
-          "minimum": 0.0,
-          "maximum": 1.0,
+          "minimum": 0,
+          "maximum": 1,
           "markdownDescription": "%config.openAI.temperature.description%"
         }
       }
@@ -132,7 +132,8 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "vsce:package": "vsce package"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -142,6 +143,7 @@
     "@typescript-eslint/parser": "^6.19.1",
     "@vscode/test-cli": "^0.0.4",
     "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^2.23.0",
     "eslint": "^8.56.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",

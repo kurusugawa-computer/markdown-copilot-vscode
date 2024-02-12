@@ -1,0 +1,51 @@
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - "dev/-/**"
+    paths:
+      - "src/**"
+      - "package-lock.json"
+      - "!**.md"
+
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - test
+
+jobs:
+  test:
+    name: 🧪 Test
+    runs-on: ubuntu-latest
+    steps:
+    - run: sudo apt-get update
+    - name: Install OS packages
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2
+        version: 1.0
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: npm
+    - run: npm install
+    - name: Get VS Code versions
+      run: curl --silent --output vscode-stable-versions.json https://update.code.visualstudio.com/api/releases/stable
+    - name: Cache VSCode for test
+      uses: actions/cache@v3
+      with:
+        path: .vscode-test/
+        key: ${{ runner.os }}-vscode-test-${{ hashFiles('vscode-stable-versions.json') }}
+        restore-keys: ${{ runner.os }}-vscode-test-
+    - name: Run headless test
+      run: |
+        sudo mkdir /run/dbus
+        dbus-daemon --session --address=unix:path=/run/dbus/system_bus_socket --nofork &
+        DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket xvfb-run npm test
+        ps aux | grep -e [t]mp/xvfb-run -e [d]bus-daemon | awk '{print $2}' | sudo xargs kill

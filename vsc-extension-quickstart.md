@@ -44,6 +44,33 @@
   * The provided test runner will only consider files matching the name pattern `**.test.ts`.
   * You can create folders inside the `test` folder to structure your tests any way you want.
 
+## Run GitHub Actions tests
+
+### Pre-requirement
+
+- **Docker in Docker**:
+  A docker container must be able to mount `/var/run/docker.sock` to run GitHub Actions inside docker.
+  So only tested in Linux and macOS environment.
+- **GitHub personal access token**:
+  A GitHub personal access token may be required to run workflows.
+  Which must have Public Repositories (read-only) access.
+
+  See: [Managing your personal access tokens - GitHub Docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
+
+### Run GitHub Actions
+
+You can run GitHub Actions using the following commands:
+* List jobs
+  * `bash tools/run_github_actions.sh --list`
+* Latest bulid test
+  * `bash tools/run_github_actions.sh package`
+* All push test
+  * `bash tools/run_github_actions.sh push`
+* Show help
+  * `bash tools/run_github_actions.sh --help`
+  * Detailed command examples: <https://github.com/nektos/act#example-commands>
+
+
 ## Go further
 
 * Reduce the extension size and improve the startup time by [bundling your extension](https://code.visualstudio.com/api/working-with-extensions/bundling-extension).

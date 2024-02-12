@@ -1,0 +1,57 @@
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/*.yml"
+      - "src/**"
+      - "package*.json"
+      - "tsconfig.json"
+      - "webpack.*"
+      - "!**.md"
+
+  release:
+    types:
+    - released
+
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - package
+
+
+jobs:
+  package:
+    name: 📦 Package .vsix
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: npm
+    - run: npm install
+    - name: Pacakge .vsix
+      run: npm run vsce:package
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: markdown-copilot-${{ github.sha }}
+        path: markdown-copilot-*.vsix
+
+  release:
+    name: 🚀 Publish to Marketplace
+    needs: [package]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: markdown-copilot-${{ github.sha }}
+          path: dist
+
+      - name: Publish distribution 📦 to PyPI
+        run: ls -la dist

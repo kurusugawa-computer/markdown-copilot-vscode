@@ -641,7 +641,7 @@ function toEolString(eol: vscode.EndOfLine): string {
 };
 
 const intlSegmenter = new Intl.Segmenter();
-function countChar(text: string): number {
+export function countChar(text: string): number {
 	let result = 0;
 	for (const data of intlSegmenter.segment(text)) {
 		result += data.segment === CRLF ? 2 : 1;
