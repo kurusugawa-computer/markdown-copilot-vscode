@@ -1,14 +1,25 @@
-.vscode/**
+# Development tools, intermediate build results, and temporary files
 .vscode-test/**
 out/**
+tools/**
+**/*.map
+**/.vscode-test.*
+
+# Source files
 node_modules/**
 src/**
+**/*.ts
+
+# Configuration files
+.github/**
+.vscode/**
 .gitignore
 .yarnrc
 webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
-**/*.map
-**/*.ts
-**/.vscode-test.*
+
+# VS Code maps local image paths to GitHub paths
+images
+!images/icon-128x128.png
