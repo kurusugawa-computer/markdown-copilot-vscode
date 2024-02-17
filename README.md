@@ -8,7 +8,7 @@
 
 **Markdown Copilot** provides automatic document editing from an AI pair editor as you edit Markdown.
 
-![Basic Usage](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024"></picture>
 
 Elevate your Markdown editing experience in Visual Studio Code with Markdown Copilot, your AI-powered assistant. Whether you're crafting documentation, jotting down notes, or creating any Markdown content, Markdown Copilot offers intelligent, real-time suggestions to enhance your writing process. With advanced features like Parallel Editing, Context Control, and Quote Indentation, Markdown Copilot ensures your writing is not just efficient but also precise and easy.
 
@@ -20,13 +20,13 @@ Elevate your Markdown editing experience in Visual Studio Code with Markdown Cop
 
 Execute multiple auto-edits simultaneously, enhancing your productivity by not having to wait for one edit to complete before starting another.
 
-![Parallel Editing](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="Parallel Editing" width="1024"></picture>
 
 ### Context Control
 
 Manage conversational contexts hierarchically, using quote indentation and syntax colors for visual context highlighting.
 
-![Context Control](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024"></picture>
 
 ### Contextual Editing
 
@@ -34,7 +34,7 @@ Effortlessly continue editing based on the current context, ensuring a seamless 
 
 To use, select a text range and choose `💡 Markdown Copilot: Continue` from the code action proposals.
 
-![Contextual Editing](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="Contextual Editing" width="356"></picture>
 
 Or use shortcuts for quick access:
 
@@ -42,23 +42,22 @@ Or use shortcuts for quick access:
 | :----------------: | :------------------------------: | :---------------------------: |
 | `Copilot continue` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> |
 
-![Contextual Editing Shortcut](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="Contextual Editing Shortcut" width="442"></picture>
 
 #### Context Notation in Markdown
 
 The active context is determined by tracing back the quote indent from the cursor line.
 Can force a context guard with a line starting with `# Copilot Context`.
 
-![Example: take care](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512"></picture>
 
 If you select `Then say "take care".` and let the copilot continue, you will get the following output: `hello` → `good bye` → `take care`.
 
-![Copilot continue: take care](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif)
-
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460"></picture>
 
 More complex example: the context continues across `take care` line.
 
-![Example: see you again](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512"></picture>
 
 ### Quote Indentation
 
@@ -66,7 +65,7 @@ Simplify the editing of quote indentation levels with intuitive actions.
 
 Select text and use `💡 Markdown Copilot: Indent Quote Line` or `💡 Markdown Copilot: Outdent Quote Line` from code action proposals.
 
-![Quote Indentation](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="Quote Indentation" width="512"></picture>
 
 Or use these shortcuts:
 
@@ -75,7 +74,7 @@ Or use these shortcuts:
 | `Indent Quote Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
 | `Outdent Quote Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-![Quote Indentation Shortcut](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif)
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="Quote Indentation Shortcut" width="512"></picture>
 
 ## Prerequisites
 
