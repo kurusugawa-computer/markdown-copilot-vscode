@@ -1,7 +1,7 @@
 # Markdown Copilot for Visual Studio Code
 
-[![version](https://img.shields.io/vscode-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
-[![installs](https://img.shields.io/vscode-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Version](https://img.shields.io/vscode-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Downloads](https://img.shields.io/vscode-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kurusugawa-computer/markdown-copilot-vscode/main.yml?style=flat-square&branch=main)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/actions)
 [![GitHub stars](https://img.shields.io/github/stars/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square&label=github%20stars)](https://github.com/kurusugawa-computer/markdown-copilot-vscode)
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
@@ -38,11 +38,27 @@ To use, select a text range and choose `💡 Markdown Copilot: Continue` from th
 
 Or use shortcuts for quick access:
 
-| Command | Windows / Linux | Mac |
-|:-------:|:---------------:|:---:|
+|      Command       |         Windows / Linux          |              Mac              |
+| :----------------: | :------------------------------: | :---------------------------: |
 | `Copilot continue` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> |
 
 ![Contextual Editing Shortcut](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png)
+
+#### Context Notation in Markdown
+
+The active context is determined by tracing back the quote indent from the cursor line.
+Can force a context guard with a line starting with `# Copilot Context`.
+
+![Example: take care](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png)
+
+If you select `Then say "take care".` and let the copilot continue, you will get the following output: `hello` → `good bye` → `take care`.
+
+![Copilot continue: take care](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif)
+
+
+More complex example: the context continues across `take care` line.
+
+![Example: see you again](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png)
 
 ### Quote Indentation
 
@@ -54,9 +70,9 @@ Select text and use `💡 Markdown Copilot: Indent Quote Line` or `💡 Markdown
 
 Or use these shortcuts:
 
-| Command | Windows / Linux | Mac |
-|:-------:|:---------------:|:---:|
-| `Indent Quote Line`  | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd> |
+|       Command        |                       Windows / Linux                        |                         Mac                         |
+| :------------------: | :----------------------------------------------------------: | :-------------------------------------------------: |
+| `Indent Quote Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
 | `Outdent Quote Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
 ![Quote Indentation Shortcut](https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif)
@@ -69,9 +85,12 @@ Or use these shortcuts:
 ## Enhance Your Markdown Experience
 
 Combine Markdown Copilot with these extensions for an even more powerful Markdown experience:
-- **[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)**: Comprehensive Markdown support (keyboard shortcuts, table of contents, auto preview, and more).
-- **[Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)**: Adds Mermaid diagram and flowchart support to VS Code's built-in markdown preview.
-- **[Markdown+Math](https://marketplace.visualstudio.com/items?itemName=goessner.mdmath)**: Enhance your Markdown with LaTeX Math ... including macros and more.
+- **[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)**:
+  Comprehensive Markdown support (keyboard shortcuts, table of contents, auto preview, and more).
+- **[Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)**:
+  Adds Mermaid diagram and flowchart support to VS Code's built-in markdown preview.
+- **[Markdown+Math](https://marketplace.visualstudio.com/items?itemName=goessner.mdmath)**:
+  Enhance your Markdown with LaTeX Math ... including macros and more.
 
 ## Roadmap
 
@@ -85,7 +104,7 @@ Combine Markdown Copilot with these extensions for an even more powerful Markdow
   - [x] Japanese
   - [x] Simplified Chinese
 - [x] Documentation
-- [ ] Review Markdown syntax
+- [x] Review Markdown notation
 - [ ] Publish to marketplace
 - [ ] Importing Files
 - [ ] Image Generation: DALL·E

@@ -1,0 +1,234 @@
+<mxfile host="65bd71144e">
+    <diagram id="9O6JOvk3EWkSfyzY4hvH" name="example-takecare">
+        <mxGraphModel dx="555" dy="752" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="ZW_1BUQHTaebC2WOtGQ6-74" value="Back" style="locked=1;" parent="0"/>
+                <mxCell id="ZW_1BUQHTaebC2WOtGQ6-75" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#FFFFFF;strokeColor=none;" vertex="1" parent="ZW_1BUQHTaebC2WOtGQ6-74">
+                    <mxGeometry y="40" width="600" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="1" style="locked=1;" parent="0"/>
+                <mxCell id="69" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=none;" vertex="1" parent="1">
+                    <mxGeometry y="100" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="63" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#FFF9E4;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry y="120" width="600" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#eee8d5;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry y="160" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="54" value="" style="endArrow=none;html=1;rounded=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;strokeWidth=3;opacity=70;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="320" y="180" as="sourcePoint"/>
+                        <mxPoint x="320" y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="56" value="Cursor&lt;br&gt;▼" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=center;spacing=0;textOpacity=70;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="140" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="66" value="Active" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;" parent="1" vertex="1">
+                    <mxGeometry y="120" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="68" value="Context Guard" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;" vertex="1" parent="1">
+                    <mxGeometry y="100" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="70" value="Inactive" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;verticalAlign=middle;" vertex="1" parent="1">
+                    <mxGeometry y="80" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="Inactive&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;verticalAlign=middle;" vertex="1" parent="1">
+                    <mxGeometry y="180" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="74" value="Cursor Line" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;" vertex="1" parent="1">
+                    <mxGeometry y="160" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="Text" style="" parent="0"/>
+                <mxCell id="DSBTVACUyPClZuLl66bj-74" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;# Copilot Context: Simple prompting&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;fontStyle=1;fontColor=#1A5C8C;textOpacity=80;" vertex="1" parent="33">
+                    <mxGeometry x="80" y="40" width="520" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="DSBTVACUyPClZuLl66bj-75" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;# Copilot Context: Contextual prompting&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;fontStyle=1;fontColor=#1A5C8C;" vertex="1" parent="33">
+                    <mxGeometry x="80" y="100" width="520" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="35" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;Say &quot;nice to meet you&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" parent="33" vertex="1">
+                    <mxGeometry x="80" y="60" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="37" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;Say &quot;hello&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;" parent="33" vertex="1">
+                    <mxGeometry x="80" y="120" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="38" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; Then say &quot;good bye&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;" parent="33" vertex="1">
+                    <mxGeometry x="80" y="140" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; &amp;gt; Then say &quot;take care&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;" parent="33" vertex="1">
+                    <mxGeometry x="80" y="160" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" parent="33" vertex="1">
+                    <mxGeometry x="80" y="180" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; &amp;gt; Then say &quot;see you again&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" parent="33" vertex="1">
+                    <mxGeometry x="80" y="200" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; Then say &quot;we meet again&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" parent="33" vertex="1">
+                    <mxGeometry x="80" y="240" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="Diagram" style="locked=1;" parent="0"/>
+                <mxCell id="45" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endArrow=openThin;endFill=0;endSize=5;startSize=5;" parent="44" source="47" target="49" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="hello" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacing=0;spacingLeft=6;" parent="44" vertex="1">
+                    <mxGeometry x="360" y="120" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="good bye" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;align=left;spacing=0;spacingLeft=6;" parent="44" vertex="1">
+                    <mxGeometry x="400" y="140" width="90" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="take care" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;align=left;spacing=0;spacingLeft=6;" parent="44" vertex="1">
+                    <mxGeometry x="440" y="160" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" value="see you again" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;opacity=50;textOpacity=50;align=left;spacing=0;spacingLeft=6;" parent="44" vertex="1">
+                    <mxGeometry x="440" y="200" width="140" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="we meet again" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;opacity=50;textOpacity=50;align=left;spacing=0;spacingLeft=6;" parent="44" vertex="1">
+                    <mxGeometry x="400" y="240" width="140" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="" style="endArrow=openThin;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;rounded=1;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endFill=0;endSize=5;startSize=5;" parent="44" source="46" target="47" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="320" as="sourcePoint"/>
+                        <mxPoint x="520" y="470" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="52" value="" style="endArrow=openThin;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;rounded=1;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endFill=0;endSize=5;startSize=5;" parent="44" source="47" target="48" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="605" y="350" as="sourcePoint"/>
+                        <mxPoint x="500" y="190" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="53" value="" style="endArrow=openThin;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;rounded=1;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endFill=0;endSize=5;startSize=5;" parent="44" source="46" target="50" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="650" y="370" as="sourcePoint"/>
+                        <mxPoint x="535" y="390" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="59" value="nice to meet you" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;opacity=50;textOpacity=50;align=left;spacing=0;spacingLeft=6;" parent="44" vertex="1">
+                    <mxGeometry x="360" y="60" width="170" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram name="example-seeyouagain" id="qnup5mdtJSnTVCD019eb">
+        <mxGraphModel dx="555" dy="752" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-0"/>
+                <mxCell id="Oq_Tjb9oaE1ZdaQdSyZl-0" value="Back" style="locked=1;" parent="MDSQV5zMVQcSWrhW9h-y-0"/>
+                <mxCell id="Oq_Tjb9oaE1ZdaQdSyZl-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#FFFFFF;strokeColor=none;" vertex="1" parent="Oq_Tjb9oaE1ZdaQdSyZl-0">
+                    <mxGeometry y="40" width="600" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-1" style="locked=1;" parent="MDSQV5zMVQcSWrhW9h-y-0"/>
+                <mxCell id="siBviN6P7-Wduqes6bnr-0" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#FFF9E4;strokeColor=none;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="120" width="600" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-2" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=none;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="100" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-3" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#FFF9E4;strokeColor=none;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="180" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-4" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#eee8d5;strokeColor=none;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="200" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-5" value="" style="endArrow=none;html=1;rounded=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;strokeWidth=3;opacity=70;" edge="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="360" y="220" as="sourcePoint"/>
+                        <mxPoint x="360" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-6" value="Cursor&lt;br&gt;▼" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=center;spacing=0;textOpacity=70;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry x="340" y="180" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-7" value="Active" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="120" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-8" value="Context Guard" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="100" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-9" value="Inactive" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;verticalAlign=middle;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="80" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-10" value="Inactive&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;verticalAlign=middle;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="160" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-11" value="Cursor Line" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="200" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="siBviN6P7-Wduqes6bnr-1" value="Active" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontFamily=Tahoma;fontSize=9;fontColor=#000000;fillColor=none;strokeColor=none;align=right;spacing=0;textOpacity=70;rotation=0;spacingRight=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-1">
+                    <mxGeometry y="180" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-12" value="Text" style="locked=1;" parent="MDSQV5zMVQcSWrhW9h-y-0"/>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-13" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;# Copilot Context: Simple prompting&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;fontStyle=1;fontColor=#1A5C8C;textOpacity=80;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="40" width="520" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-14" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;Say &quot;nice to meet you&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="60" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-15" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;# Copilot Context: Contextual prompting&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;fontStyle=1;fontColor=#1A5C8C;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="100" width="520" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-16" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;Say &quot;hello&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="120" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-17" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; Then say &quot;good bye&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="140" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-18" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; &amp;gt; Then say &quot;take care&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="160" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-19" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="180" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-20" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; &amp;gt; Then say &quot;see you again&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="200" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-22" value="&lt;div style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&amp;gt; Then say &quot;we meet again&quot;.&lt;br style=&quot;font-size: 16px;&quot;&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;fontSize=16;fontFamily=Courier New;verticalAlign=bottom;spacing=0;textOpacity=80;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-12">
+                    <mxGeometry x="80" y="240" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-23" value="Diagram" style="locked=1;" parent="MDSQV5zMVQcSWrhW9h-y-0"/>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-24" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endArrow=openThin;endFill=0;endSize=5;startSize=5;" edge="1" parent="MDSQV5zMVQcSWrhW9h-y-23" source="MDSQV5zMVQcSWrhW9h-y-26" target="MDSQV5zMVQcSWrhW9h-y-28">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-25" value="hello" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacing=0;spacingLeft=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-23">
+                    <mxGeometry x="360" y="120" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-26" value="good bye" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;align=left;spacing=0;spacingLeft=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-23">
+                    <mxGeometry x="400" y="140" width="90" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-27" value="take care" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;align=left;spacing=0;spacingLeft=6;textOpacity=50;opacity=50;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-23">
+                    <mxGeometry x="440" y="160" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-28" value="see you again" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;align=left;spacing=0;spacingLeft=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-23">
+                    <mxGeometry x="440" y="200" width="140" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-29" value="we meet again" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;opacity=50;textOpacity=50;align=left;spacing=0;spacingLeft=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-23">
+                    <mxGeometry x="400" y="240" width="140" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-30" value="" style="endArrow=openThin;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;rounded=1;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endFill=0;endSize=5;startSize=5;" edge="1" parent="MDSQV5zMVQcSWrhW9h-y-23" source="MDSQV5zMVQcSWrhW9h-y-25" target="MDSQV5zMVQcSWrhW9h-y-26">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="320" as="sourcePoint"/>
+                        <mxPoint x="520" y="470" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-31" value="" style="endArrow=openThin;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;rounded=1;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endFill=0;endSize=5;startSize=5;" edge="1" parent="MDSQV5zMVQcSWrhW9h-y-23" source="MDSQV5zMVQcSWrhW9h-y-26" target="MDSQV5zMVQcSWrhW9h-y-27">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="605" y="350" as="sourcePoint"/>
+                        <mxPoint x="500" y="190" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-32" value="" style="endArrow=openThin;html=1;fontFamily=Courier New;fontSize=16;fontColor=#1A5C8C;rounded=1;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endFill=0;endSize=5;startSize=5;" edge="1" parent="MDSQV5zMVQcSWrhW9h-y-23" source="MDSQV5zMVQcSWrhW9h-y-25" target="MDSQV5zMVQcSWrhW9h-y-29">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="650" y="370" as="sourcePoint"/>
+                        <mxPoint x="535" y="390" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="MDSQV5zMVQcSWrhW9h-y-33" value="nice to meet you" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Courier New;fontSize=16;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;opacity=50;textOpacity=50;align=left;spacing=0;spacingLeft=6;" vertex="1" parent="MDSQV5zMVQcSWrhW9h-y-23">
+                    <mxGeometry x="360" y="60" width="170" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

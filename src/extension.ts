@@ -82,11 +82,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		pushChatMessage(previousChatRole, chatMessagelineTexts);
 
+		const userStartLineText = document.lineAt(userStart.line).text;
 		const userEndLineText = document.lineAt(userEnd.line).text;
 		const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
 		const userEndOffset = document.offsetAt(userEnd);
 
-		const userStartLineQuoteIndentText = document.lineAt(userStart.line).text.match(quoteIndentRegex)?.[0] || '';
+		const userStartLineQuoteIndentText = userStartLineText.match(quoteIndentRegex)?.[0] || '';
 		const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
 
 		const selectionText = document.getText(userRange);
@@ -114,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}, async (_progress, token) => {
 			token.onCancellationRequested(() => completion.cancel());
 			return completion.insertText(
-				(userStart.character > 0 ? LF : "") + "**User:** ",
+				userStartLineText.includes("**User:** ") ? "" : (userStart.character > 0 ? documentEol : "") + "**User:** ",
 				documentEol + userStartLineQuoteIndentText
 			).then(offsetDiff => {
 				completion.setAnchorOffset(userEndOffset + offsetDiff);
@@ -222,7 +223,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('markdown', {
 		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken, _context: vscode.CompletionContext) {
-			const insertText = "# Copilot Session: ";
+			const insertText = "# Copilot Context: ";
 			const offset = partialEndsWith(document.lineAt(position.line).text, insertText, /(?!^)#+/);
 			if (offset === 0) { return; }
 			const item = new vscode.CompletionItem(insertText, vscode.CompletionItemKind.Keyword);
@@ -246,8 +247,8 @@ interface LineRange {
 
 const isSelectionOverflow = (selection: vscode.Selection): boolean => !selection.isEmpty && selection.end.character === 0;
 
-function isSessionSeparate(lineText: string): boolean {
-	return lineText.match(/^#\sCopilot Session/) !== null;
+function isContextSeparate(lineText: string): boolean {
+	return lineText.match(/^#\sCopilot Context/) !== null;
 }
 
 class DocumentOutline {
@@ -300,7 +301,7 @@ class DocumentOutline {
 			const textLine = document.lineAt(line);
 			const textLineRange = textLine.range;
 			const textLineText = textLine.text;
-			if (isSessionSeparate(textLineText)) {
+			if (isContextSeparate(textLineText)) {
 				lineRange = {
 					start: textLineRange.start,
 					end: textLineRange.end,
