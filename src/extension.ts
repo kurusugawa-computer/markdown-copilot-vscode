@@ -91,12 +91,26 @@ export function activate(context: vscode.ExtensionContext) {
 		const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
 
 		const selectionText = document.getText(userRange);
+
+		let lastUserMessage = outdentQuote(
+			selectionText,
+			userEndLineQuoteIndent
+		).replaceAll(documentEol, LF);
+
+		let copilotOptions = {} as OpenAI.ChatCompletionCreateParamsStreaming;
+		for (const match of lastUserMessage.matchAll(/```json\s+copilot-options\n([^]*?)\n```/gm)) {
+			try {
+				Object.assign(copilotOptions, JSON.parse(match[1]));
+			} catch {
+				lastUserMessage = "Correct the following JSON and answer in the language of the `" + getLocale() + "` locale:\n```\n" + match[1] + "\n```";
+				break;
+			}
+			lastUserMessage = lastUserMessage.replace(match[0], "");
+		}
+
 		chatMessages.push({
 			role: ChatRole.User,
-			content: outdentQuote(
-				selectionText,
-				userEndLineQuoteIndent
-			).replaceAll(documentEol, LF)
+			content: lastUserMessage,
 		});
 
 		const completion = new Completion(
@@ -127,7 +141,8 @@ export function activate(context: vscode.ExtensionContext) {
 				completion.translateAnchorOffset(offsetDiff);
 				return completion.completeText(
 					chatMessages,
-					documentEol + userEndLineQuoteIndentText
+					documentEol + userEndLineQuoteIndentText,
+					copilotOptions,
 				);
 			}).catch(error =>
 				vscode.window.showErrorMessage(
@@ -228,6 +243,18 @@ export function activate(context: vscode.ExtensionContext) {
 			return [item];
 		}
 	}, '#'));
+
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('markdown', {
+		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken, _context: vscode.CompletionContext) {
+			const insertText = '```json copilot-options\n{"temperature":${1:0.01},"max_tokens":${2:4096},"model":"${3:gpt-4-turbo-preview}"}\n```';
+			const offset = partialEndsWith(document.lineAt(position.line).text, insertText);
+			if (offset === 0) { return; }
+			const item = new vscode.CompletionItem(insertText, vscode.CompletionItemKind.Module);
+			item.insertText = new vscode.SnippetString(insertText);
+			item.range = document.lineAt(position.line).range;
+			return [item];
+		}
+	}, '`'));
 }
 
 export function deactivate() {
@@ -385,7 +412,7 @@ class ContextDecorator {
 			this._inactiveDecorationType,
 			this._outline.toInactiveRanges()
 		);
-	};
+	}
 
 	private static toInactiveDecorationType(configuration: vscode.WorkspaceConfiguration) {
 		const inactiveContextOpacity = configuration.get<number>("markdown.copilot.decorations.inactiveContextOpacity");
@@ -495,7 +522,7 @@ class Completion {
 		).then(() => countChar(text));
 	};
 
-	private async createStream(chatMessages: ChatMessage[]): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+	private async createStream(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
 		const configuration = vscode.workspace.getConfiguration();
 		let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
 		const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
@@ -507,17 +534,20 @@ class Completion {
 			configuration.update("markdown.copilot.openAI.apiKey", apiKey);
 		}
 		const openai = new OpenAI({ apiKey: apiKey });
-		const stream = await openai.chat.completions.create({
-			model: configuration.get<string>("markdown.copilot.openAI.model")!,
-			messages: chatMessages as OpenAI.ChatCompletionMessageParam[],
-			temperature: configuration.get<number>("markdown.copilot.openAI.temperature")!,
-			stream: true,
-		});
+		const stream = await openai.chat.completions.create(Object.assign(
+			{
+				model: configuration.get<string>("markdown.copilot.openAI.model")!,
+				messages: chatMessages as OpenAI.ChatCompletionMessageParam[],
+				temperature: configuration.get<number>("markdown.copilot.openAI.temperature")!,
+				stream: true,
+			},
+			override
+		));
 		return stream;
 	}
 
-	async completeText(chatMessages: ChatMessage[], lineSeparator: string) {
-		const stream = await this.createStream(chatMessages);
+	async completeText(chatMessages: ChatMessage[], lineSeparator: string, override: OpenAI.ChatCompletionCreateParamsStreaming) {
+		const stream = await this.createStream(chatMessages, override);
 		this.abortController = stream.controller;
 
 		const chunkTextBuffer: string[] = [];
@@ -650,9 +680,13 @@ export function countChar(text: string): number {
 /*
  * Utilities for l10n
  */
+function getLocale(): string {
+	return JSON.parse(process.env.VSCODE_NLS_CONFIG as string).locale;
+}
+
 function initializeL10n(baseUri: vscode.Uri, forcedLocale?: string) {
 	const defaultPackageNlsJson = "package.nls.json";
-	const locale: string = forcedLocale || JSON.parse(process.env.VSCODE_NLS_CONFIG as string).locale;
+	const locale: string = forcedLocale || getLocale();
 	const packageNlsJson = locale === 'en' ? defaultPackageNlsJson : `package.nls.${locale}.json`;
 	try {
 		l10n.config(vscode.Uri.joinPath(baseUri, packageNlsJson));
