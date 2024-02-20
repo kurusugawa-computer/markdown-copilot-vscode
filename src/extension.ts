@@ -202,10 +202,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const activeTextEditor = contextDecorator.activeTextEditor;
 			if (activeTextEditor === undefined) { return; }
 			if (activeTextEditor.document !== document) { return; }
-
-			if (activeTextEditor.selection.isEmpty) {
-				return;
-			}
+			if (activeTextEditor.selection.isEmpty) { return; }
 
 			const item = new vscode.CompletionItem("Copilot continue");
 			item.kind = vscode.CompletionItemKind.Text;
@@ -555,16 +552,16 @@ interface ChatMessage {
 }
 
 const roleRegex = /\*\*(System|User|Copilot):\*\*/;
-const tagToChatRoles = new Map<string, ChatRole>([
+const matchToChatRoles = new Map<string, ChatRole>([
 	["System", ChatRole.System],
 	["User", ChatRole.User],
 	["Copilot", ChatRole.Assistant],
 ]);
 
-function toChatRole(lineText: string): ChatRole {
-	const match = lineText.match(roleRegex);
+function toChatRole(text: string): ChatRole {
+	const match = text.match(roleRegex);
 	if (match === null) { return ChatRole.None; }
-	return tagToChatRoles.get(match[1])!;
+	return matchToChatRoles.get(match[1])!;
 };
 
 function removeChatRole(text: string): string {
@@ -625,7 +622,7 @@ function countQuoteIndent(lineText: string): number {
 };
 
 /*
- * Utilities for code points and line breaks
+ * Utilities for characters (code points and line breaks)
  */
 const LF = '\n';
 const CRLF = '\r\n';

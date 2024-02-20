@@ -24,7 +24,9 @@ jobs:
     - name: 📤 Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: markdown-copilot-${{ github.sha }}
+        name: markdown-copilot-${{github.sha}}
         path: markdown-copilot-*.vsix
     - name: 🚚 Publish to 🛒 Marketplace
-      run: ls -la markdown-copilot-*.vsix
+      run: npm run vsce:publish
+      env:
+        VSCE_PAT: ${{secrets.VSCE_PAT}}

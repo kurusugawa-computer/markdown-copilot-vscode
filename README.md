@@ -105,8 +105,11 @@ Combine Markdown Copilot with these extensions for an even more powerful Markdow
 - [x] Documentation
 - [x] Review Markdown notation
 - [ ] Publish to marketplace
-- [ ] Importing Files
+- [ ] Prompt templates
+- [ ] Importing files
 - [ ] Image Generation: DALL·E
+- [ ] Flexible endpoint: Proxy and base URL support.
+- [ ] Augment tools: ChatCompletionTools
 - [ ] Unit testing
 
 ## Changelog

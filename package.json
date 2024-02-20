@@ -26,8 +26,7 @@
     "markdown"
   ],
   "activationEvents": [
-    "onLanguage:markdown",
-    "workspaceContains:README.md"
+    "onLanguage:markdown"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -133,7 +132,8 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test",
-    "vsce:package": "vsce package"
+    "vsce:package": "vsce package",
+    "vsce:publish": "vsce publish"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
