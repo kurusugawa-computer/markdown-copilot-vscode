@@ -10,9 +10,13 @@
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024"></picture>
 
-Elevate your Markdown editing experience in Visual Studio Code with Markdown Copilot, your AI-powered assistant. Whether you're crafting documentation, jotting down notes, or creating any Markdown content, Markdown Copilot offers intelligent, real-time suggestions to enhance your writing process. With advanced features like Parallel Editing, Context Control, and Quote Indentation, Markdown Copilot ensures your writing is not just efficient but also precise and easy.
+Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering superior features such as:
+1. Saving conversation histories in Markdown
+2. Asking multiple questions simultaneously
+3. Branching out conversations
+4. Editing previous conversations at any point and continuing the dialogue
 
-***Note***: An OpenAI API Key is required to use this extension. For more information, please refer to [the OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
+***Note***: An OpenAI API Key is required to use this extension. For more information, please refer to the [OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
 
 ## Key Features
 
@@ -59,6 +63,24 @@ More complex example: the context continues across `take care` line.
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512"></picture>
 
+#### Override Options
+
+Customize Markdown Copilot's behavior with override options. This allows you to control settings like response length or the AI model directly within your document.
+
+To use override options, simply include a JSON code block labeled `json copilot-options` with your desired settings, then select this block along with your text and choose `💡 Markdown Copilot: Continue` from the code action proposals.
+
+Example: Let Markdown Copilot introduce itself with customized response length and model:
+
+````markdown
+Introduce yourself.
+
+```json copilot-options
+{"max_tokens":50,"model":"gpt-3.5-turbo"}
+```
+````
+
+For more configuration options, please refer to the [OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create).
+
 ### Quote Indentation
 
 Simplify the editing of quote indentation levels with intuitive actions.
@@ -104,7 +126,8 @@ Combine Markdown Copilot with these extensions for an even more powerful Markdow
   - [x] Simplified Chinese
 - [x] Documentation
 - [x] Review Markdown notation
-- [ ] Publish to marketplace
+- [x] Publish to marketplace
+- [x] Make options overridable
 - [ ] Prompt templates
 - [ ] Importing files
 - [ ] Image Generation: DALL·E

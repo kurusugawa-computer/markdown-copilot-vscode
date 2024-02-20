@@ -40,7 +40,7 @@ jobs:
         restore-keys: ${{ runner.os }}-vscode-test-
     - name: ⚡ Run headless test
       run: |
-        sudo mkdir /run/dbus
+        [ ! -e /run/dbus ] && sudo mkdir /run/dbus
         dbus-daemon --session --address=unix:path=/run/dbus/system_bus_socket --nofork &
         DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket xvfb-run npm test
         ps aux | grep -e [t]mp/xvfb-run -e [d]bus-daemon | awk '{print $2}' | sudo xargs kill
