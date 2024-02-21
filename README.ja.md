@@ -86,7 +86,9 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 
 引用インデントレベルの編集を直感的なアクションで行えます。
 
-テキストを選択し、コードアクションの提案から `💡 Markdown Copilot: 引用行をインデント` または `💡 Markdown Copilot: 引用行をアンインデント` を使用します。<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用インデント" width="512"></picture>
+テキストを選択し、コードアクションの提案から `💡 Markdown Copilot: 引用行をインデント` または `💡 Markdown Copilot: 引用行をアンインデント` を使用します。
+
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用インデント" width="512"></picture>
 
 または、次のショートカットキーを使用します:
 
@@ -102,7 +104,7 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 - OpenAI APIへのアクセスが必要です。詳細については、[OpenAI API](https://openai.com/blog/openai-api)をご覧ください。
 - Visual Studio Codeがインストールされている必要があります。[Visual Studio Codeダウンロードページ](https://code.visualstudio.com/Download)からダウンロードしてください。
 
-## 🙌 Markdown体験を強化する
+## 🚀 Markdown体験を強化する
 
 次の拡張機能とMarkdown Copilotを組み合わせて、さらに強力なMarkdown体験を実現します:
 - **[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)**:

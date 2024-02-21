@@ -110,6 +110,8 @@ Or use these shortcuts:
 Combine Markdown Copilot with these extensions for an even more powerful Markdown experience:
 - **[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)**:
   Comprehensive Markdown support (keyboard shortcuts, table of contents, auto preview, and more).
+- **[Snippets](https://marketplace.visualstudio.com/items?itemName=tahabasri.snippets)**:
+  Supercharge your Snippets in VS Code — Manage your code snippets without quitting your editor.
 - **[Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)**:
   Adds Mermaid diagram and flowchart support to VS Code's built-in markdown preview.
 - **[Markdown+Math](https://marketplace.visualstudio.com/items?itemName=goessner.mdmath)**:

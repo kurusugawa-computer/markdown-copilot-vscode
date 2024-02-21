@@ -38,6 +38,7 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 基于当前上下文轻松继续编辑，确保无缝的写作流程。
 
 使用时，选择文本范围并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
+
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="上下文编辑" width="356"></picture>
 
 或使用快捷方式快速访问:
@@ -56,6 +57,7 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="示例: take care" width="512"></picture>
 
 如果您选择 `Then say "take care".` 并选择 `💡 Markdown Copilot: 继续`，您将得到以下输出: `hello` → `good bye` → `take care`。
+
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="示例: take care" width="460"></picture>
 
 更复杂的示例: 上下文跨越 `take care` 行继续。
@@ -83,7 +85,9 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 
 通过直观的操作简化引用缩进级别的编辑。
 
-选择文本并从代码操作建议中选择 `💡 Markdown Copilot: 缩进引号行` 或 `💡 Markdown Copilot: 减少缩进报价行`。<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用缩进" width="512"></picture>
+选择文本并从代码操作建议中选择 `💡 Markdown Copilot: 缩进引号行` 或 `💡 Markdown Copilot: 减少缩进报价行`。
+
+<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用缩进" width="512"></picture>
 
 或使用这些快捷方式:
 
