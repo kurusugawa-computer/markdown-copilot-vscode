@@ -97,6 +97,12 @@ export function activate(context: vscode.ExtensionContext) {
 			userEndLineQuoteIndent
 		).replaceAll(documentEol, LF);
 
+		const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*\s*/);
+
+		if (userStartLineMatchesUser !== null) {
+			lastUserMessage = lastUserMessage.replace(userStartLineMatchesUser[0], "");
+		}
+
 		let copilotOptions = {} as OpenAI.ChatCompletionCreateParamsStreaming;
 		for (const match of lastUserMessage.matchAll(/```json\s+copilot-options\n([^]*?)\n```/gm)) {
 			try {
@@ -129,7 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}, async (_progress, token) => {
 			token.onCancellationRequested(() => completion.cancel());
 			return completion.insertText(
-				userStartLineText.includes("**User:** ") ? "" : (userStart.character > 0 ? documentEol : "") + "**User:** ",
+				userStartLineMatchesUser !== null ? "" : `${userStart.character > 0 ? documentEol : ""}**User:** `,
 				documentEol + userStartLineQuoteIndentText
 			).then(offsetDiff => {
 				completion.setAnchorOffset(userEndOffset + offsetDiff);
@@ -242,7 +248,7 @@ export function activate(context: vscode.ExtensionContext) {
 			item.range = document.lineAt(position.line).range;
 			return [item];
 		}
-	}, '#'));
+	}));
 
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('markdown', {
 		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken, _context: vscode.CompletionContext) {
@@ -254,7 +260,7 @@ export function activate(context: vscode.ExtensionContext) {
 			item.range = document.lineAt(position.line).range;
 			return [item];
 		}
-	}, '`'));
+	}));
 }
 
 export function deactivate() {

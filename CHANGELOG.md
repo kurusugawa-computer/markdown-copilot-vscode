@@ -4,6 +4,11 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.4] - 2024-02-22
+### Changed
+- Suppress CompletionItem triggers: ``` ` ```, `#`
+- Fix line breaks in READMEs
+
 ## [0.0.3] - 2024-02-21
 ### Added
 - README in Japanese and Simplified Chinese
@@ -31,7 +36,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-
+[0.0.4]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/releases/tag/v0.0.1
