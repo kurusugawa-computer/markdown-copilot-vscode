@@ -51,7 +51,7 @@ RUN mkdir /act_artifacts \
 RUN apk add --no-cache bash curl
 
 # Install act
-ENV ACT_VERSION=0.2.56
+ENV ACT_VERSION=0.2.59
 RUN curl https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
 __EOF__
 )" \
