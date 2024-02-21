@@ -20,6 +20,9 @@ vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
 
+# Localized document files
+README.*.md
+
 # VS Code maps local image paths to GitHub paths
 images
 !images/icon-128x128.png
