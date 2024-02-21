@@ -691,7 +691,7 @@ function initializeL10n(baseUri: vscode.Uri, forcedLocale?: string) {
 	try {
 		l10n.config(vscode.Uri.joinPath(baseUri, packageNlsJson));
 	} catch {
-		console.error("Cannot load l10n resource file:", packageNlsJson);
+		console.warn("Cannot load l10n resource file:", packageNlsJson);
 		l10n.config(vscode.Uri.joinPath(baseUri, defaultPackageNlsJson));
 	}
 }
