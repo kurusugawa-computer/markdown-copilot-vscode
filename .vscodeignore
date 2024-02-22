@@ -19,6 +19,7 @@ webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
+.env
 
 # Localized document files
 README.*.md
