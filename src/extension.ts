@@ -49,9 +49,10 @@ export function activate(context: vscode.ExtensionContext) {
 		const configuration = vscode.workspace.getConfiguration();
 		const systemMessage = configuration.get<string>("markdown.copilot.openAI.systemMessage");
 
-		const chatMessages: ChatMessage[] = systemMessage === undefined || systemMessage.trim().length === 0
-			? []
-			: [{ role: ChatRole.System, content: systemMessage }];
+		const chatMessages: ChatMessage[] = [];
+		if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
+			chatMessages.push({ role: ChatRole.System, content: systemMessage });
+		}
 		const pushChatMessage = (role: ChatRole, lineTexts: string[]): void => {
 			const message = lineTexts.join(LF);
 			if (message.length === 0) { return; }
@@ -124,6 +125,8 @@ export function activate(context: vscode.ExtensionContext) {
 			document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))
 		);
 
+		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
+
 		const titleText = selectionText.replaceAll(/[\r\n]+/g, " ").trim();
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Window,
@@ -141,20 +144,24 @@ export function activate(context: vscode.ExtensionContext) {
 				completion.setAnchorOffset(userEndOffset + offsetDiff);
 				return completion.insertText(
 					"\n\n**Copilot:** ",
-					documentEol + userEndLineQuoteIndentText
+					userEndLineEol
 				);
 			}).then(offsetDiff => {
 				completion.translateAnchorOffset(offsetDiff);
 				return completion.completeText(
 					chatMessages,
-					documentEol + userEndLineQuoteIndentText,
+					userEndLineEol,
 					copilotOptions,
 				);
-			}).catch(error =>
-				vscode.window.showErrorMessage(
-					error.message.replace(/^\d+ /, ""),
-				)
-			).finally(
+			}).catch(async error => {
+				// remove head error code
+				const errorMessage = error.message.replace(/^\d+ /, "");
+				vscode.window.showErrorMessage(errorMessage);
+				return completion.insertText(
+					errorMessage,
+					userEndLineEol
+				);
+			}).finally(
 				() => completion.dispose()
 			);
 		});
