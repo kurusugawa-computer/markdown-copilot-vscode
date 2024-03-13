@@ -33,7 +33,7 @@ jobs:
       run: npm install
     - name: Get VS Code
       run: curl --silent --output vscode-stable-versions.json https://update.code.visualstudio.com/api/releases/stable
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: .vscode-test/
         key: ${{ runner.os }}-vscode-test-${{ hashFiles('vscode-stable-versions.json') }}

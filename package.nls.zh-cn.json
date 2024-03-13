@@ -1,12 +1,22 @@
 {
-    "extension.description": "您的AI配对Markdown编辑",
-    "command.editing.continue.title": "Markdown Copilot: 继续",
-    "command.editing.continue.detail": "根据上下文继续编辑",
+    "extension.description": "用于 VSCode 的 OpenAI ChatGPT API 客户端",
+    "command.editing.continueInContext.title": "Markdown Copilot: 根据上下文继续",
+    "command.editing.continueInContext.detail": "根据上下文继续编辑",
+    "command.editing.continueWithoutContext.title": "Markdown Copilot: 无上下文继续",
+    "command.editing.continueWithoutContext.detail": "无上下文继续编辑",
     "command.editing.indentQuote.title": "Markdown Copilot: 缩进引号行",
     "command.editing.outdentQuote.title": "Markdown Copilot: 减少缩进报价行",
+    "command.editing.titleActiveContext.title": "Markdown Copilot: 活动上下文标题",
+    "command.completion.context.detail": "插入上下文保护头",
+    "command.completion.user.detail": "插入用户消息",
+    "command.completion.system-override.detail": "插入覆盖系统消息",
+    "command.completion.system.detail": "插入系统消息",
+    "command.completion.copilot.detail": "插入copilot消息",
+    "command.completion.copilot-options.detail": "插入覆盖OpenAI选项块",
     "config.decorations.inactiveContextOpacity.description": "控制非活动上下文线条的不透明度, `0.0`表示完全透明, `1.0`表示完全不透明。",
+    "config.instructions.systemMessage.description": "自定义Copilot的行为, 允许更改其个性或特定行为指令。",
+    "config.instructions.titleMessage.description": "自定义Copilot的行为, 允许更改其对活动上下文的标题指令。",
     "config.openAI.apiKey.description": "您的OpenAI API密钥。可以从 <https://platform.openai.com/api-keys> 处获得。",
     "config.openAI.model.description": "可指定[Models](https://platform.openai.com/docs/models)中列出的模型。",
-    "config.openAI.systemMessage.description": "自定义Copilot的行为, 允许更改其个性或特定行为指令。",
-    "config.openAI.temperature.description": "可指定一个介于`0.0`和`1.0`之间的值。`0.8`这样的较高值会使输出更加随机，而`0.2`这样的较低值会使输出更加集中和确定。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)有助于确定该值。"
+    "config.options.temperature.description": "可指定一个介于`0.0`和`1.0`之间的值。`0.8`这样的较高值会使输出更加随机，而`0.2`这样的较低值会使输出更加集中和确定。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)有助于确定该值。"
 }

@@ -10,156 +10,73 @@ export function activate(context: vscode.ExtensionContext) {
 	const outline = new DocumentOutline();
 	const contextDecorator = new ContextDecorator(outline, vscode.window.activeTextEditor);
 
-	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE = "markdown.copilot.editing.continue";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT = "markdown.copilot.editing.continueInContext";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT = "markdown.copilot.editing.continueWithoutContext";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE, (selectionOverride?: vscode.Selection) => {
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
+		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, selectionOverride)
+	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT,
+		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
+	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined) { return; }
-		if (selectionOverride === undefined) {
-			if (textEditor.selection.isEmpty) { return; }
-		} else if (selectionOverride.isEmpty) { return; }
+
+		const activeLineRanges = outline.toActiveLineRanges();
+		if (activeLineRanges.length === 0) { return; }
 
 		const document = textEditor.document;
-
-		const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
-		const userStart = userRange.start;
-		const userEnd = userRange.end;
-
-		const activeLineTexts: string[] = [];
-
-		for (const lineRange of outline.toActiveLineRanges()) {
-			if (lineRange.start.isAfterOrEqual(userStart)) {
-				break;
-			}
-			activeLineTexts.push(
-				outdentQuote(
-					document.getText(new vscode.Range(
-						lineRange.start,
-						lineRange.end.isAfterOrEqual(userStart)
-							? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
-							: lineRange.end
-					)),
-					lineRange.quoteIndent
-				)
-			);
-		}
-
-		const configuration = vscode.workspace.getConfiguration();
-		const systemMessage = configuration.get<string>("markdown.copilot.openAI.systemMessage");
-
-		const chatMessages: ChatMessage[] = [];
-		if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
-			chatMessages.push({ role: ChatRole.System, content: systemMessage });
-		}
-		const pushChatMessage = (role: ChatRole, lineTexts: string[]): void => {
-			const message = lineTexts.join(LF);
-			if (message.length === 0) { return; }
-			chatMessages.push({
-				role: role,
-				content: message
-			});
-		};
-
-		const chatMessagelineTexts: string[] = [];
 		const documentEol = toEolString(document.eol);
 
-		let previousChatRole = ChatRole.User;
-		for (const lineText of activeLineTexts.join(documentEol).split(documentEol)) {
-			const lineChatRole = toChatRole(lineText);
-			switch (lineChatRole) {
-				default:
-					pushChatMessage(previousChatRole, chatMessagelineTexts);
-					chatMessagelineTexts.length = 0;
-					previousChatRole = lineChatRole;
-				case previousChatRole:
-					chatMessagelineTexts.push(removeChatRole(lineText));
-					break;
-				case ChatRole.None:
-					chatMessagelineTexts.push(lineText);
-					break;
-			}
-		}
-		pushChatMessage(previousChatRole, chatMessagelineTexts);
+		const activeLineRangesStart = activeLineRanges[0].start;
 
-		const userStartLineText = document.lineAt(userStart.line).text;
-		const userEndLineText = document.lineAt(userEnd.line).text;
-		const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
-		const userEndOffset = document.offsetAt(userEnd);
-
-		const userStartLineQuoteIndentText = userStartLineText.match(quoteIndentRegex)?.[0] || '';
-		const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
-
-		const selectionText = document.getText(userRange);
-
-		let lastUserMessage = outdentQuote(
-			selectionText,
-			userEndLineQuoteIndent
+		const activeContextText = document.getText(
+			new vscode.Range(
+				activeLineRangesStart,
+				activeLineRanges.at(-1)!.end
+			)
 		).replaceAll(documentEol, LF);
 
-		const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*\s*/);
+		if (activeContextText.trim().length === 0) { return; }
 
-		if (userStartLineMatchesUser !== null) {
-			lastUserMessage = lastUserMessage.replace(userStartLineMatchesUser[0], "");
+		const configuration = vscode.workspace.getConfiguration();
+		const titleMessage = configuration.get<string>("markdown.copilot.instructions.titleMessage");
+		if (titleMessage === undefined || titleMessage.trim().length === 0) {
+			return;
 		}
 
-		let copilotOptions = {} as OpenAI.ChatCompletionCreateParamsStreaming;
-		for (const match of lastUserMessage.matchAll(/```json\s+copilot-options\n([^]*?)\n```/gm)) {
-			try {
-				Object.assign(copilotOptions, JSON.parse(match[1]));
-			} catch {
-				lastUserMessage = "Correct the following JSON and answer in the language of the `" + getLocale() + "` locale:\n```\n" + match[1] + "\n```";
-				break;
-			}
-			lastUserMessage = lastUserMessage.replace(match[0], "");
-		}
-
-		chatMessages.push({
-			role: ChatRole.User,
-			content: lastUserMessage,
-		});
-
-		const completion = new Completion(
-			document,
-			document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))
-		);
-
-		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-
-		const titleText = selectionText.replaceAll(/[\r\n]+/g, " ").trim();
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Window,
-			title: `Markdown Copilot: ${titleText.length > 64
-				? titleText.slice(0, 63) + '…'
-				: titleText
-				}`,
+			title: "Markdown Copilot: Title the context",
 			cancellable: true
 		}, async (_progress, token) => {
+			const lineRangeStartLine = activeLineRangesStart.line;
+			const match = document.lineAt(lineRangeStartLine).text.match(/^(#[ \t]Copilot Context:[ \t]).*$/);
+
+			const completion = new Completion(document, document.offsetAt(activeLineRangesStart));
 			token.onCancellationRequested(() => completion.cancel());
-			return completion.insertText(
-				userStartLineMatchesUser !== null ? "" : `${userStart.character > 0 ? documentEol : ""}**User:** `,
-				documentEol + userStartLineQuoteIndentText
-			).then(offsetDiff => {
-				completion.setAnchorOffset(userEndOffset + offsetDiff);
-				return completion.insertText(
-					"\n\n**Copilot:** ",
-					userEndLineEol
-				);
-			}).then(offsetDiff => {
-				completion.translateAnchorOffset(offsetDiff);
-				return completion.completeText(
-					chatMessages,
-					userEndLineEol,
-					copilotOptions,
-				);
-			}).catch(async error => {
-				// remove head error code
+
+			return (match !== null
+				? completion.replaceLine(match[1], lineRangeStartLine)
+				: completion.insertText("# Copilot Context: \n", documentEol)
+			).then(() => {
+				completion.setAnchorOffset(document.offsetAt(document.lineAt(lineRangeStartLine).range.end));
+				return completion.completeText([
+					{ role: OpenAIChatRole.User, content: activeContextText },
+					{ role: OpenAIChatRole.User, content: titleMessage },
+				], "", {} as OpenAI.ChatCompletionCreateParamsStreaming);
+			}).catch(error => {
 				const errorMessage = error.message.replace(/^\d+ /, "");
 				vscode.window.showErrorMessage(errorMessage);
 				return completion.insertText(
 					errorMessage,
-					userEndLineEol
+					documentEol
 				);
 			}).finally(
 				() => completion.dispose()
@@ -212,7 +129,8 @@ export function activate(context: vscode.ExtensionContext) {
 		provideCodeActions(_document: vscode.TextDocument, range: vscode.Range): vscode.CodeAction[] | undefined {
 			if (range.isEmpty) { return; }
 			return [
-				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE, l10n.t("command.editing.continue.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT, l10n.t("command.editing.continueInContext.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT, l10n.t("command.editing.continueWithoutContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
 			];
@@ -232,40 +150,100 @@ export function activate(context: vscode.ExtensionContext) {
 			if (activeTextEditor.document !== document) { return; }
 			if (activeTextEditor.selection.isEmpty) { return; }
 
-			const item = new vscode.CompletionItem("Copilot continue");
-			item.kind = vscode.CompletionItemKind.Text;
-			item.insertText = document.getText(activeTextEditor.selection);
-			item.detail = l10n.t("command.editing.continue.detail");
-			item.keepWhitespace = false;
-			item.command = {
-				command: COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE,
-				title: l10n.t("command.editing.continue.title"),
-				arguments: [activeTextEditor.selection],
-			};
-			return [item];
+			return [
+				newCompletionItem(
+					COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
+					"Copilot continue in context",
+					l10n.t("command.editing.continueInContext.detail"),
+					l10n.t("command.editing.continueInContext.title"),
+					activeTextEditor.selection,
+				),
+				newCompletionItem(
+					COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT,
+					"Copilot continue without context",
+					l10n.t("command.editing.continueWithoutContext.detail"),
+					l10n.t("command.editing.continueWithoutContext.title"),
+					activeTextEditor.selection,
+				),
+			];
+
+			function newCompletionItem(command: string, name: string, detail: string, title: string, selection: vscode.Selection) {
+				const item = new vscode.CompletionItem(name);
+				item.kind = vscode.CompletionItemKind.Text;
+				item.insertText = document.getText(selection);
+				item.detail = detail;
+				item.keepWhitespace = false;
+				item.command = {
+					command: command,
+					title: title,
+					arguments: [selection],
+				};
+				return item;
+			}
 		}
 	}));
 
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('markdown', {
 		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken, _context: vscode.CompletionContext) {
-			const insertText = "# Copilot Context: ";
-			const offset = partialEndsWith(document.lineAt(position.line).text, insertText, /(?!^)#+/);
-			if (offset === 0) { return; }
-			const item = new vscode.CompletionItem(insertText, vscode.CompletionItemKind.Keyword);
-			item.range = document.lineAt(position.line).range;
-			return [item];
-		}
-	}));
+			return [
+				newCompletionItem(
+					vscode.CompletionItemKind.Snippet,
+					"# Copilot Context: ",
+					l10n.t("command.completion.context.detail"),
+					"0",
+					/(?!^)#+/,
+				),
+				newCompletionItem(
+					vscode.CompletionItemKind.Snippet,
+					"**User:** ",
+					l10n.t("command.completion.user.detail"),
+					"1",
+					/:\*\* ?/,
+				),
+				newCompletionItem(
+					vscode.CompletionItemKind.Snippet,
+					"**System(Override):** ",
+					l10n.t("command.completion.system-override.detail"),
+					"0",
+					/:\*\* ?/,
+				),
+				newCompletionItem(
+					vscode.CompletionItemKind.Snippet,
+					"**System:** ",
+					l10n.t("command.completion.system.detail"),
+					"0",
+					/:\*\* ?/,
+				),
+				newCompletionItem(
+					vscode.CompletionItemKind.Snippet,
+					"**Copilot:** ",
+					l10n.t("command.completion.copilot.detail"),
+					"2",
+					/:\*\* ?/,
+				),
+				newCompletionItem(
+					vscode.CompletionItemKind.Module,
+					'```json copilot-options\n{"temperature":${1:0.01},"max_tokens":${2:4096},"model":"${3:gpt-4-turbo-preview}"}\n```',
+					l10n.t("command.completion.copilot-options.detail"),
+					"0",
+				),
+			].filter((e): e is NonNullable<typeof e> => e !== undefined);
 
-	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('markdown', {
-		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken, _context: vscode.CompletionContext) {
-			const insertText = '```json copilot-options\n{"temperature":${1:0.01},"max_tokens":${2:4096},"model":"${3:gpt-4-turbo-preview}"}\n```';
-			const offset = partialEndsWith(document.lineAt(position.line).text, insertText);
-			if (offset === 0) { return; }
-			const item = new vscode.CompletionItem(insertText, vscode.CompletionItemKind.Module);
-			item.insertText = new vscode.SnippetString(insertText);
-			item.range = document.lineAt(position.line).range;
-			return [item];
+			function newCompletionItem(kind: vscode.CompletionItemKind, insertText: string, detail: string, sortPrefix: string, ignore?: RegExp): vscode.CompletionItem | undefined {
+				const offset = partialEndsWith(document.lineAt(position.line).text, insertText, ignore);
+				if (offset === 0) { return; }
+				const item = new vscode.CompletionItem(insertText, kind);
+				item.sortText = sortPrefix + insertText;
+				if (kind === vscode.CompletionItemKind.Module) {
+					item.insertText = new vscode.SnippetString(insertText);
+				} else {
+					item.insertText = insertText;
+				}
+				item.detail = detail;
+				const range = document.lineAt(position.line).range;
+				item.range = range.with(new vscode.Position(position.line, range.end.character - offset));
+				return item;
+			}
 		}
 	}));
 }
@@ -285,7 +263,7 @@ interface LineRange {
 const isSelectionOverflow = (selection: vscode.Selection): boolean => !selection.isEmpty && selection.end.character === 0;
 
 function isContextSeparate(lineText: string): boolean {
-	return lineText.match(/^#\sCopilot Context/) !== null;
+	return lineText.match(/^#[ \t]Copilot Context/) !== null;
 }
 
 class DocumentOutline {
@@ -533,9 +511,24 @@ class Completion {
 		return vscode.workspace.applyEdit(
 			edit,
 		).then(() => countChar(text));
-	};
+	}
 
-	private async createStream(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+	async replaceLine(text: string, line: number): Promise<number> {
+		const textLine = this.document.lineAt(line);
+		const deleteCharCount = countChar(textLine.text);
+		const edit = new vscode.WorkspaceEdit();
+		edit.replace(
+			this.document.uri,
+			textLine.range,
+			text
+		);
+		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
+		return vscode.workspace.applyEdit(
+			edit,
+		).then(() => countChar(text) - deleteCharCount);
+	}
+
+	private async createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
 		const configuration = vscode.workspace.getConfiguration();
 		let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
 		const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
@@ -551,7 +544,7 @@ class Completion {
 			{
 				model: configuration.get<string>("markdown.copilot.openAI.model")!,
 				messages: chatMessages as OpenAI.ChatCompletionMessageParam[],
-				temperature: configuration.get<number>("markdown.copilot.openAI.temperature")!,
+				temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
 				stream: true,
 			},
 			override
@@ -559,7 +552,7 @@ class Completion {
 		return stream;
 	}
 
-	async completeText(chatMessages: ChatMessage[], lineSeparator: string, override: OpenAI.ChatCompletionCreateParamsStreaming) {
+	async completeText(chatMessages: OpenAIChatMessage[], lineSeparator: string, override: OpenAI.ChatCompletionCreateParamsStreaming) {
 		const stream = await this.createStream(chatMessages, override);
 		this.abortController = stream.controller;
 
@@ -579,37 +572,244 @@ class Completion {
 		}
 		// flush chunkTextBuffer
 		this.anchorOffset += await submitChunkText(LF);
-	};
+	}
 }
 
-enum ChatRole {
+function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
+	const textEditor = vscode.window.activeTextEditor;
+	if (textEditor === undefined) { return; }
+
+	if (selectionOverride === undefined) {
+		if (textEditor.selection.isEmpty) { return; }
+	} else if (selectionOverride.isEmpty) { return; }
+
+	const document = textEditor.document;
+	const documentEol = toEolString(document.eol);
+
+	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
+	const userStart = userRange.start;
+	const userEnd = userRange.end;
+
+	const chatMessageBuilder = new ChatMessageBuilder();
+
+	const configuration = vscode.workspace.getConfiguration();
+	const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
+	if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
+		chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
+	}
+
+	if (useContext) {
+		const activeLineTexts: string[] = [];
+
+		for (const lineRange of outline.toActiveLineRanges()) {
+			if (lineRange.start.isAfterOrEqual(userStart)) {
+				break;
+			}
+			activeLineTexts.push(
+				outdentQuote(
+					document.getText(new vscode.Range(
+						lineRange.start,
+						lineRange.end.isAfterOrEqual(userStart)
+							? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
+							: lineRange.end
+					)),
+					lineRange.quoteIndent
+				)
+			);
+		}
+
+		chatMessageBuilder.addLines(
+			activeLineTexts.join(documentEol).split(documentEol)
+		);
+	}
+
+	const userStartLineText = document.lineAt(userStart.line).text;
+	const userEndLineText = document.lineAt(userEnd.line).text;
+	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
+	const userEndOffset = document.offsetAt(userEnd);
+
+	const userStartLineQuoteIndentText = userStartLineText.match(quoteIndentRegex)?.[0] || '';
+	const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
+
+	const selectionText = document.getText(userRange);
+
+	let lastUserMessage = outdentQuote(
+		selectionText,
+		userEndLineQuoteIndent
+	).replaceAll(documentEol, LF);
+
+	const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*[ \t]*/);
+
+	if (userStartLineMatchesUser !== null) {
+		lastUserMessage = lastUserMessage.replace(userStartLineMatchesUser[0], "");
+	}
+
+	chatMessageBuilder.addChatMessage(ChatRoleFlags.User, lastUserMessage);
+
+	const titleText = selectionText.replaceAll(/[\r\n]+/g, " ").trim();
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Window,
+		title: `Markdown Copilot: ${titleText.length > 64
+			? titleText.slice(0, 63) + '…'
+			: titleText
+			}`,
+		cancellable: true
+	}, async (_progress, token) => {
+		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
+		const completion = new Completion(
+			document,
+			document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))
+		);
+		token.onCancellationRequested(() => completion.cancel());
+		return completion.insertText(
+			userStartLineMatchesUser !== null ? "" : `${userStart.character > 0 ? documentEol : ""}**User:** `,
+			documentEol + userStartLineQuoteIndentText
+		).then(offsetDiff => {
+			completion.setAnchorOffset(userEndOffset + offsetDiff);
+			return completion.insertText(
+				"\n\n**Copilot:** ",
+				userEndLineEol
+			);
+		}).then(offsetDiff => {
+			completion.translateAnchorOffset(offsetDiff);
+			return completion.completeText(
+				chatMessageBuilder.toChatMessages(),
+				userEndLineEol,
+				chatMessageBuilder.getCopilotOptions(),
+			);
+		}).catch(async error => {
+			// remove head error code
+			const errorMessage = error.message.replace(/^\d+ /, "");
+			vscode.window.showErrorMessage(errorMessage);
+			return completion.insertText(
+				errorMessage,
+				userEndLineEol
+			);
+		}).finally(
+			() => completion.dispose()
+		);
+	});
+}
+
+class ChatMessageBuilder {
+	private copilotOptions: OpenAI.ChatCompletionCreateParamsStreaming;
+	private chatMessages: OpenAIChatMessage[];
+	private isInvalid: boolean;
+
+	constructor() {
+		this.copilotOptions = {} as OpenAI.ChatCompletionCreateParamsStreaming;
+		this.chatMessages = [];
+		this.isInvalid = false;
+	}
+
+	addChatMessage(flags: ChatRoleFlags, message: string): void {
+		if (this.isInvalid) { return; }
+		if (message.length === 0) { return; }
+
+		for (const match of message.matchAll(/```json +copilot-options\n([^]*?)\n```/gm)) {
+			try {
+				Object.assign(this.copilotOptions, JSON.parse(match[1]));
+				message = message.replace(match[0], "");
+			} catch {
+				flags = ChatRoleFlags.User;
+				message = "Correct the following JSON and answer in the language of the `" + getLocale() + "` locale:\n```\n" + match[1] + "\n```";
+				this.copilotOptions = {} as OpenAI.ChatCompletionCreateParamsStreaming;
+				this.chatMessages = [];
+				this.isInvalid = true;
+				break;
+			}
+		}
+
+		const role = toOpenAIChatRole(flags);
+
+		if (flags & ChatRoleFlags.Override) {
+			this.chatMessages = this.chatMessages.filter(m => m.role !== role);
+		}
+
+		this.chatMessages.push({
+			role: role,
+			content: message,
+		});
+	}
+
+	addLines(lines: string[]) {
+		let previousChatRole = ChatRoleFlags.User;
+		let chatMessagelineTexts: string[] = [];
+		for (const lineText of lines) {
+			const lineChatRoleFlags = toChatRole(lineText);
+			if (ChatRoleFlags.None === lineChatRoleFlags) {
+				chatMessagelineTexts.push(lineText);
+				continue;
+			}
+
+			if (lineChatRoleFlags !== previousChatRole) {
+				this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
+				previousChatRole = lineChatRoleFlags;
+				chatMessagelineTexts = [];
+			}
+
+			chatMessagelineTexts.push(removeChatRole(lineText));
+		}
+		this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
+	}
+
+	toChatMessages(): OpenAIChatMessage[] {
+		return this.chatMessages;
+	}
+
+	getCopilotOptions(): OpenAI.ChatCompletionCreateParamsStreaming {
+		return this.copilotOptions;
+	}
+
+	private addChatMessageLines(flags: ChatRoleFlags, textLines: string[]): void {
+		this.addChatMessage(flags, textLines.join(LF));
+	}
+}
+
+enum OpenAIChatRole {
+	None = "none",
 	System = "system",
 	User = "user",
 	Assistant = "assistant",
-	None = "none",
 }
 
-interface ChatMessage {
-	role: ChatRole;
+enum ChatRoleFlags {
+	None = 0,
+	Override = 1 << 0,
+	System = 1 << 1,
+	User = 1 << 2,
+	Assistant = 1 << 3,
+}
+
+interface OpenAIChatMessage {
+	role: OpenAIChatRole;
 	content: string;
 }
 
-const roleRegex = /\*\*(System|User|Copilot):\*\*/;
-const matchToChatRoles = new Map<string, ChatRole>([
-	["System", ChatRole.System],
-	["User", ChatRole.User],
-	["Copilot", ChatRole.Assistant],
+const roleRegex = /\*\*(System|User|Copilot)(\(Override\))?:\*\*/;
+const matchToChatRoles = new Map<string, ChatRoleFlags>([
+	["System", ChatRoleFlags.System],
+	["User", ChatRoleFlags.User],
+	["Copilot", ChatRoleFlags.Assistant],
 ]);
 
-function toChatRole(text: string): ChatRole {
+function toChatRole(text: string): ChatRoleFlags {
 	const match = text.match(roleRegex);
-	if (match === null) { return ChatRole.None; }
-	return matchToChatRoles.get(match[1])!;
-};
+	if (match === null) { return ChatRoleFlags.None; }
+	return matchToChatRoles.get(match[1])!
+		| (match[2] === "(Override)" ? ChatRoleFlags.Override : ChatRoleFlags.None);
+}
+
+function toOpenAIChatRole(flags: ChatRoleFlags): OpenAIChatRole {
+	if (flags & ChatRoleFlags.User) { return OpenAIChatRole.User; }
+	if (flags & ChatRoleFlags.Assistant) { return OpenAIChatRole.Assistant; }
+	if (flags & ChatRoleFlags.System) { return OpenAIChatRole.System; }
+	throw new AssertionError();
+}
 
 function removeChatRole(text: string): string {
 	return text.replace(roleRegex, "");
-};
+}
 
 /*
  * Utilities for ranges
@@ -640,18 +840,18 @@ function partialEndsWith(target: string, search: string, ignore?: RegExp): numbe
  * Utilities for quote indent
  */
 function outdentQuote(text: string, level: number): string {
-	return text.replace(new RegExp(`^(>\\s?){0,${level}}`, "gm"), "");
-};
+	return text.replace(new RegExp(`^(>[ \t]?){0,${level}}`, "gm"), "");
+}
 
 function indentQuote(text: string, level: number): string {
-	const headQuoteMatch = text.match(/^(>\s?)/);
+	const headQuoteMatch = text.match(/^(>[ \t]?)/);
 	const quoteIndentText = headQuoteMatch === null
 		? "> "
 		: headQuoteMatch[1];
 	return text.replace(/(?<!\r)^/gm, quoteIndentText.repeat(level));
 }
 
-const quoteIndentRegex = /^(>\s?)+/;
+const quoteIndentRegex = /^(>[ \t]?)+/;
 function countQuoteIndent(lineText: string): number {
 	const match = lineText.match(quoteIndentRegex);
 	if (match === null) { return 0; }
@@ -662,7 +862,7 @@ function countQuoteIndent(lineText: string): number {
 		count += +('>' === quoteHead[i]);
 	}
 	return count;
-};
+}
 
 /*
  * Utilities for characters (code points and line breaks)
@@ -679,7 +879,7 @@ function toEolString(eol: vscode.EndOfLine): string {
 		default:
 			throw new AssertionError();
 	}
-};
+}
 
 const intlSegmenter = new Intl.Segmenter();
 export function countChar(text: string): number {
@@ -688,7 +888,7 @@ export function countChar(text: string): number {
 		result += data.segment === CRLF ? 2 : 1;
 	}
 	return result;
-};
+}
 
 /*
  * Utilities for l10n

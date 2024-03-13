@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -33,8 +33,20 @@
   "contributes": {
     "commands": [
       {
-        "command": "markdown.copilot.editing.continue",
-        "title": "%command.editing.continue.title%",
+        "command": "markdown.copilot.editing.titleActiveContext",
+        "title": "%command.editing.titleActiveContext.title%",
+        "icon": "$(milestone)",
+        "enablement": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown.copilot.editing.continueInContext",
+        "title": "%command.editing.continueInContext.title%",
+        "icon": "$(comment-discussion)",
+        "enablement": "editorLangId == markdown && editorHasSelection"
+      },
+      {
+        "command": "markdown.copilot.editing.continueWithoutContext",
+        "title": "%command.editing.continueWithoutContext.title%",
         "icon": "$(comment-discussion)",
         "enablement": "editorLangId == markdown && editorHasSelection"
       },
@@ -60,6 +72,18 @@
           "minimum": 0,
           "maximum": 1,
           "markdownDescription": "%config.decorations.inactiveContextOpacity.description%"
+        },
+        "markdown.copilot.instructions.systemMessage": {
+          "type": "string",
+          "default": "You are Markdown Copilot, an expert assistant dedicated to helping the user solve tasks by:\n- Providing clear and concise responses to questions and requests.\n- Offering step-by-step instructions with examples for complex concepts or procedures.\n- Engaging interactively, seeking feedback to questions, and tailoring support to user needs.\n- Utilizing VSCode Markdown syntax for enhanced readability.\n- Enclosing code snippets in ` ` ` and blocks in ` ``` ` or `~~~` but only use when necessary.\n- Enclosing inline mathematical expressions in single dollar signs `$...$`, and block expressions in double dollar signs `$$...$$`.",
+          "editPresentation": "multilineText",
+          "markdownDescription": "%config.instructions.systemMessage.description%"
+        },
+        "markdown.copilot.instructions.titleMessage": {
+          "type": "string",
+          "default": "Provide a title that summarizes the main topic of the conversation up to this point, using the same language as the conversation. The title should be concise, complete in one line, and outputted without any quotes or additional explanations.",
+          "editPresentation": "multilineText",
+          "markdownDescription": "%config.instructions.titleMessage.description%"
         },
         "markdown.copilot.openAI.apiKey": {
           "type": "string",
@@ -87,18 +111,12 @@
           "default": "gpt-4-turbo-preview",
           "markdownDescription": "%config.openAI.model.description%"
         },
-        "markdown.copilot.openAI.systemMessage": {
-          "type": "string",
-          "default": "You are Markdown Copilot, an expert assistant dedicated to helping the user solve tasks by:\n- Providing clear and concise responses to questions and requests.\n- Offering step-by-step instructions with examples for complex concepts or procedures.\n- Engaging interactively, seeking feedback to questions, and tailoring support to user needs.\n- Utilizing VSCode Markdown syntax for enhanced readability.\n- Enclosing code snippets in ` ` ` and blocks in ` ``` ` or `~~~` but only use when necessary.\n- Enclosing inline mathematical expressions in single dollar signs `$...$`, and block expressions in double dollar signs `$$...$$`.",
-          "editPresentation": "multilineText",
-          "markdownDescription": "%config.openAI.systemMessage.description%"
-        },
-        "markdown.copilot.openAI.temperature": {
+        "markdown.copilot.options.temperature": {
           "type": "number",
           "default": 0.1,
           "minimum": 0,
           "maximum": 1,
-          "markdownDescription": "%config.openAI.temperature.description%"
+          "markdownDescription": "%config.options.temperature.description%"
         }
       }
     },

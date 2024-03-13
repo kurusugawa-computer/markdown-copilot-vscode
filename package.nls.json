@@ -1,12 +1,22 @@
 {
-    "extension.description": "Your AI pair Markdown editor",
-    "command.editing.continue.title": "Markdown Copilot: Continue",
-    "command.editing.continue.detail": "Continue editing based on context",
+    "extension.description": "An OpenAI ChatGPT API client for VSCode",
+    "command.editing.continueInContext.title": "Markdown Copilot: Continue in context",
+    "command.editing.continueInContext.detail": "Continue editing based on context",
+    "command.editing.continueWithoutContext.title": "Markdown Copilot: Continue without context",
+    "command.editing.continueWithoutContext.detail": "Continue editing without context",
     "command.editing.indentQuote.title": "Markdown Copilot: Indent Quote Line",
     "command.editing.outdentQuote.title": "Markdown Copilot: Outdent Quote Line",
+    "command.editing.titleActiveContext.title": "Markdown Copilot: Title active context",
+    "command.completion.context.detail": "Insert context guard header",
+    "command.completion.user.detail": "Insert user message",
+    "command.completion.system-override.detail": "Insert overriding system message",
+    "command.completion.system.detail": "Insert system message",
+    "command.completion.copilot.detail": "Insert copilot message",
+    "command.completion.copilot-options.detail": "Insert overriding OpenAI options block",
     "config.decorations.inactiveContextOpacity.description": "Controls the opacity of inactive context lines, `0.0` is completely transparent, while a value of `1.0` is completely opaque.",
+    "config.instructions.systemMessage.description": "Controls the Copilot's behavior, allowing changes to its personality or specific behavior instructions.",
+    "config.instructions.titleMessage.description": "Controls the Copilot's behavior, allowing changes to its title instructions for the active context.",
     "config.openAI.apiKey.description": "Your OpenAI API key. Can be obtained from <https://platform.openai.com/api-keys>.",
     "config.openAI.model.description": "Can specify the models listed in [Models](https://platform.openai.com/docs/models).",
-    "config.openAI.systemMessage.description": "Controls the Copilot's behavior, allowing changes to its personality or specific behavior instructions.",
-    "config.openAI.temperature.description": "Can specify a value between `0.0` and `1.0`. Higher values like `0.8` will make the output more random, while lower values like `0.2` will make it more focused and deterministic. [FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter) helps to determine the value."
+    "config.options.temperature.description": "Can specify a value between `0.0` and `1.0`. Higher values like `0.8` will make the output more random, while lower values like `0.2` will make it more focused and deterministic. [FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter) helps to determine the value."
 }

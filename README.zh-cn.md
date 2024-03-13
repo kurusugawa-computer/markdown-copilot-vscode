@@ -7,13 +7,14 @@
 [![GitHub stars](https://img.shields.io/github/stars/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square&label=github%20stars)](https://github.com/kurusugawa-computer/markdown-copilot-vscode)
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
 
-**Markdown Copilot** 在您编辑 Markdown 时提供自动文档编辑功能，就像有一个 AI 伙伴在旁辅助。
+
+**Markdown Copilot** 是用于 VSCode 的 OpenAI ChatGPT API 客户端。
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本使用" width="1024"></picture>
 
 Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越的功能，例如:
 1. 以 Markdown 形式保存对话历史
-2. 同时提出多个问题
+2. 同时进行多个对话
 3. 分支对话
 4. 随时编辑之前的对话并继续对话
 
@@ -35,7 +36,7 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 
 ### 📝 上下文编辑
 
-基于当前上下文轻松继续编辑，确保无缝的写作流程。
+Markdown Copilot根据上下文回答选文。
 
 使用时，选择文本范围并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
 
@@ -43,9 +44,10 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 
 或使用快捷方式快速访问:
 
-|      命令       |         Windows / Linux          |              Mac              |
-| :------------: | :------------------------------: | :---------------------------: |
-| `Copilot 继续` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> |
+|    命令   |         Windows / Linux                                          |              Mac                                           |
+| :-------: | :--------------------------------------------------------------: | :--------------------------------------------------------: |
+| `触发建议` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> 或 <kbd>Ctrl</kbd>+<kbd>I</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> 或 <kbd>⌘</kbd>+<kbd>I</kbd> |
+
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="上下文编辑快捷方式" width="442"></picture>
 
@@ -60,16 +62,26 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="示例: take care" width="460"></picture>
 
-更复杂的示例: 上下文跨越 `take care` 行继续。
+**更复杂的示例:** 上下文跨越 `take care` 行继续。
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="示例: see you again" width="512"></picture>
+
+**指定发言人:** 您可以在行首使用特殊的 Markdown 符号来指定发言人。
+
+| Markdown | 意思 |
+| -------- | ---- |
+| `**User:**` | 用户是发言人 |
+| `**Copilot:**` | Markdown Copilot 是发言人 |
+| `**System(Override):**` | 覆盖系统消息 |
+| `**System:**` | 指定额外的系统消息 |
 
 #### ᝰ 覆盖选项
 
 使用覆盖选项自定义 Markdown Copilot 的行为。这允许您直接在文档中控制响应长度或 AI 模型等设置。
 
 要使用覆盖选项，只需包含一个标记为 `json copilot-options` 的 JSON 代码块，并在其中填入您希望的设置，然后选择此块及您的文本并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
-示例: 让 Markdown Copilot 用自定义的响应长度和模型介绍自己:
+
+**示例:** 让 Markdown Copilot 用自定义的响应长度和模型介绍自己:
 
 ~~~markdown
 自我介绍。
@@ -80,6 +92,13 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 ~~~
 
 更多配置选项，请参考 [OpenAI API: 创建聊天完成](https://platform.openai.com/docs/api-reference/chat/create)。
+
+### 🏷️ 为活动上下文添加标题
+
+Markdown Copilot 可以根据对话历史记录为对话添加标题。
+对话标题以`# Copilot Context: `开头的行表示。
+
+要使用此功能，请将光标移至您要标题的上下文，然后使用 `Markdown Copilot: 活动上下文标题` 命令。
 
 ### ⤷ 引用缩进
 
@@ -128,6 +147,7 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 - [x] 审查 Markdown 符号
 - [x] 发布到市场
 - [x] 使选项可覆盖
+- [x] 活动上下文标题
 - [ ] 提示模板
 - [ ] 导入文件
 - [ ] 图像生成: DALL·E

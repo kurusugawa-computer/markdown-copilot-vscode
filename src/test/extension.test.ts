@@ -13,7 +13,7 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(0.5, configuration.get<number>("markdown.copilot.decorations.inactiveContextOpacity"));
 		assert.strictEqual("", configuration.get<string>("markdown.copilot.openAI.apiKey"));
 		assert.strictEqual("gpt-4-turbo-preview", configuration.get<string>("markdown.copilot.openAI.model"));
-		assert.strictEqual(0.1, configuration.get<number>("markdown.copilot.openAI.temperature"));
+		assert.strictEqual(0.1, configuration.get<number>("markdown.copilot.options.temperature"));
 	});
 
 	test("countChar", () => {

@@ -8,15 +8,15 @@
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
 
 
-**Markdown Copilot** provides automatic document editing from an AI pair editor as you edit Markdown.
+**Markdown Copilot** is an OpenAI ChatGPT API client for VSCode.
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024"></picture>
 
 Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering superior features such as:
 1. Saving conversation histories in Markdown
-2. Asking multiple questions simultaneously
+2. Conducting multiple conversations simultaneously
 3. Branching out conversations
-4. Editing previous conversations at any point and continuing the dialogue
+4. Editing previous conversations at any point and continuing the conversation
 
 ***Note***: An OpenAI API Key is required to use this extension. For more information, please refer to the [OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
 
@@ -36,7 +36,7 @@ Manage conversational contexts hierarchically, using quote indentation and synta
 
 ### 📝 Contextual Editing
 
-Effortlessly continue editing based on the current context, ensuring a seamless writing flow.
+Markdown Copilot answers to selected text based on context.
 
 To use, select a text range and choose `💡 Markdown Copilot: Continue` from the code action proposals.
 
@@ -44,9 +44,9 @@ To use, select a text range and choose `💡 Markdown Copilot: Continue` from th
 
 Or use shortcuts for quick access:
 
-|      Command       |         Windows / Linux          |              Mac              |
-| :----------------: | :------------------------------: | :---------------------------: |
-| `Copilot continue` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> |
+|      Command         |         Windows / Linux                                          |              Mac                                           |
+| :------------------: | :--------------------------------------------------------------: | :--------------------------------------------------------: |
+| `Trigger suggestion` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> or <kbd>Ctrl</kbd>+<kbd>I</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> or <kbd>⌘</kbd>+<kbd>I</kbd> |
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="Contextual Editing Shortcut" width="442"></picture>
 
@@ -61,9 +61,18 @@ If you select `Then say "take care".` and choose `💡 Markdown Copilot: Continu
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460"></picture>
 
-More complex example: the context continues across `take care` line.
+**More complex example:** the context continues across `take care` line.
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512"></picture>
+
+**Specifying a speaker:** You can specify a speaker by placing a special Markdown notation at the beginning of a line.
+
+| Markdown | Meaning |
+| -------- | ---- |
+| `**User:**` | User is the speaker |
+| `**Copilot:**` | Markdown Copilot is the speaker |
+| `**System(Override):**` | Overrides [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
+| `**System:**` | Specifies additional [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
 
 #### ᝰ Override Options
 
@@ -71,7 +80,7 @@ Customize Markdown Copilot's behavior with override options. This allows you to 
 
 To use override options, simply include a JSON code block labeled `json copilot-options` with your desired settings, then select this block along with your text and choose `💡 Markdown Copilot: Continue` from the code action proposals.
 
-Example: Let Markdown Copilot introduce itself with customized response length and model:
+**Example:** Let Markdown Copilot introduce itself with customized response length and model:
 
 ~~~markdown
 Introduce yourself.
@@ -82,6 +91,19 @@ Introduce yourself.
 ~~~
 
 For more configuration options, please refer to the [OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create).
+
+### 🏷️ Titling the Active Context
+
+Markdown Copilot allows you to title a conversation based on the conversation history.
+Conversation titles are represented as lines beginning with `# Copilot Context: `.
+
+To use, move the cursor to the context you want to title and use the `Markdown Copilot: Title active context` command.
+
+Use shortcuts for quick access:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
 
 ### ⤷ Quote Indentation
 
@@ -132,6 +154,7 @@ Combine Markdown Copilot with these extensions for an even more powerful Markdow
 - [x] Review Markdown notation
 - [x] Publish to marketplace
 - [x] Make options overridable
+- [x] Title the active context
 - [ ] Prompt templates
 - [ ] Importing files
 - [ ] Image Generation: DALL·E

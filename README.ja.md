@@ -7,15 +7,16 @@
 [![GitHub stars](https://img.shields.io/github/stars/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square&label=github%20stars)](https://github.com/kurusugawa-computer/markdown-copilot-vscode)
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
 
-**Markdown Copilot** は、Markdownを編集する際にAIペアエディターからの自動文書編集を提供します。
+
+**Markdown Copilot** はVSCode用のOpenAI ChatGPT APIクライアントです。
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本的な使用方法" width="1024"></picture>
 
 Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換えることができ、次のような優れた機能を提供します:
 1. 会話履歴をMarkdownで保存する
-2. 複数の質問を同時並行で行う
+2. 複数の会話を同時並行で行う
 3. 会話を分岐させる
-4. 会話履歴を編集して対話を続ける
+4. 会話履歴を編集して会話を続ける
 
 ***注***: この拡張機能を使用するには、OpenAI APIキーが必要です。詳細については、[OpenAI公式FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)を参照してください。
 
@@ -35,7 +36,7 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 
 ### 📝 コンテキストに基づく編集
 
-現在のコンテキストに基づいて編集を簡単に続けることができ、シームレスな執筆フローを実現します。
+Markdown Copilotはコンテキストに基づいて選択したテキストに回答します。
 
 使用するには、テキスト範囲を選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
 
@@ -45,7 +46,7 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 
 |      コマンド       |         Windows / Linux          |              Mac              |
 | :----------------: | :------------------------------: | :---------------------------: |
-| `Copilot 続ける`    | <kbd>Ctrl</kbd>+<kbd>Space</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> |
+| `候補をトリガー`    | <kbd>Ctrl</kbd>+<kbd>Space</kbd> または <kbd>Ctrl</kbd>+<kbd>I</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> または <kbd>⌘</kbd>+<kbd>I</kbd> |
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="コンテキストに基づく編集のショートカット" width="442"></picture>
 
@@ -60,9 +61,18 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="例: take care" width="460"></picture>
 
-より複雑な例: コンテキストは`take care`行を跨いで継続します。
+**より複雑な例:** コンテキストは`take care`行を跨いで継続します。
 
 <picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="例: see you again" width="512"></picture>
+
+**発言者の指定:** 行頭に特定のMarkdown表記を配置することで発言者を指定できます。
+
+| Markdown | 意味 |
+| -------- | ---- |
+| `**User:**` | ユーザ自身の発言であることを指定します |
+| `**Copilot:**` | Markdown Copilotの発言であることを指定します |
+| `**System(Override):**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を上書き指定します |
+| `**System:**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を追加で指定します |
 
 #### ᝰ オーバーライドオプション
 
@@ -70,7 +80,7 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 
 オーバーライドオプションを使用するには、希望する設定を含むJSONコードブロックを `json copilot-options` として含め、このブロックとテキストを一緒に選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
 
-例: カスタマイズされた応答の長さとモデルでMarkdown Copilotに自己紹介させる:
+**例:** カスタマイズされた応答の長さとモデルでMarkdown Copilotに自己紹介させる:
 
 ~~~markdown
 自己紹介してください。
@@ -81,6 +91,19 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 ~~~
 
 他の設定オプションについては、[OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create)を参照してください。
+
+### 🏷️ アクティブコンテキストにタイトルを付ける
+
+Markdown Copilotは会話履歴をもとに会話にタイトルを付けられます。
+会話タイトルは`# Copilot Context: `で始まる行として表現します。
+
+タイトルを付けたいコンテキストにカーソルを移動して`Markdown Copilot: アクティブコンテキストにタイトルを付ける`コマンドを使用します。
+
+次のショートカットキーを使用します:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
 
 ### ⤷ 引用インデント
 
@@ -128,6 +151,7 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 - [x] Markdown記法のレビュー
 - [x] マーケットプレイスへの公開
 - [x] オプションをオーバーライド可能にする
+- [x] アクティブなコンテキストにタイトルを付ける
 - [ ] プロンプトテンプレート
 - [ ] ファイルのインポート
 - [ ] 画像生成: DALL·E
