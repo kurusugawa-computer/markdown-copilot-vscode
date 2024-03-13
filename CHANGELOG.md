@@ -4,6 +4,18 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.6] - 2024-03-14
+### Added
+- Allow to title in the active context
+  - Add `markdown.copilot.instructions.titleMessage` configuration property
+- Allow to continue editing without context
+
+### Changed
+- Change configuration property Ids
+  - `markdown.copilot.openAI.systemMessage` -> `markdown.copilot.instructions.systemMessage`
+  - `markdown.copilot.openAI.temperature` -> `markdown.copilot.options.temperature`
+- Update dependent packages
+
 ## [0.0.5] - 2024-02-23
 ### Added
 - Make it work as a web extension
@@ -44,6 +56,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.0.6]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.2...v0.0.3
