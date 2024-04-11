@@ -10,7 +10,7 @@
 
 **Markdown Copilot** is an OpenAI ChatGPT API client for VSCode.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024"></p>
 
 Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering superior features such as:
 1. Saving conversation histories in Markdown
@@ -26,13 +26,13 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 
 Execute multiple auto-edits simultaneously, enhancing your productivity by not having to wait for one edit to complete before starting another.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="Parallel Editing" width="1024"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="Parallel Editing" width="1024"></p>
 
 ### 🎛 Context Control
 
 Manage conversational contexts hierarchically, using quote indentation and syntax colors for visual context highlighting.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024"></p>
 
 ### 📝 Contextual Editing
 
@@ -40,7 +40,7 @@ Markdown Copilot answers to selected text based on context.
 
 To use, select a text range and choose `💡 Markdown Copilot: Continue` from the code action proposals.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="Contextual Editing" width="356"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="Contextual Editing" width="356"></p>
 
 Or use shortcuts for quick access:
 
@@ -48,22 +48,22 @@ Or use shortcuts for quick access:
 | :------------------: | :--------------------------------------------------------------: | :--------------------------------------------------------: |
 | `Trigger suggestion` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> or <kbd>Ctrl</kbd>+<kbd>I</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> or <kbd>⌘</kbd>+<kbd>I</kbd> |
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="Contextual Editing Shortcut" width="442"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="Contextual Editing Shortcut" width="442"></p>
 
 #### ♯ Context Notation in Markdown
 
 The active context is determined by tracing back the quote indent from the cursor line.
 Can force a context guard with a line starting with `# Copilot Context`.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512"></p>
 
 If you select `Then say "take care".` and choose `💡 Markdown Copilot: Continue`, you will get the following output: `hello` → `good bye` → `take care`.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460"></p>
 
 **More complex example:** the context continues across `take care` line.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512"></p>
 
 **Specifying a speaker:** You can specify a speaker by placing a special Markdown notation at the beginning of a line.
 
@@ -82,13 +82,13 @@ To use override options, simply include a JSON code block labeled `json copilot-
 
 **Example:** Let Markdown Copilot introduce itself with customized response length and model:
 
-~~~markdown
+````markdown
 Introduce yourself.
 
 ```json copilot-options
 {"max_tokens":50,"model":"gpt-3.5-turbo"}
 ```
-~~~
+````
 
 For more configuration options, please refer to the [OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create).
 
@@ -111,7 +111,7 @@ Simplify the editing of quote indentation levels with intuitive actions.
 
 Select text and choose `💡 Markdown Copilot: Indent Quote Line` or `💡 Markdown Copilot: Outdent Quote Line` from code action proposals.
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="Quote Indentation" width="512"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="Quote Indentation" width="512"></p>
 
 Or use these shortcuts:
 
@@ -120,7 +120,7 @@ Or use these shortcuts:
 | `Indent Quote Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
 | `Outdent Quote Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="Quote Indentation Shortcut" width="512"></picture>
+<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="Quote Indentation Shortcut" width="512"></p>
 
 ## 📋 Prerequisites
 
