@@ -17,11 +17,11 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
-		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, selectionOverride)
+		async (selectionOverride?: vscode.Selection) => await continueEditing(outline, true, selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT,
-		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
+		async (selectionOverride?: vscode.Selection) => await continueEditing(outline, false, selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
@@ -575,7 +575,7 @@ class Completion {
 	}
 }
 
-function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
+async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
@@ -605,17 +605,29 @@ function continueEditing(outline: DocumentOutline, useContext: boolean, selectio
 			if (lineRange.start.isAfterOrEqual(userStart)) {
 				break;
 			}
-			activeLineTexts.push(
-				outdentQuote(
-					document.getText(new vscode.Range(
-						lineRange.start,
-						lineRange.end.isAfterOrEqual(userStart)
-							? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
-							: lineRange.end
-					)),
-					lineRange.quoteIndent
-				)
+			const lineTexts = outdentQuote(
+				document.getText(new vscode.Range(
+					lineRange.start,
+					lineRange.end.isAfterOrEqual(userStart)
+						? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
+						: lineRange.end
+				)),
+				lineRange.quoteIndent
 			);
+
+			// Find lines with `@import "file.md"` and append its content to the active context.
+			for (const line of lineTexts.split(/\r?\n/)) {
+				const match = line.match(/\@import\s+\"([^\"]+)\"/);
+				if (match !== null && vscode.workspace.workspaceFolders !== undefined) {
+					const workspaceFolder = vscode.workspace.workspaceFolders[0].uri;
+					const filename = match[1];
+					const fullPath = vscode.Uri.joinPath(workspaceFolder, filename);
+					const doc = await vscode.workspace.openTextDocument(fullPath);
+					activeLineTexts.push(doc.getText());
+				} else {
+					activeLineTexts.push(line);
+				}
+			}
 		}
 
 		chatMessageBuilder.addLines(
