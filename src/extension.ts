@@ -622,8 +622,12 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 					const workspaceFolder = vscode.workspace.workspaceFolders[0].uri;
 					const filename = match[1];
 					const fullPath = vscode.Uri.joinPath(workspaceFolder, filename);
-					const doc = await vscode.workspace.openTextDocument(fullPath);
-					activeLineTexts.push(doc.getText());
+					try {
+						const doc = await vscode.workspace.openTextDocument(fullPath);
+						activeLineTexts.push(doc.getText());
+					} catch {
+						vscode.window.showErrorMessage(`Error occurred while importing ${filename}`);
+					}
 				} else {
 					activeLineTexts.push(line);
 				}
