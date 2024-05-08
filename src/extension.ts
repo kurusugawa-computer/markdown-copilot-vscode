@@ -17,11 +17,11 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
-		async (selectionOverride?: vscode.Selection) => await continueEditing(outline, true, selectionOverride)
+		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT,
-		async (selectionOverride?: vscode.Selection) => await continueEditing(outline, false, selectionOverride)
+		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
