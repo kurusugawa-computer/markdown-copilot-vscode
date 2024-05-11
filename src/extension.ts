@@ -626,7 +626,16 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 						const doc = await vscode.workspace.openTextDocument(fullPath);
 						activeLineTexts.push(doc.getText());
 					} catch {
-						vscode.window.showErrorMessage(l10n.t("command.editing.continueInContext.import.error", filename));
+						const message = l10n.t("command.editing.continueInContext.import.error", filename);
+						const textEditor = vscode.window.activeTextEditor;
+						const decorationType = vscode.window.createTextEditorDecorationType({
+							after: {
+								contentText: message,
+								color: 'rgba(128, 128, 128, 0.7)'
+							}
+						});
+						textEditor?.setDecorations(decorationType, [new vscode.Range(userEnd, userEnd)]);
+						vscode.window.showErrorMessage(message).then(() => decorationType.dispose());
 					}
 				} else {
 					activeLineTexts.push(line);
