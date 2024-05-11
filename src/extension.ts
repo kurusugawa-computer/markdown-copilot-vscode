@@ -626,7 +626,7 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 						const doc = await vscode.workspace.openTextDocument(fullPath);
 						activeLineTexts.push(doc.getText());
 					} catch {
-						vscode.window.showErrorMessage(`Error occurred while importing ${filename}`);
+						vscode.window.showErrorMessage(l10n.t("command.editing.continueInContext.import.error", filename));
 					}
 				} else {
 					activeLineTexts.push(line);
