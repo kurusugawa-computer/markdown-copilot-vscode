@@ -575,7 +575,7 @@ class Completion {
 	}
 }
 
-function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
+async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
@@ -598,6 +598,8 @@ function continueEditing(outline: DocumentOutline, useContext: boolean, selectio
 		chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
 	}
 
+	let errorMessage = null;
+
 	if (useContext) {
 		const activeLineTexts: string[] = [];
 
@@ -605,17 +607,34 @@ function continueEditing(outline: DocumentOutline, useContext: boolean, selectio
 			if (lineRange.start.isAfterOrEqual(userStart)) {
 				break;
 			}
-			activeLineTexts.push(
-				outdentQuote(
-					document.getText(new vscode.Range(
-						lineRange.start,
-						lineRange.end.isAfterOrEqual(userStart)
-							? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
-							: lineRange.end
-					)),
-					lineRange.quoteIndent
-				)
+			const lineTexts = outdentQuote(
+				document.getText(new vscode.Range(
+					lineRange.start,
+					lineRange.end.isAfterOrEqual(userStart)
+						? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
+						: lineRange.end
+				)),
+				lineRange.quoteIndent
 			);
+
+			// Find lines with `@import "file.md"` and append its content to the active context.
+			for (const line of lineTexts.split(/\r?\n/)) {
+				const match = line.match(/\@import\s+\"([^\"]+)\"/);
+				if (match !== null && vscode.workspace.workspaceFolders !== undefined) {
+					const workspaceFolder = vscode.workspace.workspaceFolders[0].uri;
+					const filename = match[1];
+					const fullPath = vscode.Uri.joinPath(workspaceFolder, filename);
+					try {
+						const doc = await vscode.workspace.openTextDocument(fullPath);
+						activeLineTexts.push(doc.getText());
+					} catch {
+						errorMessage = l10n.t("command.editing.continueInContext.import.error", filename);
+						break;
+					}
+				} else {
+					activeLineTexts.push(line);
+				}
+			}
 		}
 
 		chatMessageBuilder.addLines(
@@ -672,11 +691,19 @@ function continueEditing(outline: DocumentOutline, useContext: boolean, selectio
 			);
 		}).then(offsetDiff => {
 			completion.translateAnchorOffset(offsetDiff);
-			return completion.completeText(
-				chatMessageBuilder.toChatMessages(),
-				userEndLineEol,
-				chatMessageBuilder.getCopilotOptions(),
-			);
+			if (errorMessage !== null) {
+				// Show errors to help users correct their text
+				return completion.insertText(
+					errorMessage,
+					userEndLineEol
+				).then(() => { });
+			} else {
+				return completion.completeText(
+					chatMessageBuilder.toChatMessages(),
+					userEndLineEol,
+					chatMessageBuilder.getCopilotOptions(),
+				);
+			}
 		}).catch(async error => {
 			// remove head error code
 			const errorMessage = error.message.replace(/^\d+ /, "");
