@@ -693,18 +693,17 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 			completion.translateAnchorOffset(offsetDiff);
 			if (errorMessage !== null) {
 				// Show errors to help users correct their text
-				completion.insertText(
+				return completion.insertText(
 					errorMessage,
 					userEndLineEol
-				);
+				).then(() => { });
 			} else {
-				completion.completeText(
+				return completion.completeText(
 					chatMessageBuilder.toChatMessages(),
 					userEndLineEol,
 					chatMessageBuilder.getCopilotOptions(),
 				);
 			}
-
 		}).catch(async error => {
 			// remove head error code
 			const errorMessage = error.message.replace(/^\d+ /, "");
