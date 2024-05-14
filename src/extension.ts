@@ -598,6 +598,8 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 		chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
 	}
 
+	let errorMessage = null;
+
 	if (useContext) {
 		const activeLineTexts: string[] = [];
 
@@ -626,16 +628,8 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 						const doc = await vscode.workspace.openTextDocument(fullPath);
 						activeLineTexts.push(doc.getText());
 					} catch {
-						const message = l10n.t("command.editing.continueInContext.import.error", filename);
-						const textEditor = vscode.window.activeTextEditor;
-						const decorationType = vscode.window.createTextEditorDecorationType({
-							after: {
-								contentText: message,
-								color: 'rgba(128, 128, 128, 0.7)'
-							}
-						});
-						textEditor?.setDecorations(decorationType, [new vscode.Range(userEnd, userEnd)]);
-						vscode.window.showErrorMessage(message).then(() => decorationType.dispose());
+						errorMessage = l10n.t("command.editing.continueInContext.import.error", filename);
+						break;
 					}
 				} else {
 					activeLineTexts.push(line);
@@ -697,11 +691,20 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 			);
 		}).then(offsetDiff => {
 			completion.translateAnchorOffset(offsetDiff);
-			return completion.completeText(
-				chatMessageBuilder.toChatMessages(),
-				userEndLineEol,
-				chatMessageBuilder.getCopilotOptions(),
-			);
+			if (errorMessage !== null) {
+				// Show errors to help users correct their text
+				completion.insertText(
+					errorMessage,
+					userEndLineEol
+				);
+			} else {
+				completion.completeText(
+					chatMessageBuilder.toChatMessages(),
+					userEndLineEol,
+					chatMessageBuilder.getCopilotOptions(),
+				);
+			}
+
 		}).catch(async error => {
 			// remove head error code
 			const errorMessage = error.message.replace(/^\d+ /, "");
