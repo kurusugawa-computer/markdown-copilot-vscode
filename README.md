@@ -80,7 +80,7 @@ Customize Markdown Copilot's behavior with override options. This allows you to 
 
 To use override options, simply include a JSON code block labeled `json copilot-options` with your desired settings, then select this block along with your text and choose `💡 Markdown Copilot: Continue` from the code action proposals.
 
-**Example:** Let Markdown Copilot introduce itself with customized response length and model:
+**Example:** Let Markdown Copilot introduce itself with customized response length and model
 
 ````markdown
 Introduce yourself.
@@ -104,6 +104,27 @@ Use shortcuts for quick access:
 | Windows / Linux | Mac |
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
+
+### 📥 Import Other Markdown Files
+
+Markdown Copilot allows you to easily import other Markdown files into your current document.
+This enables you to reference or reuse content from other documents.
+
+To import another Markdown file, use the `@import` directive followed by the path to the file you want to import, enclosed in double quotes.
+
+**Example with a relative path:** Import `another-markdown.md` located at a relative position from the current file.
+
+```markdown
+@import "path/to/another-markdown.md"
+```
+
+**Example with an absolute path:** Use an absolute path from the root directory of the workspace to import `toplevel-markdown.md`.
+
+```markdown
+@import "/toplevel-markdown.md"
+```
+
+When the current document is unsaved and thus lacks a confirmed file path, you must use an absolute path to specify other Markdown files to be imported.
 
 ### ⤷ Quote Indentation
 
@@ -130,13 +151,15 @@ Or use these shortcuts:
 ## 🚀 Enhance Your Markdown Experience
 
 Combine Markdown Copilot with these extensions for an even more powerful Markdown experience:
-- **[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)**:
+- **[Markdown All in One]**:
   Comprehensive Markdown support (keyboard shortcuts, table of contents, auto preview, and more).
-- **[Snippets](https://marketplace.visualstudio.com/items?itemName=tahabasri.snippets)**:
+- **[Snippets]**:
   Supercharge your Snippets in VS Code — Manage your code snippets without quitting your editor.
-- **[Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)**:
+- **[Markdown Preview Mermaid Support]**:
   Adds Mermaid diagram and flowchart support to VS Code's built-in markdown preview.
-- **[Markdown+Math](https://marketplace.visualstudio.com/items?itemName=goessner.mdmath)**:
+- **[Markdown Preview Enhanced]ed)**:
+  Markdown Preview Enhanced is a SUPER POWERFUL markdown extension for Visual Studio Code. The goal of this project is to bring you a wonderful markdown writing experience.
+- **[Markdown+Math]**:
   Enhance your Markdown with LaTeX Math ... including macros and more.
 
 ## 🗺️ Roadmap
@@ -155,11 +178,11 @@ Combine Markdown Copilot with these extensions for an even more powerful Markdow
 - [x] Publish to marketplace
 - [x] Make options overridable
 - [x] Title the active context
-- [ ] Prompt templates
-- [ ] Importing files
+- [x] Importing files
 - [ ] Image Generation: DALL·E
 - [ ] Flexible endpoint: Proxy and base URL support
 - [ ] Augment tools: ChatCompletionTools
+- [ ] Prompt templates
 - [ ] Unit testing
 
 ## 🔄 Changelog
@@ -170,3 +193,10 @@ For detailed updates, refer to the [CHANGELOG](CHANGELOG.md).
 
 - Report bugs or suggest features via [GitHub Issues](https://github.com/kurusugawa-computer/markdown-copilot-vscode/issues).
 - Share your feedback by leaving a review on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot#review-details).
+
+
+[Markdown All in One]: https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
+[Snippets]: https://marketplace.visualstudio.com/items?itemName=tahabasri.snippets
+[Markdown Preview Mermaid Support]: https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid
+[Markdown Preview Enhanced]: https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced
+[Markdown+Math]: https://marketplace.visualstudio.com/items?itemName=goessner.mdmath

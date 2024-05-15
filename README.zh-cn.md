@@ -100,6 +100,33 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 
 要使用此功能，请将光标移至您要标题的上下文，然后使用 `Markdown Copilot: 活动上下文标题` 命令。
 
+使用快捷方式快速访问:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
+
+### 📥 导入其他 Markdown 文件
+Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档。
+这使得引用或重用其他文档的内容成为可能。
+
+要导入其他 Markdown 文件，请使用 `@import` 指令。
+在此指令后，用双引号括起来，指定您想要导入的文件的路径。
+
+**相对路径示例：** 从当前文件的相对位置导入 `another-markdown.md`。
+
+```markdown
+@import "path/to/another-markdown.md"
+```
+
+**绝对路径示例：** 使用从工作区根目录开始的绝对路径导入 `toplevel-markdown.md`。
+
+```markdown
+@import "/toplevel-markdown.md"
+```
+
+如果当前文档尚未保存，因为文件路径未确定，您必须使用绝对路径来指定要导入的其他 Markdown 文件。
+
 ### ⤷ 引用缩进
 
 通过直观的操作简化引用缩进级别的编辑。
@@ -125,11 +152,15 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 ## 🚀 提升您的 Markdown 体验
 
 将 Markdown Copilot 与这些扩展结合使用，获得更强大的 Markdown 体验:
-- **[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)**:
+- **[Markdown All in One]**:
   全面的 Markdown 支持(键盘快捷键、目录、自动预览等)。
-- **[Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)**:
+- **[Snippets]**:
+  为 VS 代码中的代码片段增效 - 无需退出编辑器即可管理代码片段。
+- **[Markdown Preview Mermaid Support]**:
   为 VS Code 内置的 markdown 预览添加 Mermaid 图表和流程图支持。
-- **[Markdown+Math](https://marketplace.visualstudio.com/items?itemName=goessner.mdmath)**:
+- **[Markdown Preview Enhanced]ed)**:
+  Markdown Preview Enhanced 是一款为 Visual Studio Code 编辑器编写的超级强大的 Markdown 插件。 这款插件意在让你拥有飘逸的 Markdown 写作体验。
+- **[Markdown+Math]**:
   使用 LaTeX 数学增强您的 Markdown ... 包括宏等。
 
 ## 🗺️ 路线图
@@ -148,11 +179,11 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 - [x] 发布到市场
 - [x] 使选项可覆盖
 - [x] 活动上下文标题
-- [ ] 提示模板
-- [ ] 导入文件
+- [x] 导入文件
 - [ ] 图像生成: DALL·E
 - [ ] 灵活的端点: 代理和基础 URL 支持
 - [ ] 增强工具: ChatCompletionTools
+- [ ] 提示模板
 - [ ] 单元测试
 
 ## 🔄 更新日志
@@ -162,3 +193,10 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 ## 🤝 参与其中
 - 通过 [GitHub Issues](https://github.com/kurusugawa-computer/markdown-copilot-vscode/issues) 报告错误或建议功能。
 - 通过在 [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot#review-details) 上留下评论分享您的反馈。
+
+
+[Markdown All in One]: https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
+[Snippets]: https://marketplace.visualstudio.com/items?itemName=tahabasri.snippets
+[Markdown Preview Mermaid Support]: https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid
+[Markdown Preview Enhanced]: https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced
+[Markdown+Math]: https://marketplace.visualstudio.com/items?itemName=goessner.mdmath

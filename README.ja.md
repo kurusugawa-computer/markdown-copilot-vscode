@@ -80,7 +80,7 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 
 オーバーライドオプションを使用するには、希望する設定を含むJSONコードブロックを `json copilot-options` として含め、このブロックとテキストを一緒に選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
 
-**例:** カスタマイズされた応答の長さとモデルでMarkdown Copilotに自己紹介させる:
+**例:** カスタマイズされた応答の長さとモデルでMarkdown Copilotに自己紹介させる
 
 ~~~markdown
 自己紹介してください。
@@ -104,6 +104,28 @@ Markdown Copilotは会話履歴をもとに会話にタイトルを付けられ�
 | Windows / Linux | Mac |
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
+
+### 📥 他のMarkdownファイルをインポート
+
+Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にインポートできます。
+これにより、他のドキュメントの内容を参照したり、再利用したりすることが可能になります。
+
+他のMarkdownファイルをインポートするには、`@import`ディレクティブを使用します。
+このディレクティブに続けて、インポートしたいファイルのパスをダブルクォーテーションで囲んで指定します。
+
+**相対パスの例:**　現在のファイルから相対的な位置にある`another-markdown.md`をインポートします。
+
+```markdown
+@import "path/to/another-markdown.md"
+```
+
+**絶対パスの例:**　ワークスペースのルートディレクトリからの絶対パスを使用して`toplevel-markdown.md`をインポートします。
+
+```markdown
+@import "/toplevel-markdown.md"
+```
+
+現在の文書が未保存ときはファイルパスが確定していないため、必ず絶対パスを使用して他のMarkdownファイルを指定する必要があります。
 
 ### ⤷ 引用インデント
 
@@ -130,11 +152,15 @@ Markdown Copilotは会話履歴をもとに会話にタイトルを付けられ�
 ## 🚀 Markdown体験を強化する
 
 次の拡張機能とMarkdown Copilotを組み合わせて、さらに強力なMarkdown体験を実現します:
-- **[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)**:
+- **[Markdown All in One]**:
   包括的なMarkdownサポート(キーボードショートカット、目次、自動プレビューなど)。
-- **[Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)**:
+- **[Snippets]**:
+  VS Codeでスニペットを過給 - エディタを終了せずにコードスニペットを管理できます。
+- **[Markdown Preview Mermaid Support]**:
   VS Codeの組み込みmarkdownプレビューにMermaidダイアグラムとフローチャートのサポートを追加します。
-- **[Markdown+Math](https://marketplace.visualstudio.com/items?itemName=goessner.mdmath)**:
+- **[Markdown Preview Enhanced]**:
+  Markdown Preview Enhanced は Visual Studio Code のスーパー強力なmarkdown 拡張機能です。 このプロジェクトの目標は、素晴らしい markdown 編集経験を提供することです。
+- **[Markdown+Math]**:
   LaTeX Mathを使用してMarkdownを強化します...マクロなどを含む。
 
 ## 🗺️ ロードマップ
@@ -152,11 +178,11 @@ Markdown Copilotは会話履歴をもとに会話にタイトルを付けられ�
 - [x] マーケットプレイスへの公開
 - [x] オプションをオーバーライド可能にする
 - [x] アクティブなコンテキストにタイトルを付ける
-- [ ] プロンプトテンプレート
-- [ ] ファイルのインポート
+- [x] ファイルのインポート
 - [ ] 画像生成: DALL·E
 - [ ] 柔軟なエンドポイント: プロキシとベースURLのサポート
 - [ ] ツールの拡張: ChatCompletionTools
+- [ ] プロンプトテンプレート
 - [ ] ユニットテスト
 
 ## 🔄 変更履歴
@@ -165,3 +191,10 @@ Markdown Copilotは会話履歴をもとに会話にタイトルを付けられ�
 ## 🤝 参加する
 - [GitHub Issues](https://github.com/kurusugawa-computer/markdown-copilot-vscode/issues)を通じてバグを報告したり、機能を提案してください。
 - [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot#review-details)でレビューを残してフィードバックを共有してください。
+
+
+[Markdown All in One]: https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
+[Snippets]: https://marketplace.visualstudio.com/items?itemName=tahabasri.snippets
+[Markdown Preview Mermaid Support]: https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid
+[Markdown Preview Enhanced]: https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced
+[Markdown+Math]: https://marketplace.visualstudio.com/items?itemName=goessner.mdmath

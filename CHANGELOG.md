@@ -4,9 +4,19 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.8] - 2024-05-14
+### Added
+- New OpenAI models can be selected in the Settings
+  - `gpt-4o`
+  - `gpt-4o-2024-05-13`
+- Support for document import
+
+### Changed
+- Update dependent packages
+
 ## [0.0.7] - 2024-04-11
 ### Added
-- New OpenAI models can be selected in the Settings.
+- New OpenAI models can be selected in the Settings
   - `gpt-4-turbo`
   - `gpt-4-turbo-2024-04-09`
 
@@ -69,6 +79,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.0.8]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.4...v0.0.5
