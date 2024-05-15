@@ -2,7 +2,7 @@
     "extension.description": "An OpenAI ChatGPT API client for VSCode",
     "command.editing.continueInContext.title": "Markdown Copilot: Continue in context",
     "command.editing.continueInContext.detail": "Continue editing based on context",
-    "command.editing.continueInContext.import.error": "Error occurred while importing {0}",
+    "command.editing.continueInContext.import.error": "Error occurred while importing \"{0}\" in [{1}]({1}).Please check if the file path, etc. is correct.",
     "command.editing.continueWithoutContext.title": "Markdown Copilot: Continue without context",
     "command.editing.continueWithoutContext.detail": "Continue editing without context",
     "command.editing.indentQuote.title": "Markdown Copilot: Indent Quote Line",

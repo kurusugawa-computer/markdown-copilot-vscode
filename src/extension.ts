@@ -601,39 +601,78 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 	let errorMessage = null;
 
 	if (useContext) {
+		const importedDocumentUriTexts: string[] = [];
 		const activeLineTexts: string[] = [];
 
-		for (const lineRange of outline.toActiveLineRanges()) {
-			if (lineRange.start.isAfterOrEqual(userStart)) {
-				break;
-			}
-			const lineTexts = outdentQuote(
-				document.getText(new vscode.Range(
-					lineRange.start,
-					lineRange.end.isAfterOrEqual(userStart)
-						? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
-						: lineRange.end
-				)),
-				lineRange.quoteIndent
-			);
-
-			// Find lines with `@import "file.md"` and append its content to the active context.
-			for (const line of lineTexts.split(/\r?\n/)) {
-				const match = line.match(/\@import\s+\"([^\"]+)\"/);
-				if (match !== null && vscode.workspace.workspaceFolders !== undefined) {
-					const workspaceFolder = vscode.workspace.workspaceFolders[0].uri;
-					const filename = match[1];
-					const fullPath = vscode.Uri.joinPath(workspaceFolder, filename);
-					try {
-						const doc = await vscode.workspace.openTextDocument(fullPath);
-						activeLineTexts.push(doc.getText());
-					} catch {
-						errorMessage = l10n.t("command.editing.continueInContext.import.error", filename);
-						break;
+		async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
+			async function resolveFragmentUri(document: vscode.TextDocument, fragmentUriText: string) {
+				try {
+					let fullUri = null;
+					if (fragmentUriText.startsWith('/')) {
+						fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, fragmentUriText);
+					} else {
+						if (document.uri.scheme === 'untitled') {
+							throw new AssertionError();
+						}
+						fullUri = vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
 					}
-				} else {
-					activeLineTexts.push(line);
+					return await vscode.workspace.openTextDocument(fullUri);
+				} catch {
+					throw new Error(l10n.t(
+						"command.editing.continueInContext.import.error",
+						fragmentUriText,
+						vscode.workspace.asRelativePath(document.fileName)
+					));
 				}
+			}
+
+			// Avoid recursive import infinity loop.
+			const documentUriText = document.uri.toString();
+			if (importedDocumentUriTexts.includes(documentUriText)) {
+				return;
+			}
+			importedDocumentUriTexts.push(documentUriText);
+			try {
+				// Find lines with `@import "file.md"` and append its content to the active context.
+				for (const line of lineTexts.split(/\r?\n/)) {
+					// Format conforms to crossnote filepath
+					// see: https://github.com/shd101wyy/crossnote/blob/master/src/markdown-engine/transformer.ts#L601
+					const match = line.match(/\@import\s+\"([^\"]+)\"/);
+					if (match === null) {
+						activeLineTexts.push(line);
+						continue;
+					}
+					await resolveFragmentUri(
+						document, match[1].trim()
+					).then(
+						(importedDocument) => resolveImport(importedDocument, importedDocument.getText())
+					);
+				}
+			} finally {
+				importedDocumentUriTexts.pop();
+			}
+		}
+
+		try {
+			for (const lineRange of outline.toActiveLineRanges()) {
+				if (lineRange.start.isAfterOrEqual(userStart)) {
+					break;
+				}
+				const lineTexts = outdentQuote(
+					document.getText(new vscode.Range(
+						lineRange.start,
+						lineRange.end.isAfterOrEqual(userStart)
+							? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
+							: lineRange.end
+					)),
+					lineRange.quoteIndent
+				);
+
+				await resolveImport(document, lineTexts);
+			}
+		} catch (e) {
+			if (e instanceof Error) {
+				errorMessage = e.message;
 			}
 		}
 

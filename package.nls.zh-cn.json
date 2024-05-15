@@ -4,7 +4,7 @@
     "command.editing.continueInContext.detail": "根据上下文继续编辑",
     "command.editing.continueWithoutContext.title": "Markdown Copilot: 无上下文继续",
     "command.editing.continueWithoutContext.detail": "无上下文继续编辑",
-    "command.editing.continueInContext.import.error": "在导入{0}时发生了错误",
+    "command.editing.continueInContext.import.error": "在导入{0} in [{1}]({1})时发生了错误。请检查文件路径等是否正确。",
     "command.editing.indentQuote.title": "Markdown Copilot: 缩进引号行",
     "command.editing.outdentQuote.title": "Markdown Copilot: 减少缩进报价行",
     "command.editing.titleActiveContext.title": "Markdown Copilot: 活动上下文标题",
