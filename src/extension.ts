@@ -704,6 +704,11 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 
 	chatMessageBuilder.addChatMessage(ChatRoleFlags.User, lastUserMessage);
 
+	const completionIndicator = vscode.window.createTextEditorDecorationType({
+		after: { contentText: "📝" }
+	});
+	textEditor?.setDecorations(completionIndicator, [new vscode.Range(userEnd, userEnd)]);
+
 	const titleText = selectionText.replaceAll(/[\r\n]+/g, " ").trim();
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Window,
@@ -752,7 +757,10 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 				userEndLineEol
 			);
 		}).finally(
-			() => completion.dispose()
+			() => {
+				completion.dispose();
+				completionIndicator.dispose();
+			}
 		);
 	});
 }
