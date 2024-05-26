@@ -705,9 +705,9 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 	chatMessageBuilder.addChatMessage(ChatRoleFlags.User, lastUserMessage);
 
 	const completionIndicator = vscode.window.createTextEditorDecorationType({
-		after: { contentText: "📝" }
+		after: { contentText: "📝" },
 	});
-	textEditor?.setDecorations(completionIndicator, [new vscode.Range(userEnd, userEnd)]);
+	textEditor.setDecorations(completionIndicator, [new vscode.Range(userEnd, userEnd)]);
 
 	const titleText = selectionText.replaceAll(/[\r\n]+/g, " ").trim();
 	vscode.window.withProgress({
