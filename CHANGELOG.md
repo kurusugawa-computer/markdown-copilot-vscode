@@ -4,6 +4,10 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.9] - DATE
+### Added
+- Indicate ongoing completion with the emoji 📝
+
 ## [0.0.8] - 2024-05-14
 ### Added
 - New OpenAI models can be selected in the Settings
