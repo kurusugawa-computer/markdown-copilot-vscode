@@ -59,7 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const lineRangeStartLine = activeLineRangesStart.line;
 			const match = document.lineAt(lineRangeStartLine).text.match(/^(#[ \t]Copilot Context:[ \t]).*$/);
 
-			const completion = new Completion(document, document.offsetAt(activeLineRangesStart));
+			const completion = new Completion(textEditor, document.offsetAt(activeLineRangesStart));
 			token.onCancellationRequested(() => completion.cancel());
 
 			return (match !== null
@@ -451,20 +451,27 @@ class ContextDecorator {
  */
 class Completion {
 	static readonly runningCompletions = new Set<Completion>();
+	private textEditor: vscode.TextEditor;
 	private document: vscode.TextDocument;
 	private anchorOffset: number;
 	private changes: Set<string>;
 	private abortController?: AbortController;
+	private completionIndicator: vscode.TextEditorDecorationType;
 
-	constructor(document: vscode.TextDocument, anchorOffset: number) {
-		this.document = document;
+	constructor(textEditor: vscode.TextEditor, anchorOffset: number) {
+		this.textEditor = textEditor;
+		this.document = textEditor.document;
 		this.anchorOffset = anchorOffset;
 		this.changes = new Set();
 		this.abortController = undefined;
+		this.completionIndicator = vscode.window.createTextEditorDecorationType({
+			after: { contentText: "📝" },
+		});
 		Completion.runningCompletions.add(this);
 	}
 
 	dispose() {
+		this.completionIndicator.dispose();
 		Completion.runningCompletions.delete(this);
 	}
 
@@ -502,11 +509,13 @@ class Completion {
 	async insertText(text: string, lineSeparator: string): Promise<number> {
 		text = lineSeparator === LF ? text : text.replaceAll(LF, lineSeparator);
 		const edit = new vscode.WorkspaceEdit();
+		const anchorPosition = this.document.positionAt(this.anchorOffset);
 		edit.insert(
 			this.document.uri,
-			this.document.positionAt(this.anchorOffset),
+			anchorPosition,
 			text
 		);
+		this.textEditor.setDecorations(this.completionIndicator, [new vscode.Range(anchorPosition, anchorPosition)]);
 		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
 		return vscode.workspace.applyEdit(
 			edit,
@@ -715,7 +724,7 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
 		const completion = new Completion(
-			document,
+			textEditor,
 			document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))
 		);
 		token.onCancellationRequested(() => completion.cancel());
