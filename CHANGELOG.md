@@ -4,9 +4,12 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [0.0.9] - DATE
+## [0.0.9] - 2024-06-02
 ### Added
 - Indicate ongoing completion with the emoji 📝
+
+### Changed
+- Update dependent packages
 
 ## [0.0.8] - 2024-05-14
 ### Added
