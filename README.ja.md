@@ -10,15 +10,16 @@
 
 **Markdown Copilot** はVSCode用のOpenAI ChatGPT APIクライアントです。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本的な使用方法" width="1024"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本的な使用方法" width="1024">
 
 Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換えることができ、次のような優れた機能を提供します:
 1. 会話履歴をMarkdownで保存する
 2. 複数の会話を同時並行で行う
 3. 会話を分岐させる
 4. 会話履歴を編集して会話を続ける
+5. 会話にタイトルをつける
 
-***注***: この拡張機能を使用するには、OpenAI APIキーが必要です。詳細については、[OpenAI公式FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)を参照してください。
+***注***: この拡張機能を使用するには、OpenAIまたはAzure OpenAIのAPIキーが必要です。詳細については、[OpenAI公式FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)を参照してください。
 
 ## 🌟 主な機能
 
@@ -26,13 +27,13 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 
 複数の自動編集を同時に実行し、ひとつの編集が完了するのを待たずに別の編集を開始できるため、作業速度が向上します。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="並行編集" width="1024"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="並行編集" width="1024">
 
 ### 🎛 コンテキストコントロール
 
 引用インデントと構文カラーを使用して、会話のコンテキストを階層的に管理し、視覚的にコンテキストを強調表示します。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="コンテキストコントロール" width="1024"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="コンテキストコントロール" width="1024">
 
 ### 📝 コンテキストに基づく編集
 
@@ -40,7 +41,7 @@ Markdown Copilotはコンテキストに基づいて選択したテキストに�
 
 使用するには、テキスト範囲を選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="コンテキストに基づく編集" width="356"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="コンテキストに基づく編集" width="356">
 
 または、クイックアクセスのためのショートカットキーを使用します:
 
@@ -48,22 +49,22 @@ Markdown Copilotはコンテキストに基づいて選択したテキストに�
 | :----------------: | :------------------------------: | :---------------------------: |
 | `候補をトリガー`    | <kbd>Ctrl</kbd>+<kbd>Space</kbd> または <kbd>Ctrl</kbd>+<kbd>I</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> または <kbd>⌘</kbd>+<kbd>I</kbd> |
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="コンテキストに基づく編集のショートカット" width="442"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="コンテキストに基づく編集のショートカット" width="442">
 
 #### ♯ Markdownにおけるコンテキスト表記
 
 アクティブなコンテキストは、カーソル行から引用インデントを遡って決定されます。
 `# Copilot Context`で始まる行でコンテキストガードを強制することができます。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="例: take care" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="例: take care" width="512">
 
 `Then say "take care".`を選択して`💡 Markdown Copilot: 続ける` を使用すると、次の出力が得られます: `hello` → `good bye` → `take care`。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="例: take care" width="460"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="例: take care" width="460">
 
 **より複雑な例:** コンテキストは`take care`行を跨いで継続します。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="例: see you again" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="例: see you again" width="512">
 
 **発言者の指定:** 行頭に特定のMarkdown表記を配置することで発言者を指定できます。
 
@@ -133,7 +134,7 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
 
 テキストを選択し、コードアクションの提案から `💡 Markdown Copilot: 引用行をインデント` または `💡 Markdown Copilot: 引用行をアンインデント` を使用します。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用インデント" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用インデント" width="512">
 
 または、次のショートカットキーを使用します:
 
@@ -142,11 +143,11 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
 | `Indent Quote Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
 | `Outdent Quote Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="引用インデントのショートカット" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="引用インデントのショートカット" width="512">
 
 ## 📋 前提条件
 
-- OpenAI APIへのアクセスが必要です。詳細については、[OpenAI API](https://openai.com/blog/openai-api)をご覧ください。
+- OpenAI APIまたはAzure OpenAI Serviceへのアクセスが必要です。詳細については、[OpenAI API](https://openai.com/blog/openai-api)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)をご覧ください。
 - Visual Studio Codeがインストールされている必要があります。[Visual Studio Codeダウンロードページ](https://code.visualstudio.com/Download)からダウンロードしてください。
 
 ## 🚀 Markdown体験を強化する
@@ -162,28 +163,6 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
   Markdown Preview Enhanced は Visual Studio Code のスーパー強力なmarkdown 拡張機能です。 このプロジェクトの目標は、素晴らしい markdown 編集経験を提供することです。
 - **[Markdown+Math]**:
   LaTeX Mathを使用してMarkdownを強化します...マクロなどを含む。
-
-## 🗺️ ロードマップ
-- [x] Markdown補完
-- [x] 実行中の補完をキャンセル
-- [x] 設定
-- [x] コード再利用のためのリファクタリング
-- [x] 引用インデント
-- [x] ローカライゼーション
-  - [x] 英語
-  - [x] 日本語
-  - [x] 簡体字中国語
-- [x] ドキュメント
-- [x] Markdown記法のレビュー
-- [x] マーケットプレイスへの公開
-- [x] オプションをオーバーライド可能にする
-- [x] アクティブなコンテキストにタイトルを付ける
-- [x] ファイルのインポート
-- [ ] 画像生成: DALL·E
-- [ ] 柔軟なエンドポイント: プロキシとベースURLのサポート
-- [ ] ツールの拡張: ChatCompletionTools
-- [ ] プロンプトテンプレート
-- [ ] ユニットテスト
 
 ## 🔄 変更履歴
 詳細な更新については、[CHANGELOG](CHANGELOG.md)を参照してください。

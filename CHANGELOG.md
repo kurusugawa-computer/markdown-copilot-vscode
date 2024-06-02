@@ -4,6 +4,16 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.0] - 2024-06-04
+### Add
+- Support for Azure OpenAI
+
+### Changed
+- Update dependent packages
+
+### Removed
+- Remove milestone section from READMEs
+
 ## [0.1.0] - 2024-06-03
 ### Changed
 - Change default OpenAI model
@@ -93,6 +103,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.2.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.9...v0.1.0
 [0.0.9]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.7...v0.0.8

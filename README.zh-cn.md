@@ -10,15 +10,16 @@
 
 **Markdown Copilot** 是用于 VSCode 的 OpenAI ChatGPT API 客户端。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本使用" width="1024"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本使用" width="1024">
 
 Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越的功能，例如:
 1. 以 Markdown 形式保存对话历史
 2. 同时进行多个对话
 3. 分支对话
 4. 随时编辑之前的对话并继续对话
+5. 标题对话
 
-***注意***: 使用此扩展需要 OpenAI API 密钥。更多信息，请参考 [OpenAI 官方常见问题](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)。
+***注意***: 使用此扩展需要 OpenAI 或 Azure OpenAI API 密钥。更多信息，请参考 [OpenAI 官方常见问题](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)或 [Azure OpenAI Quickstart](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart)。
 
 ## 🌟 主要特性
 
@@ -26,13 +27,13 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 
 同时执行多个自动编辑，通过不必等待一个编辑完成就开始另一个编辑，从而提高您的生产力。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="并行编辑" width="1024"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="并行编辑" width="1024">
 
 ### 🎛 上下文控制
 
 使用引用缩进和语法颜色管理对话上下文，以层次化方式进行，以实现视觉上的上下文突出显示。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="上下文控制" width="1024"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="上下文控制" width="1024">
 
 ### 📝 上下文编辑
 
@@ -40,7 +41,7 @@ Markdown Copilot根据上下文回答选文。
 
 使用时，选择文本范围并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="上下文编辑" width="356"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="上下文编辑" width="356">
 
 或使用快捷方式快速访问:
 
@@ -49,22 +50,22 @@ Markdown Copilot根据上下文回答选文。
 | `触发建议` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> 或 <kbd>Ctrl</kbd>+<kbd>I</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> 或 <kbd>⌘</kbd>+<kbd>I</kbd> |
 
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="上下文编辑快捷方式" width="442"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="上下文编辑快捷方式" width="442">
 
 #### ♯ Markdown 中的上下文标记
 
 通过从光标行回溯引用缩进来确定活动上下文。
 可以通过以 `# Copilot Context` 开头的行强制上下文保护。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="示例: take care" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="示例: take care" width="512">
 
 如果您选择 `Then say "take care".` 并选择 `💡 Markdown Copilot: 继续`，您将得到以下输出: `hello` → `good bye` → `take care`。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="示例: take care" width="460"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="示例: take care" width="460">
 
 **更复杂的示例:** 上下文跨越 `take care` 行继续。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="示例: see you again" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="示例: see you again" width="512">
 
 **指定发言人:** 您可以在行首使用特殊的 Markdown 符号来指定发言人。
 
@@ -133,7 +134,7 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
 
 选择文本并从代码操作建议中选择 `💡 Markdown Copilot: 缩进引号行` 或 `💡 Markdown Copilot: 减少缩进报价行`。
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用缩进" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用缩进" width="512">
 
 或使用这些快捷方式:
 
@@ -142,11 +143,11 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
 | `缩进引用行`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
 | `减少引用行缩进` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-<picture><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="引用缩进快捷方式" width="512"></picture>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="引用缩进快捷方式" width="512">
 
 ## 📋 先决条件
 
-- 需要访问 OpenAI API。详情请访问 [OpenAI API](https://openai.com/blog/openai-api)。
+- 需要访问 OpenAI 或 Azure OpenAI API。详情请访问 [OpenAI API](https://openai.com/blog/openai-api)或[Azure OpenAI Quickstart](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart)。
 - 必须安装 Visual Studio Code。从 [Visual Studio Code 下载页面](https://code.visualstudio.com/Download)下载。
 
 ## 🚀 提升您的 Markdown 体验
@@ -162,29 +163,6 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
   Markdown Preview Enhanced 是一款为 Visual Studio Code 编辑器编写的超级强大的 Markdown 插件。 这款插件意在让你拥有飘逸的 Markdown 写作体验。
 - **[Markdown+Math]**:
   使用 LaTeX 数学增强您的 Markdown ... 包括宏等。
-
-## 🗺️ 路线图
-
-- [x] Markdown 完成
-- [x] 取消正在运行的完成
-- [x] 设置
-- [x] 代码重用的重构
-- [x] 引用缩进
-- [x] 本地化
-  - [x] 英语
-  - [x] 日语
-  - [x] 简体中文
-- [x] 文档
-- [x] 审查 Markdown 符号
-- [x] 发布到市场
-- [x] 使选项可覆盖
-- [x] 活动上下文标题
-- [x] 导入文件
-- [ ] 图像生成: DALL·E
-- [ ] 灵活的端点: 代理和基础 URL 支持
-- [ ] 增强工具: ChatCompletionTools
-- [ ] 提示模板
-- [ ] 单元测试
 
 ## 🔄 更新日志
 

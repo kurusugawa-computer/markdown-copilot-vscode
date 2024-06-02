@@ -2,7 +2,7 @@
     "extension.description": "VSCode 用 OpenAI ChatGPT API クライアント",
     "command.editing.continueInContext.title": "Markdown Copilot: コンテキストの中で続ける",
     "command.editing.continueInContext.detail": "コンテキストに基づいて編集を続ける",
-    "command.editing.continueInContext.import.error": "{0} in [{1}]({1}) のインポート中にエラーが発生しました。ファイルパスなどが正しいか確認してください。",
+    "command.editing.continueInContext.import.error": "\"{0}\" in [{1}]({1}) のインポート中にエラーが発生しました。ファイルパスなどが正しいか確認してください。",
     "command.editing.continueWithoutContext.title": "Markdown Copilot: コンテキストを無視して続ける",
     "command.editing.continueWithoutContext.detail": "コンテキストを無視して編集を続ける",
     "command.editing.indentQuote.title": "Markdown Copilot: 引用行をインデント",
@@ -17,7 +17,9 @@
     "config.decorations.inactiveContextOpacity.description": "非アクティブコンテキストの不透明度を制御し、`0.0`は完全に透明で`1.0`は完全に不透明になります。",
     "config.instructions.systemMessage.description": "Copilotの動作を制御し、性格や特定の動作指示を変更できるようにします。",
     "config.instructions.titleMessage.description": "Copilotの動作を制御し、アクティブコンテキストのタイトル付与指示を変更できるようにします。",
-    "config.openAI.apiKey.description": "OpenAIのAPIキー。<https://platform.openai.com/api-keys>から取得できます。",
+    "config.openAI.apiKey.description": "OpenAIまたはAzure OpenAIのAPIキー。[OpenAI Platform](https://platform.openai.com/api-keys)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)から取得できます。",
+    "config.openAI.azureBaseUrl.description": "Azure Base URLを指定するか、Azureを使用しない場合は空のままにします。URL形式は`https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/completions?api-version={api-version}`です。詳細は[Azure OpenAI ServiceのREST APIリファレンス](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/reference#completions)を参照してください。",
+    "config.openAI.azureBaseUrl.error": "URLのパース中にエラーが発生しました: \"{0}\"\n{1}",
     "config.openAI.model.description": "[Models](https://platform.openai.com/docs/models)にリストされているモデルを指定できます。",
     "config.options.temperature.description": "`0.0`から`1.0`の間で値を指定できます。`0.8`のような高い値を設定すると出力はよりランダムになり、`0.2`のような低い値を設定すると出力はより集中して決定的になります。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)が値の決定に役立ちます。"
 }

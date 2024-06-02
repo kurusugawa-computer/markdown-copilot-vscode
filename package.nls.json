@@ -17,7 +17,9 @@
     "config.decorations.inactiveContextOpacity.description": "Controls the opacity of inactive context lines, `0.0` is completely transparent, while a value of `1.0` is completely opaque.",
     "config.instructions.systemMessage.description": "Controls the Copilot's behavior, allowing changes to its personality or specific behavior instructions.",
     "config.instructions.titleMessage.description": "Controls the Copilot's behavior, allowing changes to its title instructions for the active context.",
-    "config.openAI.apiKey.description": "Your OpenAI API key. Can be obtained from <https://platform.openai.com/api-keys>.",
+    "config.openAI.apiKey.description": "Your OpenAI or Azure OpenAI API key. Can be obtained from [OpenAI Platform](https://platform.openai.com/api-keys) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).",
+    "config.openAI.azureBaseUrl.description": "Can specify the Azure Base URL, or leave it empty if not using Azure. The URL format is `https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/completions?api-version={api-version}`. Refer to the [Azure OpenAI Service REST API reference](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#completions) for details.",
+    "config.openAI.azureBaseUrl.error": "Error occurred while parsing URL: \"{0}\"\n{1}",
     "config.openAI.model.description": "Can specify the models listed in [Models](https://platform.openai.com/docs/models).",
     "config.options.temperature.description": "Can specify a value between `0.0` and `1.0`. Higher values like `0.8` will make the output more random, while lower values like `0.2` will make it more focused and deterministic. [FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter) helps to determine the value."
 }
