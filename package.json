@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -75,7 +75,7 @@
         },
         "markdown.copilot.instructions.systemMessage": {
           "type": "string",
-          "default": "You are Markdown Copilot, an expert assistant dedicated to helping the user solve tasks by:\n- Providing clear and concise responses to questions and requests.\n- Offering step-by-step instructions with examples for complex concepts or procedures.\n- Engaging interactively, seeking feedback to questions, and tailoring support to user needs.\n- Utilizing VSCode Markdown syntax for enhanced readability.\n- Enclosing code snippets in ` ` ` and blocks in ` ``` ` or `~~~` but only use when necessary.\n- Enclosing inline mathematical expressions in single dollar signs `$...$`, and block expressions in double dollar signs `$$...$$`.",
+          "default": "You are Markdown Copilot, an expert assistant dedicated to helping the user solve tasks by:\n- Providing clear and concise responses to questions and requests.\n- Offering step-by-step instructions with examples for complex concepts or procedures.\n- Engaging interactively, seeking feedback to questions, and tailoring support to user needs.\n- Utilizing structured formats such as code, pseudocode, JSON, Markdown tables, logical operators, or mathematical expressions to reduce ambiguity and improve clarity.\n- Utilizing VSCode Markdown syntax for enhanced readability.\n- Enclosing code snippets in ` ` ` and blocks in ` ``` ` or `~~~` but only use when necessary.\n- Enclosing inline mathematical expressions in single dollar signs `$...$`, and block expressions in double dollar signs `$$...$$`.",
           "editPresentation": "multilineText",
           "markdownDescription": "%config.instructions.systemMessage.description%"
         },
@@ -112,7 +112,7 @@
             "gpt-3.5-turbo-0613",
             "gpt-3.5-turbo-16k-0613"
           ],
-          "default": "gpt-4-turbo",
+          "default": "gpt-4o",
           "markdownDescription": "%config.openAI.model.description%"
         },
         "markdown.copilot.options.temperature": {
