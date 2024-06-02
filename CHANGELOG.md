@@ -4,6 +4,13 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.0] - 2024-06-03
+### Changed
+- Change default OpenAI model
+  - `gpt-4-turbo` -> `gpt-4o`
+- Change default System message
+  - Add `Utilizing structured formats such as code, pseudocode, JSON, Markdown tables, logical operators, or mathematical expressions to reduce ambiguity and improve clarity.`
+
 ## [0.0.9] - 2024-06-02
 ### Added
 - Indicate ongoing completion with the emoji 📝
@@ -86,6 +93,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.1.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.9...v0.1.0
+[0.0.9]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.5...v0.0.6

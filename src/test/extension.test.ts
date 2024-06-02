@@ -12,7 +12,7 @@ suite('Extension Test Suite', () => {
 		const configuration = vscode.workspace.getConfiguration();
 		assert.strictEqual(0.5, configuration.get<number>("markdown.copilot.decorations.inactiveContextOpacity"));
 		assert.strictEqual("", configuration.get<string>("markdown.copilot.openAI.apiKey"));
-		assert.strictEqual("gpt-4-turbo", configuration.get<string>("markdown.copilot.openAI.model"));
+		assert.strictEqual("gpt-4o", configuration.get<string>("markdown.copilot.openAI.model"));
 		assert.strictEqual(0.1, configuration.get<number>("markdown.copilot.options.temperature"));
 	});
 

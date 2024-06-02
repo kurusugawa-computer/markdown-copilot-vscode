@@ -223,7 +223,7 @@ export function activate(context: vscode.ExtensionContext) {
 				),
 				newCompletionItem(
 					vscode.CompletionItemKind.Module,
-					'```json copilot-options\n{"temperature":${1:0.01},"max_tokens":${2:4096},"model":"${3:gpt-4-turbo}"}\n```',
+					'```json copilot-options\n{"temperature":${1:0.01},"max_tokens":${2:4096},"model":"${3:gpt-4o}","response_format":{"type":"${4:text}"}}\n```',
 					l10n.t("command.completion.copilot-options.detail"),
 					"0",
 				),
