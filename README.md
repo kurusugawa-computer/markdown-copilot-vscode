@@ -10,15 +10,16 @@
 
 **Markdown Copilot** is an OpenAI ChatGPT API client for VSCode.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024">
 
 Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering superior features such as:
 1. Saving conversation histories in Markdown
 2. Conducting multiple conversations simultaneously
 3. Branching out conversations
 4. Editing previous conversations at any point and continuing the conversation
+5. Titling conversations
 
-***Note***: An OpenAI API Key is required to use this extension. For more information, please refer to the [OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
+***Note***: An OpenAI or Azure OpenAI API key is required to use this extension. For more information, please refer to the [OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).
 
 ## 🌟 Key Features
 
@@ -26,13 +27,13 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 
 Execute multiple auto-edits simultaneously, enhancing your productivity by not having to wait for one edit to complete before starting another.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="Parallel Editing" width="1024"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="Parallel Editing" width="1024">
 
 ### 🎛 Context Control
 
 Manage conversational contexts hierarchically, using quote indentation and syntax colors for visual context highlighting.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024">
 
 ### 📝 Contextual Editing
 
@@ -40,7 +41,7 @@ Markdown Copilot answers to selected text based on context.
 
 To use, select a text range and choose `💡 Markdown Copilot: Continue` from the code action proposals.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="Contextual Editing" width="356"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing.png" alt="Contextual Editing" width="356">
 
 Or use shortcuts for quick access:
 
@@ -48,22 +49,22 @@ Or use shortcuts for quick access:
 | :------------------: | :--------------------------------------------------------------: | :--------------------------------------------------------: |
 | `Trigger suggestion` | <kbd>Ctrl</kbd>+<kbd>Space</kbd> or <kbd>Ctrl</kbd>+<kbd>I</kbd> | <kbd>⌃</kbd>+<kbd>Space</kbd> or <kbd>⌘</kbd>+<kbd>I</kbd> |
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="Contextual Editing Shortcut" width="442"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="Contextual Editing Shortcut" width="442">
 
 #### ♯ Context Notation in Markdown
 
 The active context is determined by tracing back the quote indent from the cursor line.
 Can force a context guard with a line starting with `# Copilot Context`.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512">
 
 If you select `Then say "take care".` and choose `💡 Markdown Copilot: Continue`, you will get the following output: `hello` → `good bye` → `take care`.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460">
 
 **More complex example:** the context continues across `take care` line.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512">
 
 **Specifying a speaker:** You can specify a speaker by placing a special Markdown notation at the beginning of a line.
 
@@ -132,7 +133,7 @@ Simplify the editing of quote indentation levels with intuitive actions.
 
 Select text and choose `💡 Markdown Copilot: Indent Quote Line` or `💡 Markdown Copilot: Outdent Quote Line` from code action proposals.
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="Quote Indentation" width="512"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="Quote Indentation" width="512">
 
 Or use these shortcuts:
 
@@ -141,11 +142,11 @@ Or use these shortcuts:
 | `Indent Quote Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
 | `Outdent Quote Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-<p><img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="Quote Indentation Shortcut" width="512"></p>
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="Quote Indentation Shortcut" width="512">
 
 ## 📋 Prerequisites
 
-- Access to the OpenAI API is necessary. For details, visit [OpenAI API](https://openai.com/blog/openai-api).
+- Access to the OpenAI API or Azure OpenAI Service is necessary. For details, visit [OpenAI API](https://openai.com/blog/openai-api) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).
 - Visual Studio Code must be installed. Download it from the [Visual Studio Code download page](https://code.visualstudio.com/Download).
 
 ## 🚀 Enhance Your Markdown Experience
@@ -161,29 +162,6 @@ Combine Markdown Copilot with these extensions for an even more powerful Markdow
   Markdown Preview Enhanced is a SUPER POWERFUL markdown extension for Visual Studio Code. The goal of this project is to bring you a wonderful markdown writing experience.
 - **[Markdown+Math]**:
   Enhance your Markdown with LaTeX Math ... including macros and more.
-
-## 🗺️ Roadmap
-
-- [x] Markdown completion
-- [x] Cancel running completions
-- [x] Settings
-- [x] Refactor for code reuse
-- [x] Quote indentation
-- [x] Localization
-  - [x] English
-  - [x] Japanese
-  - [x] Simplified Chinese
-- [x] Documentation
-- [x] Review Markdown notation
-- [x] Publish to marketplace
-- [x] Make options overridable
-- [x] Title the active context
-- [x] Importing files
-- [ ] Image Generation: DALL·E
-- [ ] Flexible endpoint: Proxy and base URL support
-- [ ] Augment tools: ChatCompletionTools
-- [ ] Prompt templates
-- [ ] Unit testing
 
 ## 🔄 Changelog
 

@@ -1,6 +1,6 @@
 import * as l10n from '@vscode/l10n';
 import { AssertionError } from 'assert';
-import OpenAI from 'openai';
+import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
 
@@ -548,7 +548,27 @@ class Completion {
 			}
 			configuration.update("markdown.copilot.openAI.apiKey", apiKey);
 		}
-		const openai = new OpenAI({ apiKey: apiKey });
+		const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
+		const openai: OpenAI | AzureOpenAI = (() => {
+			if (!baseUrl) {
+				return new OpenAI({ apiKey: apiKey });
+			}
+			try {
+				const url = new URL(baseUrl);
+				return new AzureOpenAI({
+					endpoint: url.origin,
+					deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
+					apiKey: apiKey,
+					apiVersion: url.searchParams.get("api-version")!,
+				});
+			} catch {
+				throw new TypeError(l10n.t(
+					"config.openAI.azureBaseUrl.error",
+					baseUrl,
+					l10n.t("config.openAI.azureBaseUrl.description"),
+				));
+			}
+		})();
 		const stream = await openai.chat.completions.create(Object.assign(
 			{
 				model: configuration.get<string>("markdown.copilot.openAI.model")!,

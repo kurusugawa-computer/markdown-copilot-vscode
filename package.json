@@ -1,9 +1,9 @@
 {
-"name": "markdown-copilot",
+  "name": "markdown-copilot",
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -89,6 +89,11 @@
           "type": "string",
           "default": "",
           "markdownDescription": "%config.openAI.apiKey.description%"
+        },
+        "markdown.copilot.openAI.azureBaseUrl": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "%config.openAI.azureBaseUrl.description%"
         },
         "markdown.copilot.openAI.model": {
           "type": "string",
