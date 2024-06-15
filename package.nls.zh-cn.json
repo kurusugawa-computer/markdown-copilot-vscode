@@ -8,6 +8,7 @@
     "command.editing.indentQuote.title": "Markdown Copilot: 缩进引号行",
     "command.editing.outdentQuote.title": "Markdown Copilot: 减少缩进报价行",
     "command.editing.titleActiveContext.title": "Markdown Copilot: 活动上下文标题",
+    "command.editing.nameAndSave.title": "Markdown Copilot: 自动命名并存储",
     "command.completion.context.detail": "插入上下文保护头",
     "command.completion.user.detail": "插入用户消息",
     "command.completion.system-override.detail": "插入覆盖系统消息",
