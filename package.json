@@ -33,8 +33,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "markdown.copilot.editing.titleAndSave",
-        "title": "Markdown Copilot: Title and Save",
+        "command": "markdown.copilot.editing.nameAndSave",
+        "title": "Markdown Copilot: Name and Save",
         "icon": "$(milestone)",
         "enablement": "true"
       },
