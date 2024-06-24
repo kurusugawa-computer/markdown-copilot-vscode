@@ -29,12 +29,65 @@ export function activate(context: vscode.ExtensionContext) {
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined) { return; }
 
-		const destUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, "untitled.md");
-		await vscode.workspace.fs.writeFile(destUri, Buffer.from(textEditor.document.getText()));
+		// TODO
+		let filepath = "";
+		{
+			const configuration = vscode.workspace.getConfiguration();
+			let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
+			const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
+			if (!isValidApiKey(apiKey)) {
+				apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
+				if (!isValidApiKey(apiKey)) {
+					throw new Error(`401 Incorrect API key provided: ${apiKey}. You can find your API key at https://platform.openai.com/account/api-keys.`);
+				}
+				configuration.update("markdown.copilot.openAI.apiKey", apiKey);
+			}
+			const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
+			const openai: OpenAI | AzureOpenAI = (() => {
+				if (!baseUrl) {
+					return new OpenAI({ apiKey: apiKey });
+				}
+				try {
+					const url = new URL(baseUrl);
+					return new AzureOpenAI({
+						endpoint: url.origin,
+						deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
+						apiKey: apiKey,
+						apiVersion: url.searchParams.get("api-version")!,
+					});
+				} catch {
+					throw new TypeError(l10n.t(
+						"config.openAI.azureBaseUrl.error",
+						baseUrl,
+						l10n.t("config.openAI.azureBaseUrl.description"),
+					));
+				}
+			})();
+			const stream = await openai.chat.completions.create(Object.assign(
+				{
+					model: configuration.get<string>("markdown.copilot.openAI.model")!,
+					messages: [
+						{
+							role: 'system',
+							content: 'Your task is to create a file path given its content. Only answer the file path. File path format: ./memo/$lowercase_title.md'
+						},
+						{ role: 'user', content: `Content:\n${textEditor.document.getText()}` }
+					] as OpenAI.ChatCompletionMessageParam[],
+					temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
+					stream: true,
+				}, {}
+			));
+			for await (const chunk of stream) {
+				const chunkText = chunk.choices[0]?.delta?.content || '';
+				filepath += chunkText;
+			}
+		}
 
-		await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
-
-		await vscode.workspace.openTextDocument(destUri);
+		const destUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, filepath);
+		vscode.workspace.fs.writeFile(destUri, Buffer.from(textEditor.document.getText()))
+			.then((_) => vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor'))
+			.then((_) => vscode.workspace.openTextDocument(destUri.path))
+			.then((doc) => vscode.window.showTextDocument(doc));
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
