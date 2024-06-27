@@ -29,18 +29,30 @@ export function activate(context: vscode.ExtensionContext) {
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined) { return; }
 
+		function getDate(): string {
+			const date = new Date();
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		}
+
 		// TODO
-		let filepath = "";
 		const stream = await createStream(
 			[
-				{ role: 'system', content: 'Your task is to create a short and simple file path given its content.' },
-				{ role: 'system', content: 'You need to answer only the file path less than 16 characters. File path format: ./memo/$lowercase_title.md' },
+				{ role: 'system', content: 'Your task is to create a short and simple file name given its content.' },
+				{ role: 'system', content: 'You need to answer only the file name. No other text or decoration needed.' },
+				{ role: 'system', content: 'File name must not contain whitespaces and extension.' },
 				{ role: 'user', content: `Content:\n${textEditor.document.getText()}` }
 			] as OpenAIChatMessage[], {} as OpenAI.ChatCompletionCreateParamsStreaming);
+		let filename = "";
 		for await (const chunk of stream) {
 			const chunkText = chunk.choices[0]?.delta?.content || '';
-			filepath += chunkText;
+			filename += chunkText;
 		}
+		let filepath = "memo/${date}/${filename}.md";
+		filepath = filepath.replace("${date}", getDate());
+		filepath = filepath.replace("${filename}", filename);
 
 		const destUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, filepath);
 		vscode.workspace.fs.writeFile(destUri, Buffer.from(textEditor.document.getText()))
