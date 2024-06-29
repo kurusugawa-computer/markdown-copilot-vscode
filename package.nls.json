@@ -16,6 +16,7 @@
     "command.completion.copilot.detail": "Insert copilot message",
     "command.completion.copilot-options.detail": "Insert overriding OpenAI options block",
     "config.decorations.inactiveContextOpacity.description": "Controls the opacity of inactive context lines, `0.0` is completely transparent, while a value of `1.0` is completely opaque.",
+    "config.instructions.autonameFilepath.description": "Controls the Copilot's behavior, allowing changes to its file auto-naming instructions.",
     "config.instructions.systemMessage.description": "Controls the Copilot's behavior, allowing changes to its personality or specific behavior instructions.",
     "config.instructions.titleMessage.description": "Controls the Copilot's behavior, allowing changes to its title instructions for the active context.",
     "config.openAI.apiKey.description": "Your OpenAI or Azure OpenAI API key. Can be obtained from [OpenAI Platform](https://platform.openai.com/api-keys) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).",

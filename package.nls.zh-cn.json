@@ -16,6 +16,7 @@
     "command.completion.copilot.detail": "插入copilot消息",
     "command.completion.copilot-options.detail": "插入覆盖OpenAI选项块",
     "config.decorations.inactiveContextOpacity.description": "控制非活动上下文线条的不透明度, `0.0`表示完全透明, `1.0`表示完全不透明。",
+    "config.instructions.autonameFilepath.description": "自定义Copilot的行为, 允许更改其文件自动命名指令。",
     "config.instructions.systemMessage.description": "自定义Copilot的行为, 允许更改其个性或特定行为指令。",
     "config.instructions.titleMessage.description": "自定义Copilot的行为, 允许更改其对活动上下文的标题指令。",
     "config.openAI.apiKey.description": "您的OpenAI或Azure OpenAI API密钥。可从[OpenAI Platform](https://platform.openai.com/api-keys)或[Azure OpenAI Quickstart](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart)获取。",
