@@ -50,7 +50,12 @@ export function activate(context: vscode.ExtensionContext) {
 			const chunkText = chunk.choices[0]?.delta?.content || '';
 			filename += chunkText;
 		}
-		let filepath = "memo/${date}/${filename}.md";
+
+		const configuration = vscode.workspace.getConfiguration();
+		let filepath = configuration.get<string>("markdown.copilot.instructions.autonameFilepath");
+		if (filepath === undefined || filepath.trim().length === 0) {
+			filepath = "memo/${date}/${filename}.md";
+		}
 		filepath = filepath.replace("${date}", getDate());
 		filepath = filepath.replace("${filename}", filename);
 

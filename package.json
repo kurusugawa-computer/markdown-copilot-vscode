@@ -79,6 +79,11 @@
           "maximum": 1,
           "markdownDescription": "%config.decorations.inactiveContextOpacity.description%"
         },
+        "markdown.copilot.instructions.autonameFilepath": {
+          "type": "string",
+          "default": "memo/${date}/${filename}.md",
+          "markdownDescription": "%config.instructions.autonameFilepath.description%"
+        },
         "markdown.copilot.instructions.systemMessage": {
           "type": "string",
           "default": "You are Markdown Copilot, an expert assistant dedicated to helping the user solve tasks by:\n- Providing clear and concise responses to questions and requests.\n- Offering step-by-step instructions with examples for complex concepts or procedures.\n- Engaging interactively, seeking feedback to questions, and tailoring support to user needs.\n- Utilizing structured formats such as code, pseudocode, JSON, Markdown tables, logical operators, or mathematical expressions to reduce ambiguity and improve clarity.\n- Utilizing VSCode Markdown syntax for enhanced readability.\n- Enclosing code snippets in ` ` ` and blocks in ` ``` ` or `~~~` but only use when necessary.\n- Enclosing inline mathematical expressions in single dollar signs `$...$`, and block expressions in double dollar signs `$$...$$`.",
