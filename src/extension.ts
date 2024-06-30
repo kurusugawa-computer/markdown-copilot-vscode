@@ -26,6 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE, async () => {
+		const configuration = vscode.workspace.getConfiguration();
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined) { return; }
 
@@ -37,21 +38,29 @@ export function activate(context: vscode.ExtensionContext) {
 			return `${year}-${month}-${day}`;
 		}
 
-		// TODO
 		const stream = await createStream(
 			[
-				{ role: 'system', content: 'Your task is to create a short and simple file name given its content.' },
-				{ role: 'system', content: 'You need to answer only the file name. No other text or decoration needed.' },
-				{ role: 'system', content: 'File name must not contain whitespaces and extension.' },
+				{ role: 'system', content: 'Provide a filename that best describes given content, using the same language as the content.' },
+				{
+					role: 'system', content: `Also follow the instruction: "${configuration.get<string>('markdown.copilot.instructions.titleMessage')}`
+				},
+				{ role: 'system', content: 'The filename must be concise, not contain any invalid filename characters, not contain any extensions, and not contain any whitespaces.' },
+				{ role: 'system', content: 'The filename must be returned in JSON format with the following format: {"filename":"{generated filename}"}' },
 				{ role: 'user', content: `Content:\n${textEditor.document.getText()}` }
 			] as OpenAIChatMessage[], {} as OpenAI.ChatCompletionCreateParamsStreaming);
-		let filename = "";
+		let json = "";
 		for await (const chunk of stream) {
 			const chunkText = chunk.choices[0]?.delta?.content || '';
-			filename += chunkText;
+			json += chunkText;
+		}
+		let filename = "";
+		try {
+			filename = JSON.parse(json).filename;
+		} catch {
+			vscode.window.showErrorMessage("Failed to generate a filename. Try again.");
+			return;
 		}
 
-		const configuration = vscode.workspace.getConfiguration();
 		let filepath = configuration.get<string>("markdown.copilot.instructions.autonameFilepath");
 		if (filepath === undefined || filepath.trim().length === 0) {
 			filepath = "memo/${date}/${filename}.md";
