@@ -16,7 +16,7 @@
     "command.completion.copilot.detail": "コパイロットメッセージを挿入する",
     "command.completion.copilot-options.detail": "OpenAIオプションブロックを上書きして挿入する",
     "config.decorations.inactiveContextOpacity.description": "非アクティブコンテキストの不透明度を制御し、`0.0`は完全に透明で`1.0`は完全に不透明になります。",
-    "config.instructions.autonameFilepath.description": "Copilotの動作を制御し、生成されるファイルパスの命名を変更できるようにします。",
+    "config.instructions.autonameFilepath.description": "Copilotの動作を制御し、名前をつけて保存する際に生成されるファイルパスを変更できるようにします。",
     "config.instructions.systemMessage.description": "Copilotの動作を制御し、性格や特定の動作指示を変更できるようにします。",
     "config.instructions.titleMessage.description": "Copilotの動作を制御し、アクティブコンテキストのタイトル付与指示を変更できるようにします。",
     "config.openAI.apiKey.description": "OpenAIまたはAzure OpenAIのAPIキー。[OpenAI Platform](https://platform.openai.com/api-keys)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)から取得できます。",
