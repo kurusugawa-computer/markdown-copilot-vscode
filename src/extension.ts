@@ -15,6 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE = "markdown.copilot.editing.nameAndSave";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
 		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, selectionOverride)
@@ -23,6 +24,58 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT,
 		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
 	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE, async () => {
+		const configuration = vscode.workspace.getConfiguration();
+		const textEditor = vscode.window.activeTextEditor;
+		if (textEditor === undefined) { return; }
+
+		function getDate(): string {
+			const date = new Date();
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		}
+
+		const stream = await createStream(
+			[
+				{ role: 'system', content: 'Provide a filename that best describes given content, using the same language as the content.' },
+				{
+					role: 'system', content: `Also follow the instruction: "${configuration.get<string>('markdown.copilot.instructions.titleMessage')}`
+				},
+				{ role: 'system', content: 'The filename must be concise, not contain any invalid filename characters, not contain any extensions, and not contain any whitespaces.' },
+				{ role: 'system', content: 'The filename must be returned in JSON format with the following format: {"filename":"{generated filename}"}' },
+				{ role: 'user', content: `Content:\n${textEditor.document.getText()}` }
+			] as OpenAIChatMessage[], {} as OpenAI.ChatCompletionCreateParamsStreaming);
+		let json = "";
+		for await (const chunk of stream) {
+			const chunkText = chunk.choices[0]?.delta?.content || '';
+			json += chunkText;
+		}
+
+		let suggested_filename: string;
+		try {
+			suggested_filename = JSON.parse(json).filename;
+		} catch {
+			vscode.window.showErrorMessage("Failed to suggest a filename. Try again.");
+			return;
+		}
+		const filename = await vscode.window.showInputBox({ title: "Edit filename if necessary", value: suggested_filename }) || suggested_filename;
+
+		let filepath = configuration.get<string>("markdown.copilot.instructions.autonameFilepath");
+		if (filepath === undefined || filepath.trim().length === 0) {
+			filepath = "memo/${date}/${filename}.md";
+		}
+		filepath = filepath.replace("${date}", getDate());
+		filepath = filepath.replace("${filename}", filename);
+
+		const destUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, filepath);
+		vscode.workspace.fs.writeFile(destUri, Buffer.from(textEditor.document.getText()))
+			.then((_) => vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor'))
+			.then((_) => vscode.workspace.openTextDocument(destUri.path))
+			.then((doc) => vscode.window.showTextDocument(doc));
+	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
 		const textEditor = vscode.window.activeTextEditor;
@@ -537,52 +590,8 @@ class Completion {
 		).then(() => countChar(text) - deleteCharCount);
 	}
 
-	private async createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
-		const configuration = vscode.workspace.getConfiguration();
-		let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
-		const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
-		if (!isValidApiKey(apiKey)) {
-			apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
-			if (!isValidApiKey(apiKey)) {
-				throw new Error(`401 Incorrect API key provided: ${apiKey}. You can find your API key at https://platform.openai.com/account/api-keys.`);
-			}
-			configuration.update("markdown.copilot.openAI.apiKey", apiKey);
-		}
-		const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
-		const openai: OpenAI | AzureOpenAI = (() => {
-			if (!baseUrl) {
-				return new OpenAI({ apiKey: apiKey });
-			}
-			try {
-				const url = new URL(baseUrl);
-				return new AzureOpenAI({
-					endpoint: url.origin,
-					deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
-					apiKey: apiKey,
-					apiVersion: url.searchParams.get("api-version")!,
-				});
-			} catch {
-				throw new TypeError(l10n.t(
-					"config.openAI.azureBaseUrl.error",
-					baseUrl,
-					l10n.t("config.openAI.azureBaseUrl.description"),
-				));
-			}
-		})();
-		const stream = await openai.chat.completions.create(Object.assign(
-			{
-				model: configuration.get<string>("markdown.copilot.openAI.model")!,
-				messages: chatMessages as OpenAI.ChatCompletionMessageParam[],
-				temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
-				stream: true,
-			},
-			override
-		));
-		return stream;
-	}
-
 	async completeText(chatMessages: OpenAIChatMessage[], lineSeparator: string, override: OpenAI.ChatCompletionCreateParamsStreaming) {
-		const stream = await this.createStream(chatMessages, override);
+		const stream = await createStream(chatMessages, override);
 		this.abortController = stream.controller;
 
 		const chunkTextBuffer: string[] = [];
@@ -602,6 +611,49 @@ class Completion {
 		// flush chunkTextBuffer
 		this.anchorOffset += await submitChunkText(LF);
 	}
+}
+
+async function createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+	const configuration = vscode.workspace.getConfiguration();
+	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
+	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
+	if (!isValidApiKey(apiKey)) {
+		apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
+		if (!isValidApiKey(apiKey)) {
+			throw new Error(`401 Incorrect API key provided: ${apiKey}. You can find your API key at https://platform.openai.com/account/api-keys.`);
+		}
+		configuration.update("markdown.copilot.openAI.apiKey", apiKey);
+	}
+	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
+	const openai: OpenAI | AzureOpenAI = (() => {
+		if (!baseUrl) {
+			return new OpenAI({ apiKey: apiKey });
+		}
+		try {
+			const url = new URL(baseUrl);
+			return new AzureOpenAI({
+				endpoint: url.origin,
+				deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
+				apiKey: apiKey,
+				apiVersion: url.searchParams.get("api-version")!,
+			});
+		} catch {
+			throw new TypeError(l10n.t(
+				"config.openAI.azureBaseUrl.error",
+				baseUrl,
+				l10n.t("config.openAI.azureBaseUrl.description"),
+			));
+		}
+	})();
+	const stream = await openai.chat.completions.create(Object.assign(
+		{
+			model: configuration.get<string>("markdown.copilot.openAI.model")!,
+			messages: chatMessages,
+			temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
+			stream: true,
+		}, override
+	));
+	return stream;
 }
 
 async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
