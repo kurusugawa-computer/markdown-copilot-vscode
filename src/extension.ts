@@ -53,13 +53,15 @@ export function activate(context: vscode.ExtensionContext) {
 			const chunkText = chunk.choices[0]?.delta?.content || '';
 			json += chunkText;
 		}
-		let filename = "";
+
+		let suggested_filename: string;
 		try {
-			filename = JSON.parse(json).filename;
+			suggested_filename = JSON.parse(json).filename;
 		} catch {
-			vscode.window.showErrorMessage("Failed to generate a filename. Try again.");
+			vscode.window.showErrorMessage("Failed to suggest a filename. Try again.");
 			return;
 		}
+		const filename = await vscode.window.showInputBox({ title: "Edit filename if necessary", value: suggested_filename }) || suggested_filename;
 
 		let filepath = configuration.get<string>("markdown.copilot.instructions.autonameFilepath");
 		if (filepath === undefined || filepath.trim().length === 0) {
