@@ -3,6 +3,8 @@ import { AssertionError } from 'assert';
 import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
 	initializeL10n(context.extensionUri);
@@ -40,13 +42,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const stream = await createStream(
 			[
-				{ role: 'system', content: 'Provide a filename that best describes given content, using the same language as the content.' },
+				{ role: 'system', content: 'Provide a filename that best describes given content, written in the same language as the content.' },
 				{
-					role: 'system', content: `Also follow the instruction: "${configuration.get<string>('markdown.copilot.instructions.titleMessage')}`
+					role: 'system', content: `Also follow the instruction: "${configuration.get<string>('markdown.copilot.instructions.titleMessage')}"`
 				},
 				{ role: 'system', content: 'The filename must be concise, not contain any invalid filename characters, not contain any extensions, and not contain any whitespaces.' },
 				{ role: 'system', content: 'The filename must be returned in JSON format with the following format: {"filename":"{generated filename}"}' },
-				{ role: 'user', content: `Content:\n${textEditor.document.getText()}` }
+				{ role: 'user', content: `Content:\n\n"""\n${textEditor.document.getText()}\n"""` }
 			] as OpenAIChatMessage[], {} as OpenAI.ChatCompletionCreateParamsStreaming);
 		let json = "";
 		for await (const chunk of stream) {
@@ -54,27 +56,31 @@ export function activate(context: vscode.ExtensionContext) {
 			json += chunkText;
 		}
 
-		let suggested_filename: string;
+		let suggestion: string;
 		try {
-			suggested_filename = JSON.parse(json).filename;
+			suggestion = JSON.parse(json).filename;
 		} catch {
 			vscode.window.showErrorMessage("Failed to suggest a filename. Try again.");
 			return;
 		}
-		const filename = await vscode.window.showInputBox({ title: "Edit filename if necessary", value: suggested_filename }) || suggested_filename;
-
-		let filepath = configuration.get<string>("markdown.copilot.instructions.autonameFilepath");
-		if (filepath === undefined || filepath.trim().length === 0) {
-			filepath = "memo/${date}/${filename}.md";
-		}
-		filepath = filepath.replace("${date}", getDate());
-		filepath = filepath.replace("${filename}", filename);
-
+		const filepath = (configuration.get<string>("markdown.copilot.instructions.autonameFilepath") || "memo/${date}/${filename}.md")
+			.replace("${date}", getDate())
+			.replace("${filename}", suggestion);
 		const destUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, filepath);
-		vscode.workspace.fs.writeFile(destUri, Buffer.from(textEditor.document.getText()))
-			.then((_) => vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor'))
-			.then((_) => vscode.workspace.openTextDocument(destUri.path))
-			.then((doc) => vscode.window.showTextDocument(doc));
+		const top_created_dir = fs.mkdirSync(path.dirname(destUri.path), { recursive: true });
+
+		vscode.window.showSaveDialog({ defaultUri: destUri })
+			.then((uri) => {
+				// If user cancels the dialog, uri will be undefined.
+				if (uri) {
+					vscode.workspace.fs.writeFile(uri, Buffer.from(textEditor.document.getText()))
+						.then((_) => vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor'))
+						.then((_) => vscode.workspace.openTextDocument(uri))
+						.then((doc) => vscode.window.showTextDocument(doc));
+				} else if (top_created_dir !== undefined) {
+					vscode.workspace.fs.delete(vscode.Uri.file(top_created_dir), { recursive: true });
+				}
+			});
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
