@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
-	const COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES = "markdown.copilot.file.organize";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES = "markdown.copilot.editing.organizeFiles";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES,
 		(selectionOverride?: vscode.Selection) => organizeFiles(outline, selectionOverride)
@@ -204,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT, l10n.t("command.editing.continueWithoutContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
-				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES, "Markdown Copilot: Organize files"),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES, l10n.t("command.editing.organizeFiles.title")),
 			];
 
 			function newCodeAction(command: string, title: string): vscode.CodeAction {

@@ -9,6 +9,7 @@
     "command.editing.outdentQuote.title": "Markdown Copilot: Outdent Quote Line",
     "command.editing.titleActiveContext.title": "Markdown Copilot: Title active context",
     "command.editing.nameAndSaveAs.title": "Markdown Copilot: Name and Save As...",
+    "command.editing.organizeFiles.title": "Markdown Copilot: Organize files",
     "command.completion.context.detail": "Insert context guard header",
     "command.completion.user.detail": "Insert user message",
     "command.completion.system-override.detail": "Insert overriding system message",
