@@ -9,6 +9,7 @@
     "command.editing.outdentQuote.title": "Markdown Copilot: 减少缩进报价行",
     "command.editing.titleActiveContext.title": "Markdown Copilot: 活动上下文标题",
     "command.editing.nameAndSaveAs.title": "Markdown Copilot: 命名和另存为...",
+    "command.editing.organizeFiles.title": "Markdown Copilot: 整理文件",
     "command.completion.context.detail": "插入上下文保护头",
     "command.completion.user.detail": "插入用户消息",
     "command.completion.system-override.detail": "插入覆盖系统消息",
