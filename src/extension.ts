@@ -20,7 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES = "markdown.copilot.editing.organizeFiles";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES,
-		(selectionOverride?: vscode.Selection) => organizeFiles(outline, selectionOverride)
+		(selectionOverride?: vscode.Selection) => organizeFiles(selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
@@ -678,7 +678,7 @@ async function createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.
 	return stream;
 }
 
-async function organizeFiles(outline: DocumentOutline, selectionOverride?: vscode.Selection) {
+async function organizeFiles(selectionOverride?: vscode.Selection) {
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
@@ -687,125 +687,12 @@ async function organizeFiles(outline: DocumentOutline, selectionOverride?: vscod
 	} else if (selectionOverride.isEmpty) { return; }
 
 	const document = textEditor.document;
-	const documentEol = toEolString(document.eol);
-
 	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
-	const userStart = userRange.start;
-	const userEnd = userRange.end;
 
-	const chatMessageBuilder = new ChatMessageBuilder();
-
-	const configuration = vscode.workspace.getConfiguration();
-	const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
-	if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
-		chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
+	const text = document.getText(userRange);
+	for (const line of text.split(/\r?\n/)) {
+		console.log(`File: ${line}`);
 	}
-
-	let errorMessage = null;
-
-	const importedDocumentUriTexts: string[] = [];
-	const activeLineTexts: string[] = [];
-
-	async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
-		async function resolveFragmentUri(document: vscode.TextDocument, fragmentUriText: string) {
-			try {
-				let fullUri = null;
-				if (fragmentUriText.startsWith('/')) {
-					fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, fragmentUriText);
-				} else {
-					if (document.uri.scheme === 'untitled') {
-						throw new AssertionError();
-					}
-					fullUri = vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
-				}
-				return await vscode.workspace.openTextDocument(fullUri);
-			} catch {
-				throw new Error(l10n.t(
-					"command.editing.continueInContext.import.error",
-					fragmentUriText,
-					vscode.workspace.asRelativePath(document.fileName)
-				));
-			}
-		}
-
-		// Avoid recursive import infinity loop.
-		const documentUriText = document.uri.toString();
-		if (importedDocumentUriTexts.includes(documentUriText)) {
-			return;
-		}
-		importedDocumentUriTexts.push(documentUriText);
-		try {
-			// Find lines with `@import "file.md"` and append its content to the active context.
-			for (const line of lineTexts.split(/\r?\n/)) {
-				// Format conforms to crossnote filepath
-				// see: https://github.com/shd101wyy/crossnote/blob/master/src/markdown-engine/transformer.ts#L601
-				const match = line.match(/\@import\s+\"([^\"]+)\"/);
-				if (match === null) {
-					activeLineTexts.push(line);
-					continue;
-				}
-				await resolveFragmentUri(
-					document, match[1].trim()
-				).then(
-					(importedDocument) => resolveImport(importedDocument, importedDocument.getText())
-				);
-			}
-		} finally {
-			importedDocumentUriTexts.pop();
-		}
-	}
-
-	try {
-		for (const lineRange of outline.toActiveLineRanges()) {
-			if (lineRange.start.isAfterOrEqual(userStart)) {
-				break;
-			}
-			const lineTexts = outdentQuote(
-				document.getText(new vscode.Range(
-					lineRange.start,
-					lineRange.end.isAfterOrEqual(userStart)
-						? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
-						: lineRange.end
-				)),
-				lineRange.quoteIndent
-			);
-
-			await resolveImport(document, lineTexts);
-		}
-	} catch (e) {
-		if (e instanceof Error) {
-			errorMessage = e.message;
-		}
-	}
-
-	chatMessageBuilder.addLines(
-		activeLineTexts.join(documentEol).split(documentEol)
-	);
-
-	const userStartLineText = document.lineAt(userStart.line).text;
-	const userEndLineText = document.lineAt(userEnd.line).text;
-	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
-	const userEndOffset = document.offsetAt(userEnd);
-
-	const userStartLineQuoteIndentText = userStartLineText.match(quoteIndentRegex)?.[0] || '';
-	const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
-
-	const selectionText = document.getText(userRange);
-
-	let lastUserMessage = outdentQuote(
-		selectionText,
-		userEndLineQuoteIndent
-	).replaceAll(documentEol, LF);
-
-	const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*[ \t]*/);
-
-	if (userStartLineMatchesUser !== null) {
-		lastUserMessage = lastUserMessage.replace(userStartLineMatchesUser[0], "");
-	}
-
-	chatMessageBuilder.addChatMessage(ChatRoleFlags.User, lastUserMessage);
-
-	console.log(activeLineTexts);
 }
 
 async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
