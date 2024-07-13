@@ -67,6 +67,12 @@
         "title": "%command.editing.outdentQuote.title%",
         "icon": "$(arrow-small-left)",
         "enablement": "editorLangId == markdown && editorHasSelection"
+      },
+      {
+        "command": "markdown.copilot.file.organize",
+        "title": "Organize files",
+        "icon": "$(comment-discussion)",
+        "enablement": "editorLangId == markdown && editorHasSelection"
       }
     ],
     "configuration": {
