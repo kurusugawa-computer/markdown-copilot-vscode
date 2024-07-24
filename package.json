@@ -33,8 +33,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "markdown.copilot.editing.nameAndSave",
-        "title": "%command.editing.nameAndSave.title%",
+        "command": "markdown.copilot.editing.nameAndSaveAs",
+        "title": "%command.editing.nameAndSaveAs.title%",
         "icon": "$(milestone)",
         "enablement": "true"
       },
@@ -79,10 +79,16 @@
           "maximum": 1,
           "markdownDescription": "%config.decorations.inactiveContextOpacity.description%"
         },
-        "markdown.copilot.instructions.autonameFilepath": {
+        "markdown.copilot.instructions.nameMessage": {
           "type": "string",
-          "default": "memo/${date}/${filename}.md",
-          "markdownDescription": "%config.instructions.autonameFilepath.description%"
+          "default": "Provide a filename that summarizes the main topic of given content, using the same language as the content. The filename must be concise, not contain any invalid filename characters, not contain any extensions, only return the filename in JSON with the following format `{\"filename\":\"${namePathFormat}\"}`.",
+          "editPresentation": "multilineText",
+          "markdownDescription": "%config.instructions.nameMessage.description%"
+        },
+        "markdown.copilot.instructions.namePathFormat": {
+          "type": "string",
+          "default": "memo/${date:yyyy-MM-dd}/${filename}.md",
+          "markdownDescription": "%config.instructions.namePathFormat.description%"
         },
         "markdown.copilot.instructions.systemMessage": {
           "type": "string",

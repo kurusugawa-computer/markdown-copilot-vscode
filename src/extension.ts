@@ -3,8 +3,6 @@ import { AssertionError } from 'assert';
 import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
 	initializeL10n(context.extensionUri);
@@ -14,10 +12,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT = "markdown.copilot.editing.continueInContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT = "markdown.copilot.editing.continueWithoutContext";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS = "markdown.copilot.editing.nameAndSaveAs";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
-	const COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE = "markdown.copilot.editing.nameAndSave";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
 		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, selectionOverride)
@@ -27,60 +25,60 @@ export function activate(context: vscode.ExtensionContext) {
 		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
 	));
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE, async () => {
-		const configuration = vscode.workspace.getConfiguration();
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS, async () => {
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined) { return; }
 
-		function getDate(): string {
-			const date = new Date();
-			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, '0');
-			const day = String(date.getDate()).padStart(2, '0');
-			return `${year}-${month}-${day}`;
+		const configuration = vscode.workspace.getConfiguration();
+		const nameMessage = configuration.get<string>("markdown.copilot.instructions.nameMessage");
+		if (nameMessage === undefined || nameMessage.trim().length === 0) {
+			return;
 		}
+		const namePathFormat = configuration.get<string>("markdown.copilot.instructions.namePathFormat");
+		if (namePathFormat === undefined || namePathFormat.trim().length === 0) {
+			return;
+		}
+
+		const currentDateTime = new Date().toLocaleString('sv').replace(' ', 'T');
+		const workspaceFolder = vscode.workspace.workspaceFolders![0];
 
 		const stream = await createStream(
 			[
-				{ role: 'system', content: 'Provide a filename that best describes given content, written in the same language as the content.' },
-				{
-					role: 'system', content: `Also follow the instruction: "${configuration.get<string>('markdown.copilot.instructions.titleMessage')}"`
-				},
-				{ role: 'system', content: 'The filename must be concise, not contain any invalid filename characters, not contain any extensions, and not contain any whitespaces.' },
-				{ role: 'system', content: 'The filename must be returned in JSON format with the following format: {"filename":"{generated filename}"}' },
-				{ role: 'user', content: `Content:\n\n"""\n${textEditor.document.getText()}\n"""` }
-			] as OpenAIChatMessage[], {} as OpenAI.ChatCompletionCreateParamsStreaming);
+				{ role: OpenAIChatRole.System, content: nameMessage.replace("${namePathFormat}", namePathFormat) },
+				{ role: OpenAIChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${workspaceFolder.uri.fsPath}" }\`` },
+				{ role: OpenAIChatRole.User, content: `Content:\n${textEditor.document.getText()}` },
+			] as OpenAIChatMessage[], { "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParamsStreaming);
 		let json = "";
 		for await (const chunk of stream) {
 			const chunkText = chunk.choices[0]?.delta?.content || '';
 			json += chunkText;
 		}
 
-		let suggestion: string;
+		let filepath: string;
 		try {
-			suggestion = JSON.parse(json).filename;
+			filepath = JSON.parse(json).filename;
 		} catch {
 			vscode.window.showErrorMessage("Failed to suggest a filename. Try again.");
 			return;
 		}
-		const filepath = (configuration.get<string>("markdown.copilot.instructions.autonameFilepath") || "memo/${date}/${filename}.md")
-			.replace("${date}", getDate())
-			.replace("${filename}", suggestion);
-		const destUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, filepath);
-		const top_created_dir = fs.mkdirSync(path.dirname(destUri.path), { recursive: true });
 
-		vscode.window.showSaveDialog({ defaultUri: destUri })
-			.then((uri) => {
-				// If user cancels the dialog, uri will be undefined.
-				if (uri) {
-					vscode.workspace.fs.writeFile(uri, Buffer.from(textEditor.document.getText()))
-						.then((_) => vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor'))
-						.then((_) => vscode.workspace.openTextDocument(uri))
-						.then((doc) => vscode.window.showTextDocument(doc));
-				} else if (top_created_dir !== undefined) {
-					vscode.workspace.fs.delete(vscode.Uri.file(top_created_dir), { recursive: true });
-				}
-			});
+		const saveFileUri = vscode.Uri.joinPath(workspaceFolder.uri, filepath);
+		const saveDirUri = vscode.Uri.joinPath(saveFileUri, "..");
+
+		return makeDirectories(saveDirUri)
+			.then(topCreatedDirUri => vscode.window.showSaveDialog({ defaultUri: saveFileUri })
+				.then(async (uri) => {
+					// If user cancels the dialog, uri will be undefined.
+					if (uri) {
+						await vscode.workspace.fs.writeFile(uri, Buffer.from(textEditor.document.getText()));
+						await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+						return vscode.workspace.openTextDocument(uri)
+							.then((doc) => vscode.window.showTextDocument(doc));
+					} else if (topCreatedDirUri !== undefined) {
+						return pruneEmptyDirectories(topCreatedDirUri, saveDirUri);
+					}
+				})
+			);
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
@@ -987,6 +985,51 @@ function partialEndsWith(target: string, search: string, ignore?: RegExp): numbe
 		if (target.endsWith(search.slice(0, offset))) { return offset; }
 	}
 	return 0;
+}
+
+/*
+ * Utilities for filesystem
+ */
+async function makeDirectories(dirUri: vscode.Uri): Promise<vscode.Uri | undefined> {
+	const segments = dirUri.path.split('/').filter(segment => segment);
+	const rootUri = dirUri.with({ path: '/' });
+
+	for (let i = 1; i <= segments.length; i++) {
+		const currentUri = vscode.Uri.joinPath(rootUri, ...segments.slice(0, i));
+		try {
+			// Check if currentUri already exists.
+			await vscode.workspace.fs.stat(currentUri);
+		} catch (error) {
+			// If currentUri does not exist, create directories and return the top of created directory URI.
+			await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(rootUri, ...segments));
+			return currentUri;
+		}
+	}
+	return undefined;
+}
+
+async function pruneEmptyDirectories(rootDirUri: vscode.Uri, leafDirUri: vscode.Uri): Promise<void> {
+	async function isDirectoryEmpty(dirUri: vscode.Uri): Promise<boolean> {
+		return vscode.workspace.fs.readDirectory(dirUri).then(files => files.length === 0);
+	}
+
+	async function deleteIfEmpty(targetDirUri: vscode.Uri): Promise<boolean> {
+		return isDirectoryEmpty(targetDirUri).then(
+			isEmpty => isEmpty
+				? vscode.workspace.fs.delete(targetDirUri, { recursive: false }).then(() => true)
+				: false
+		);
+	}
+
+	const rootDirUriString = rootDirUri.toString();
+
+	async function purgeRecursive(currentDirUri: vscode.Uri): Promise<void> {
+		if (!await deleteIfEmpty(currentDirUri)) { return; }
+		if (currentDirUri.toString() === rootDirUriString) { return; }
+		await purgeRecursive(vscode.Uri.joinPath(currentDirUri, '..'));
+	}
+
+	return purgeRecursive(leafDirUri);
 }
 
 /*
