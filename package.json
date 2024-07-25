@@ -81,7 +81,7 @@
         },
         "markdown.copilot.instructions.nameMessage": {
           "type": "string",
-          "default": "Provide a filename that summarizes the main topic of given content, using the same language as the content. The filename must be concise, not contain any invalid filename characters, not contain any extensions, only return the filename in JSON with the following format `{\"filename\":\"${namePathFormat}\"}`.",
+          "default": "Provide a filename that summarizes the main topic of given content, using the same language as the content. The filename must be concise, not contain any invalid filename characters, not contain any extensions, only return the filename in JSON with the following format `{\"filepath\":\"${namePathFormat}\"}`.",
           "editPresentation": "multilineText",
           "markdownDescription": "%config.instructions.nameMessage.description%"
         },

@@ -2,6 +2,7 @@ import * as l10n from '@vscode/l10n';
 import { AssertionError } from 'assert';
 import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
+import * as path from 'path';
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -29,25 +30,33 @@ export function activate(context: vscode.ExtensionContext) {
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined) { return; }
 
+		const document = textEditor.document;
+
 		const configuration = vscode.workspace.getConfiguration();
 		const nameMessage = configuration.get<string>("markdown.copilot.instructions.nameMessage");
 		if (nameMessage === undefined || nameMessage.trim().length === 0) {
-			return;
-		}
-		const namePathFormat = configuration.get<string>("markdown.copilot.instructions.namePathFormat");
-		if (namePathFormat === undefined || namePathFormat.trim().length === 0) {
 			return;
 		}
 
 		const currentDateTime = new Date().toLocaleString('sv').replace(' ', 'T');
 		const workspaceFolder = vscode.workspace.workspaceFolders![0];
 
+		const namePathFormat = document.uri.scheme === 'untitled'
+			? configuration.get<string>("markdown.copilot.instructions.namePathFormat")
+			: path.relative(workspaceFolder.uri.fsPath, vscode.Uri.joinPath(document.uri, '..', `\${filename}${path.extname(document.fileName)}`).fsPath);
+
+		if (namePathFormat === undefined || namePathFormat.trim().length === 0) {
+			return;
+		}
+
 		const stream = await createStream(
 			[
 				{ role: OpenAIChatRole.System, content: nameMessage.replace("${namePathFormat}", namePathFormat) },
 				{ role: OpenAIChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${workspaceFolder.uri.fsPath}" }\`` },
-				{ role: OpenAIChatRole.User, content: `Content:\n${textEditor.document.getText()}` },
-			] as OpenAIChatMessage[], { "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParamsStreaming);
+				{ role: OpenAIChatRole.User, content: `Content:\n${document.getText()}` },
+			] as OpenAIChatMessage[],
+			{ "temperature": Number.EPSILON, "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParamsStreaming
+		);
 		let json = "";
 		for await (const chunk of stream) {
 			const chunkText = chunk.choices[0]?.delta?.content || '';
@@ -56,9 +65,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let filepath: string;
 		try {
-			filepath = JSON.parse(json).filename;
+			filepath = JSON.parse(json).filepath;
 		} catch {
-			vscode.window.showErrorMessage("Failed to suggest a filename. Try again.");
+			vscode.window.showErrorMessage("Failed to suggest a filepath. Try again.");
 			return;
 		}
 
@@ -70,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 				.then(async (uri) => {
 					// If user cancels the dialog, uri will be undefined.
 					if (uri) {
-						await vscode.workspace.fs.writeFile(uri, Buffer.from(textEditor.document.getText()));
+						await vscode.workspace.fs.writeFile(uri, Buffer.from(document.getText()));
 						await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
 						return vscode.workspace.openTextDocument(uri)
 							.then((doc) => vscode.window.showTextDocument(doc));
