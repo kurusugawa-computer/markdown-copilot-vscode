@@ -17,7 +17,8 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 2. Conducting multiple conversations simultaneously
 3. Branching out conversations
 4. Editing previous conversations at any point and continuing the conversation
-5. Titling conversations
+5. Nameing files based on conversations
+6. Titling conversations
 
 ***Note***: An OpenAI or Azure OpenAI API key is required to use this extension. For more information, please refer to the [OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).
 
@@ -93,6 +94,18 @@ Introduce yourself.
 
 For more configuration options, please refer to the [OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create).
 
+### 📛 Name and Save File
+
+Markdown Copilot allows you to name and save a file based on its contents.
+
+To use, select the editor you want to name and save, and use the `Markdown Copilot: Name and Save As...` command.
+
+Or use shortcuts for quick access:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> |
+
 ### 🏷️ Titling the Active Context
 
 Markdown Copilot allows you to title a conversation based on the conversation history.
@@ -100,7 +113,7 @@ Conversation titles are represented as lines beginning with `# Copilot Context: 
 
 To use, move the cursor to the context you want to title and use the `Markdown Copilot: Title active context` command.
 
-Use shortcuts for quick access:
+Or use shortcuts for quick access:
 
 | Windows / Linux | Mac |
 | :-------------: | :---: |
@@ -149,7 +162,7 @@ Or use these shortcuts:
 - Access to the OpenAI API or Azure OpenAI Service is necessary. For details, visit [OpenAI API](https://openai.com/blog/openai-api) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).
 - Visual Studio Code must be installed. Download it from the [Visual Studio Code download page](https://code.visualstudio.com/Download).
 
-## 🚀 Enhance Your Markdown Experience
+## 🔌 Enhance Your Markdown Experience
 
 Combine Markdown Copilot with these extensions for an even more powerful Markdown experience:
 - **[Markdown All in One]**:

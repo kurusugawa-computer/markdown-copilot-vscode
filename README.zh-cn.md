@@ -17,7 +17,8 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 2. 同时进行多个对话
 3. 分支对话
 4. 随时编辑之前的对话并继续对话
-5. 标题对话
+5. 根据对话命名文件
+6. 标题对话
 
 ***注意***: 使用此扩展需要 OpenAI 或 Azure OpenAI API 密钥。更多信息，请参考 [OpenAI 官方常见问题](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)或 [Azure OpenAI Quickstart](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart)。
 
@@ -94,6 +95,30 @@ Markdown Copilot根据上下文回答选文。
 
 更多配置选项，请参考 [OpenAI API: 创建聊天完成](https://platform.openai.com/docs/api-reference/chat/create)。
 
+### 📛 Name and Save File
+
+Markdown Copilot allows you to name and save a file based on its contents.
+
+To use, select the editor you want to name and save, and use the `Markdown Copilot: Name and Save As...` command.
+
+Or use shortcuts for quick access:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> |
+
+### 📛 命名和另存文件
+
+Markdown Copilot 允许您根据文件内容命名和另存文件。
+
+要使用此功能，请选择您要命名和保存的编辑器，然后使用 `Markdown Copilot: 命名和另存为...` 命令。
+
+或者使用快捷方式快速访问：
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> |
+
 ### 🏷️ 为活动上下文添加标题
 
 Markdown Copilot 可以根据对话历史记录为对话添加标题。
@@ -101,7 +126,7 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 
 要使用此功能，请将光标移至您要标题的上下文，然后使用 `Markdown Copilot: 活动上下文标题` 命令。
 
-使用快捷方式快速访问:
+或使用快捷方式快速访问:
 
 | Windows / Linux | Mac |
 | :-------------: | :---: |
@@ -150,7 +175,7 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
 - 需要访问 OpenAI 或 Azure OpenAI API。详情请访问 [OpenAI API](https://openai.com/blog/openai-api)或[Azure OpenAI Quickstart](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart)。
 - 必须安装 Visual Studio Code。从 [Visual Studio Code 下载页面](https://code.visualstudio.com/Download)下载。
 
-## 🚀 提升您的 Markdown 体验
+## 🔌 提升您的 Markdown 体验
 
 将 Markdown Copilot 与这些扩展结合使用，获得更强大的 Markdown 体验:
 - **[Markdown All in One]**:

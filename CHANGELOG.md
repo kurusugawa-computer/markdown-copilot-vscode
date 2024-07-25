@@ -4,6 +4,28 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.0] - 2024-07-26
+### Add
+- New OpenAI models can be selected in the Settings
+  - `gpt-4o-mini`
+  - `gpt-4o-mini-2024-07-18`
+- Add `Name and Save As...` command
+- Add "Name and Save File" section to READMEs
+- Add setting items
+  - `Markdown > Copilot > Instructions: Name Message`
+  - `Markdown > Copilot > Instructions: Name Path Format`
+
+### Changed
+- Update dependent packages
+
+### Removed
+- Remove OpenAI models
+  - `gpt-4-vision-preview`
+  - `gpt-4-32k`
+  - `gpt-4-32k-0613`
+  - `gpt-3.5-turbo-16k`
+  - `gpt-3.5-turbo-16k-0613`
+
 ## [0.2.0] - 2024-06-04
 ### Add
 - Support for Azure OpenAI
@@ -103,6 +125,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.3.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.9...v0.1.0
 [0.0.9]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.0.8...v0.0.9

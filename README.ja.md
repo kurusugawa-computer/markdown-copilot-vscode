@@ -17,7 +17,8 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 2. 複数の会話を同時並行で行う
 3. 会話を分岐させる
 4. 会話履歴を編集して会話を続ける
-5. 会話にタイトルをつける
+5. 会話をもとにファイルに名前をつける
+6. 会話にタイトルをつける
 
 ***注***: この拡張機能を使用するには、OpenAIまたはAzure OpenAIのAPIキーが必要です。詳細については、[OpenAI公式FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)を参照してください。
 
@@ -93,14 +94,26 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 
 他の設定オプションについては、[OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create)を参照してください。
 
+### 📛 ファイルに名前をつけて保存
+
+Markdown Copilotはファイル内容をもとにファイルに名前を付けて保存できます。
+
+使用するには、ファイルに名前を付けて保存したいエディタを選択して`Markdown Copilot: 名前をつけて保存...`コマンドを使用します。
+
+または、次のショートカットキーを使用します:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> |
+
 ### 🏷️ アクティブコンテキストにタイトルを付ける
 
 Markdown Copilotは会話履歴をもとに会話にタイトルを付けられます。
 会話タイトルは`# Copilot Context: `で始まる行として表現します。
 
-タイトルを付けたいコンテキストにカーソルを移動して`Markdown Copilot: アクティブコンテキストにタイトルを付ける`コマンドを使用します。
+使用するには、タイトルを付けたいコンテキストにカーソルを移動して`Markdown Copilot: アクティブコンテキストにタイトルを付ける`コマンドを使用します。
 
-次のショートカットキーを使用します:
+または、次のショートカットキーを使用します:
 
 | Windows / Linux | Mac |
 | :-------------: | :---: |
@@ -150,7 +163,7 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
 - OpenAI APIまたはAzure OpenAI Serviceへのアクセスが必要です。詳細については、[OpenAI API](https://openai.com/blog/openai-api)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)をご覧ください。
 - Visual Studio Codeがインストールされている必要があります。[Visual Studio Codeダウンロードページ](https://code.visualstudio.com/Download)からダウンロードしてください。
 
-## 🚀 Markdown体験を強化する
+## 🔌 Markdown体験を強化する
 
 次の拡張機能とMarkdown Copilotを組み合わせて、さらに強力なMarkdown体験を実現します:
 - **[Markdown All in One]**:
