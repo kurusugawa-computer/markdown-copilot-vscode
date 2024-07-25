@@ -2,6 +2,7 @@ import * as l10n from '@vscode/l10n';
 import { AssertionError } from 'assert';
 import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
+import * as path from 'path';
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -12,6 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT = "markdown.copilot.editing.continueInContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT = "markdown.copilot.editing.continueWithoutContext";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS = "markdown.copilot.editing.nameAndSaveAs";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
@@ -23,6 +25,70 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT,
 		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
 	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS, async () => {
+		const textEditor = vscode.window.activeTextEditor;
+		if (textEditor === undefined) { return; }
+
+		const document = textEditor.document;
+
+		const configuration = vscode.workspace.getConfiguration();
+		const nameMessage = configuration.get<string>("markdown.copilot.instructions.nameMessage");
+		if (nameMessage === undefined || nameMessage.trim().length === 0) {
+			return;
+		}
+
+		const currentDateTime = new Date().toLocaleString('sv').replace(' ', 'T');
+		const workspaceFolder = vscode.workspace.workspaceFolders![0];
+
+		const namePathFormat = document.uri.scheme === 'untitled'
+			? configuration.get<string>("markdown.copilot.instructions.namePathFormat")
+			: path.relative(workspaceFolder.uri.fsPath, vscode.Uri.joinPath(document.uri, '..', `\${filename}${path.extname(document.fileName)}`).fsPath);
+
+		if (namePathFormat === undefined || namePathFormat.trim().length === 0) {
+			return;
+		}
+
+		const stream = await createStream(
+			[
+				{ role: OpenAIChatRole.System, content: nameMessage.replace("${namePathFormat}", namePathFormat) },
+				{ role: OpenAIChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${workspaceFolder.uri.fsPath}" }\`` },
+				{ role: OpenAIChatRole.User, content: `Content:\n${document.getText()}` },
+			] as OpenAIChatMessage[],
+			{ "temperature": Number.EPSILON, "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParamsStreaming
+		);
+		let json = "";
+		for await (const chunk of stream) {
+			const chunkText = chunk.choices[0]?.delta?.content || '';
+			json += chunkText;
+		}
+
+		let filepath: string;
+		try {
+			filepath = JSON.parse(json).filepath;
+		} catch {
+			vscode.window.showErrorMessage("Failed to suggest a filepath. Try again.");
+			return;
+		}
+
+		const saveFileUri = vscode.Uri.joinPath(workspaceFolder.uri, filepath);
+		const saveDirUri = vscode.Uri.joinPath(saveFileUri, "..");
+
+		return makeDirectories(saveDirUri)
+			.then(topCreatedDirUri => vscode.window.showSaveDialog({ defaultUri: saveFileUri })
+				.then(async (uri) => {
+					// If user cancels the dialog, uri will be undefined.
+					if (uri) {
+						await vscode.workspace.fs.writeFile(uri, Buffer.from(document.getText()));
+						await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+						return vscode.workspace.openTextDocument(uri)
+							.then((doc) => vscode.window.showTextDocument(doc));
+					} else if (topCreatedDirUri !== undefined) {
+						return pruneEmptyDirectories(topCreatedDirUri, saveDirUri);
+					}
+				})
+			);
+	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
 		const textEditor = vscode.window.activeTextEditor;
@@ -537,52 +603,8 @@ class Completion {
 		).then(() => countChar(text) - deleteCharCount);
 	}
 
-	private async createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
-		const configuration = vscode.workspace.getConfiguration();
-		let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
-		const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
-		if (!isValidApiKey(apiKey)) {
-			apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
-			if (!isValidApiKey(apiKey)) {
-				throw new Error(`401 Incorrect API key provided: ${apiKey}. You can find your API key at https://platform.openai.com/account/api-keys.`);
-			}
-			configuration.update("markdown.copilot.openAI.apiKey", apiKey);
-		}
-		const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
-		const openai: OpenAI | AzureOpenAI = (() => {
-			if (!baseUrl) {
-				return new OpenAI({ apiKey: apiKey });
-			}
-			try {
-				const url = new URL(baseUrl);
-				return new AzureOpenAI({
-					endpoint: url.origin,
-					deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
-					apiKey: apiKey,
-					apiVersion: url.searchParams.get("api-version")!,
-				});
-			} catch {
-				throw new TypeError(l10n.t(
-					"config.openAI.azureBaseUrl.error",
-					baseUrl,
-					l10n.t("config.openAI.azureBaseUrl.description"),
-				));
-			}
-		})();
-		const stream = await openai.chat.completions.create(Object.assign(
-			{
-				model: configuration.get<string>("markdown.copilot.openAI.model")!,
-				messages: chatMessages as OpenAI.ChatCompletionMessageParam[],
-				temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
-				stream: true,
-			},
-			override
-		));
-		return stream;
-	}
-
 	async completeText(chatMessages: OpenAIChatMessage[], lineSeparator: string, override: OpenAI.ChatCompletionCreateParamsStreaming) {
-		const stream = await this.createStream(chatMessages, override);
+		const stream = await createStream(chatMessages, override);
 		this.abortController = stream.controller;
 
 		const chunkTextBuffer: string[] = [];
@@ -602,6 +624,49 @@ class Completion {
 		// flush chunkTextBuffer
 		this.anchorOffset += await submitChunkText(LF);
 	}
+}
+
+async function createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+	const configuration = vscode.workspace.getConfiguration();
+	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
+	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
+	if (!isValidApiKey(apiKey)) {
+		apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
+		if (!isValidApiKey(apiKey)) {
+			throw new Error(`401 Incorrect API key provided: ${apiKey}. You can find your API key at https://platform.openai.com/account/api-keys.`);
+		}
+		configuration.update("markdown.copilot.openAI.apiKey", apiKey);
+	}
+	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
+	const openai: OpenAI | AzureOpenAI = (() => {
+		if (!baseUrl) {
+			return new OpenAI({ apiKey: apiKey });
+		}
+		try {
+			const url = new URL(baseUrl);
+			return new AzureOpenAI({
+				endpoint: url.origin,
+				deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
+				apiKey: apiKey,
+				apiVersion: url.searchParams.get("api-version")!,
+			});
+		} catch {
+			throw new TypeError(l10n.t(
+				"config.openAI.azureBaseUrl.error",
+				baseUrl,
+				l10n.t("config.openAI.azureBaseUrl.description"),
+			));
+		}
+	})();
+	const stream = await openai.chat.completions.create(Object.assign(
+		{
+			model: configuration.get<string>("markdown.copilot.openAI.model")!,
+			messages: chatMessages,
+			temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
+			stream: true,
+		}, override
+	));
+	return stream;
 }
 
 async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
@@ -929,6 +994,51 @@ function partialEndsWith(target: string, search: string, ignore?: RegExp): numbe
 		if (target.endsWith(search.slice(0, offset))) { return offset; }
 	}
 	return 0;
+}
+
+/*
+ * Utilities for filesystem
+ */
+async function makeDirectories(dirUri: vscode.Uri): Promise<vscode.Uri | undefined> {
+	const segments = dirUri.path.split('/').filter(segment => segment);
+	const rootUri = dirUri.with({ path: '/' });
+
+	for (let i = 1; i <= segments.length; i++) {
+		const currentUri = vscode.Uri.joinPath(rootUri, ...segments.slice(0, i));
+		try {
+			// Check if currentUri already exists.
+			await vscode.workspace.fs.stat(currentUri);
+		} catch (error) {
+			// If currentUri does not exist, create directories and return the top of created directory URI.
+			await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(rootUri, ...segments));
+			return currentUri;
+		}
+	}
+	return undefined;
+}
+
+async function pruneEmptyDirectories(rootDirUri: vscode.Uri, leafDirUri: vscode.Uri): Promise<void> {
+	async function isDirectoryEmpty(dirUri: vscode.Uri): Promise<boolean> {
+		return vscode.workspace.fs.readDirectory(dirUri).then(files => files.length === 0);
+	}
+
+	async function deleteIfEmpty(targetDirUri: vscode.Uri): Promise<boolean> {
+		return isDirectoryEmpty(targetDirUri).then(
+			isEmpty => isEmpty
+				? vscode.workspace.fs.delete(targetDirUri, { recursive: false }).then(() => true)
+				: false
+		);
+	}
+
+	const rootDirUriString = rootDirUri.toString();
+
+	async function purgeRecursive(currentDirUri: vscode.Uri): Promise<void> {
+		if (!await deleteIfEmpty(currentDirUri)) { return; }
+		if (currentDirUri.toString() === rootDirUriString) { return; }
+		await purgeRecursive(vscode.Uri.joinPath(currentDirUri, '..'));
+	}
+
+	return purgeRecursive(leafDirUri);
 }
 
 /*
