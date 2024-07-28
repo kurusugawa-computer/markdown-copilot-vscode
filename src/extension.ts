@@ -704,9 +704,13 @@ async function organizeFiles(selectionOverride?: vscode.Selection) {
 		}
 
 		if (path_from && path_to) {
-			console.log(`Renaming ${path_from} to ${path_to}`);
-			vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, path_from),
-				vscode.Uri.joinPath(workspaceFolder.uri, path_to));
+			try {
+				await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, path_from),
+					vscode.Uri.joinPath(workspaceFolder.uri, path_to));
+			} catch {
+				vscode.window.showErrorMessage(l10n.t("command.editing.organizeFiles.error", path_from, path_to));
+				break;
+			}
 			path_from = path_to = null;
 		}
 	}
