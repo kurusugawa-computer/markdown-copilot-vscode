@@ -688,6 +688,7 @@ async function organizeFiles(selectionOverride?: vscode.Selection) {
 
 	const document = textEditor.document;
 	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
+	const workspaceFolder = vscode.workspace.workspaceFolders![0];
 
 	const text = document.getText(userRange);
 	let path_from = null, path_to = null;
@@ -703,8 +704,9 @@ async function organizeFiles(selectionOverride?: vscode.Selection) {
 		}
 
 		if (path_from && path_to) {
-			// TODO: run rename
 			console.log(`Renaming ${path_from} to ${path_to}`);
+			vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, path_from),
+				vscode.Uri.joinPath(workspaceFolder.uri, path_to));
 			path_from = path_to = null;
 		}
 	}
