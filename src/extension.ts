@@ -690,8 +690,23 @@ async function organizeFiles(selectionOverride?: vscode.Selection) {
 	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
 
 	const text = document.getText(userRange);
+	let path_from = null, path_to = null;
 	for (const line of text.split(/\r?\n/)) {
-		console.log(`File: ${line}`);
+		const match = line.match(/^(\+|\-)\s*([^\s]+)$/);
+		if (match === null) { continue; }
+
+		const [_, op, path] = match;
+		if (op === '-') {
+			path_from = path;
+		} else {
+			path_to = path;
+		}
+
+		if (path_from && path_to) {
+			// TODO: run rename
+			console.log(`Renaming ${path_from} to ${path_to}`);
+			path_from = path_to = null;
+		}
 	}
 }
 
