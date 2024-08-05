@@ -69,8 +69,8 @@
         "enablement": "editorLangId == markdown && editorHasSelection"
       },
       {
-        "command": "markdown.copilot.editing.organizeFiles",
-        "title": "%command.editing.organizeFiles.title%",
+        "command": "markdown.copilot.editing.applyFilePathDiff",
+        "title": "%command.editing.applyFilePathDiff.title%",
         "icon": "$(comment-discussion)",
         "enablement": "editorLangId == markdown && editorHasSelection"
       }
