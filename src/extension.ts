@@ -726,27 +726,55 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	}
 
 	// Detect errors
+	// TODO: add l10n keys for other langs
 
 	// Incomplete diff
 	if (path_from !== null || path_to !== null) {
-		vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete")); // TODO: Add key
+		vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+		return;
 	}
 
 	// File not found
-	
-	// Destination file already exists
-	
+	for (const { from } of diff_list) {
+		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from)).then(
+			() => null, (reason) => reason
+		);
+		if (reason !== null) {
+			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
+			return;
+		}
+	}
+
 	// Duplicated destination file
+	const to_set = new Set<string>();
+	for (const { to } of diff_list) {
+		if (to_set.has(to)) {
+			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
+			return;
+		}
+		to_set.add(to);
+	}
+
+	// Destination file already exists
+	for (const { to } of diff_list) {
+		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to)).then(
+			() => null, (reason) => reason
+		);
+		if (reason === null) {
+			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
+			return;
+		}
+	}
 
 	// Apply diffs
 
 	for (const diff of diff_list) {
-		console.log(diff);
-		try {
-			await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, diff.from),
-				vscode.Uri.joinPath(workspaceFolder.uri, diff.to));
-		} catch {
+		console.log(diff); // TODO: remove
+		let reason = await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, diff.from),
+			vscode.Uri.joinPath(workspaceFolder.uri, diff.to)).then(() => null, (reason) => reason);
+		if (reason !== null) {
 			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error", diff.from, diff.to));
+			return;
 		}
 	}
 }
