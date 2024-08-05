@@ -17,10 +17,10 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
-	const COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES = "markdown.copilot.editing.organizeFiles";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF = "markdown.copilot.editing.applyFilePathDiff";
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES,
-		(selectionOverride?: vscode.Selection) => organizeFiles(selectionOverride)
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF,
+		(selectionOverride?: vscode.Selection) => applyFilePathDiff(selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
@@ -204,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT, l10n.t("command.editing.continueWithoutContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
-				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_ORGANIZE_FILES, l10n.t("command.editing.organizeFiles.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF, l10n.t("command.editing.applyFilePathDiff.title")),
 			];
 
 			function newCodeAction(command: string, title: string): vscode.CodeAction {
@@ -678,7 +678,7 @@ async function createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.
 	return stream;
 }
 
-async function organizeFiles(selectionOverride?: vscode.Selection) {
+async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
@@ -708,7 +708,7 @@ async function organizeFiles(selectionOverride?: vscode.Selection) {
 				await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, path_from),
 					vscode.Uri.joinPath(workspaceFolder.uri, path_to));
 			} catch {
-				vscode.window.showErrorMessage(l10n.t("command.editing.organizeFiles.error", path_from, path_to));
+				vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error", path_from, path_to));
 				break;
 			}
 			path_from = path_to = null;
