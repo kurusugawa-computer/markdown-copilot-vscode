@@ -15,14 +15,14 @@ jobs:
     - name: ⚙️ Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20.x
+        node-version: 20
         cache: npm
     - name: 🛠️ Install dependencies
       run: npm install
     - name: 📦 Package .vsix
       run: npm run vsce:package
     - name: 📤 Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: markdown-copilot-${{github.sha}}
         path: markdown-copilot-*.vsix
