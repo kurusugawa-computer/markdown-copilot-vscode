@@ -689,6 +689,13 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		}
 	}
 
+	async function insertErrorMessage(message: string) {
+		const edit = new vscode.WorkspaceEdit();
+		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
+		edit.insert(document.uri, anchorPosition, `\nERROR: ${message}`.replaceAll("\n", toEolString(document.eol)));
+		return vscode.workspace.applyEdit(edit);
+	}
+
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
@@ -700,6 +707,8 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
 	const workspaceFolder = vscode.workspace.workspaceFolders![0];
 	const text = document.getText(userRange);
+
+	// Extract diffs
 
 	let path_from = null, path_to = null;
 	let diff_list: Diff[] = [];
@@ -726,21 +735,19 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	}
 
 	// Detect errors
-	// TODO: add l10n keys for other langs
 
 	// Incomplete diff
 	if (path_from !== null || path_to !== null) {
-		vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+		insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
 		return;
 	}
 
 	// File not found
 	for (const { from } of diff_list) {
-		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from)).then(
-			() => null, (reason) => reason
-		);
+		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from))
+			.then(() => null, (reason) => reason);
 		if (reason !== null) {
-			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
+			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
 			return;
 		}
 	}
@@ -748,8 +755,11 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	// Duplicated destination file
 	const to_set = new Set<string>();
 	for (const { to } of diff_list) {
+		if (to === "") {
+			continue;
+		}
 		if (to_set.has(to)) {
-			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
+			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
 			return;
 		}
 		to_set.add(to);
@@ -757,23 +767,30 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 
 	// Destination file already exists
 	for (const { to } of diff_list) {
-		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to)).then(
-			() => null, (reason) => reason
-		);
+		if (to === "") {
+			continue;
+		}
+		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to))
+			.then(() => null, (reason) => reason);
 		if (reason === null) {
-			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
+			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
 			return;
 		}
 	}
 
 	// Apply diffs
 
-	for (const diff of diff_list) {
-		console.log(diff); // TODO: remove
-		let reason = await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, diff.from),
-			vscode.Uri.joinPath(workspaceFolder.uri, diff.to)).then(() => null, (reason) => reason);
+	for (const { from, to } of diff_list) {
+		let reason = null;
+		if (to === "") {
+			reason = await vscode.workspace.fs.delete(vscode.Uri.joinPath(workspaceFolder.uri, from))
+				.then(() => null, (reason) => reason);
+		} else {
+			reason = await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, from),
+				vscode.Uri.joinPath(workspaceFolder.uri, to)).then(() => null, (reason) => reason);
+		}
 		if (reason !== null) {
-			vscode.window.showErrorMessage(l10n.t("command.editing.applyFilePathDiff.error", diff.from, diff.to));
+			insertErrorMessage(`${l10n.t("command.editing.applyFilePathDiff.error.fatal", from, to)}\n${reason}`);
 			return;
 		}
 	}
