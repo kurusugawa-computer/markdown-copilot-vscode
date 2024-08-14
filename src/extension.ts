@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF = "markdown.copilot.editing.listFilePathDiff";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF,
-		(selectionOverride?: vscode.Selection) => {}
+		(uri: vscode.Uri) => listFilePathDiff(uri)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF,
@@ -210,6 +210,7 @@ export function activate(context: vscode.ExtensionContext) {
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF, l10n.t("command.editing.applyFilePathDiff.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF, l10n.t("command.editing.listFilePathDiff.title")),
 			];
 
 			function newCodeAction(command: string, title: string): vscode.CodeAction {
@@ -681,6 +682,36 @@ async function createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.
 		}, override
 	));
 	return stream;
+}
+
+async function listFilePathDiff(uri: vscode.Uri) {
+	async function insertMessage(message: string) {
+		const edit = new vscode.WorkspaceEdit();
+		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
+		edit.insert(document.uri, anchorPosition, `${message}\n`.replaceAll("\n", toEolString(document.eol)));
+		return vscode.workspace.applyEdit(edit);
+	}
+
+	const textEditor = vscode.window.activeTextEditor;
+	if (textEditor === undefined) { return; }
+
+	const document = textEditor.document;
+	const userRange = toOverflowAdjustedRange(textEditor, undefined);
+	const workspaceFolder = vscode.workspace.workspaceFolders![0];
+
+	// List all immediate descendants of the `uri` directory
+
+	let diffs = "";
+	const entries = await vscode.workspace.fs.readDirectory(uri);
+	for (const [name, type] of entries) {
+		if (type == vscode.FileType.File && name.endsWith(".md")) {
+			// Get path relative to the workspace folder
+			let path = vscode.Uri.joinPath(uri, name).fsPath.substring(workspaceFolder.uri.fsPath.length + 1);
+			diffs += `- ${path}\n+ ${path}\n`;
+		}
+	}
+
+	insertMessage(diffs)
 }
 
 async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
