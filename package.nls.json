@@ -15,6 +15,7 @@
     "command.editing.applyFilePathDiff.error.fileNotFound": "File not found: \"{0}\"",
     "command.editing.applyFilePathDiff.error.duplicatedDestination": "Destination file path duplicates: \"{0}\"",
     "command.editing.applyFilePathDiff.error.destinationExists": "Destination file already exists: \"{0}\"",
+    "command.editing.listFilePathDiff.title": "List File Path Diff",
     "command.completion.context.detail": "Insert context guard header",
     "command.completion.user.detail": "Insert user message",
     "command.completion.system-override.detail": "Insert overriding system message",

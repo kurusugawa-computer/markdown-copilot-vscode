@@ -18,6 +18,11 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF = "markdown.copilot.editing.applyFilePathDiff";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF = "markdown.copilot.editing.listFilePathDiff";
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF,
+		(selectionOverride?: vscode.Selection) => {}
+	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF,
 		(selectionOverride?: vscode.Selection) => applyFilePathDiff(selectionOverride)
