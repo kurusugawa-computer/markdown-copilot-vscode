@@ -73,8 +73,20 @@
         "title": "%command.editing.applyFilePathDiff.title%",
         "icon": "$(comment-discussion)",
         "enablement": "editorLangId == markdown && editorHasSelection"
+      },
+      {
+        "command": "markdown.copilot.editing.listFilePathDiff",
+        "title": "%command.editing.listFilePathDiff.title%",
+        "icon": "$(comment-discussion)",
+        "enablement": "explorerResourceIsFolder"
       }
     ],
+    "menus": {
+      "explorer/context": [{
+        "when": "explorerResourceIsFolder",
+        "command": "markdown.copilot.editing.listFilePathDiff"
+      }]
+    },
     "configuration": {
       "title": "Markdown Copilot",
       "properties": {
