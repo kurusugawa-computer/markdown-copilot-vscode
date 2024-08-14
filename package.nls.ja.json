@@ -15,6 +15,7 @@
     "command.editing.applyFilePathDiff.error.fileNotFound": "ファイルが見つかりませんでした: \"{0}\"",
     "command.editing.applyFilePathDiff.error.duplicatedDestination": "リネーム先のファイルパスが重複しています: \"{0}\"",
     "command.editing.applyFilePathDiff.error.destinationExists": "リネーム先のファイルが既に存在します: \"{0}\"",
+    "command.editing.listFilePathDiff.title": "ファイルパスの差分を列挙する",
     "command.completion.context.detail": "コンテキストガードヘッダーを挿入する",
     "command.completion.user.detail": "ユーザーメッセージを挿入する",
     "command.completion.system-override.detail": "システムメッセージを上書きして挿入する",
