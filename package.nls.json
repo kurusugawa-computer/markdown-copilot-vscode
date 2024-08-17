@@ -10,7 +10,7 @@
     "command.editing.titleActiveContext.title": "Markdown Copilot: Title active context",
     "command.editing.nameAndSaveAs.title": "Markdown Copilot: Name and Save As...",
     "command.editing.applyFilePathDiff.title": "Markdown Copilot: Apply File Path Diff",
-    "command.editing.applyFilePathDiff.error.fatal": "Error occurred while renaming \"{0}\" to \"{1}\". Please check if the file path, etc. is correct.",
+    "command.editing.applyFilePathDiff.error.fatal": "Error occurred while renaming: \"{0}\" to \"{1}\", Please check if the file path, etc. is correct.",
     "command.editing.applyFilePathDiff.error.incomplete": "File path diff is incomplete or invalid",
     "command.editing.applyFilePathDiff.error.fileNotFound": "File not found: \"{0}\"",
     "command.editing.applyFilePathDiff.error.duplicatedDestination": "Destination file path duplicates: \"{0}\"",
