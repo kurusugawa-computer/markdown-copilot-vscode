@@ -749,7 +749,7 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	let path_from = null, path_to = null;
 	let diff_list: Diff[] = [];
 	for (const line of text.split(/\r?\n/)) {
-		if (line.match(/^\+\s*$/)) {
+		if (line.match(/^\+?\s*$/)) {
 			// The line only containing `+` is used to delete the file.
 			path_to = "";
 		} else {
