@@ -779,13 +779,17 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	}
 
 	// File not found
+	let some_files_missing = false;
 	for (const { from } of diff_list) {
 		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from))
 			.then(() => null, (reason) => reason);
 		if (reason !== null) {
 			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
-			return;
+			some_files_missing = true;
 		}
+	}
+	if (some_files_missing) {
+		return;
 	}
 
 	// Duplicated destination file
