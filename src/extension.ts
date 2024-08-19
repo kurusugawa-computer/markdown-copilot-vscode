@@ -749,18 +749,24 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	let path_from = null, path_to = null;
 	let diff_list: Diff[] = [];
 	for (const line of text.split(/\r?\n/)) {
-		if (line.match(/^\+?\s*$/)) {
-			// The line only containing `+` is used to delete the file.
-			path_to = "";
-		} else {
-			const match = line.match(/^(\+|\-)\s*([^\s]+)$/);
-			if (match === null) { continue; }
-
-			const [_, op, path] = match;
-			if (op === '-') {
-				path_from = path;
+		if (path_from === null) { // expecting `-`
+			const match = line.match(/^\-\s*([^\s]+)$/);
+			if (match === null) { // Invalid line
+				insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+				return;
+			}
+			path_from = match[1];
+		} else if (path_to === null) { // expecting `+` or blank line
+			if (line.match(/^\+?\s*$/)) {
+				// The line only containing `+` is used to delete the file.
+				path_to = "";
 			} else {
-				path_to = path;
+				const match = line.match(/^\+\s*([^\s]+)$/);
+				if (match === null) { // Invalid line
+					insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+					return;
+				}
+				path_to = match[1];
 			}
 		}
 
