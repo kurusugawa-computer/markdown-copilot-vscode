@@ -697,21 +697,27 @@ async function listFilePathDiff(uri: vscode.Uri) {
 
 	const document = textEditor.document;
 	const userRange = toOverflowAdjustedRange(textEditor, undefined);
-	const workspaceFolder = vscode.workspace.workspaceFolders![0];
 
-	// List all immediate descendants of the `uri` directory
+	// List all files under the `uri` directory recursively
 
 	let diffs = "";
-	const entries = await vscode.workspace.fs.readDirectory(uri);
-	for (const [name, type] of entries) {
-		if (type == vscode.FileType.File && name.endsWith(".md")) {
-			// Get path relative to the workspace folder
-			let path = vscode.Uri.joinPath(uri, name).fsPath.substring(workspaceFolder.uri.fsPath.length + 1);
-			diffs += `- ${path}\n+ ${path}\n`;
+	const pendingDirs: vscode.Uri[] = [uri];
+
+	while (pendingDirs.length > 0) {
+		const currentDir = pendingDirs.pop()!;
+		const entries = await vscode.workspace.fs.readDirectory(currentDir);
+		for (const [name, fileType] of entries) {
+			const fileUri = vscode.Uri.joinPath(currentDir, name);
+			if (fileType === vscode.FileType.Directory) {
+				pendingDirs.push(fileUri);
+			} else if (fileType === vscode.FileType.File) {
+				const path = vscode.workspace.asRelativePath(fileUri, false);
+				diffs += `- ${path}\n+ ${path}\n`;
+			}
 		}
 	}
 
-	insertMessage(diffs)
+	insertMessage(diffs);
 }
 
 async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
