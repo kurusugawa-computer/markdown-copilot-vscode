@@ -700,7 +700,7 @@ async function listFilePathDiff(uri: vscode.Uri) {
 
 	// List all files under the `uri` directory recursively
 
-	let diffs = "";
+	let diffs = "```diff\n";
 	const pendingDirs: vscode.Uri[] = [uri];
 
 	while (pendingDirs.length > 0) {
@@ -717,6 +717,7 @@ async function listFilePathDiff(uri: vscode.Uri) {
 		}
 	}
 
+	diffs += "```";
 	insertMessage(diffs);
 }
 
