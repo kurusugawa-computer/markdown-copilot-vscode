@@ -808,9 +808,7 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	// Duplicated destination file
 	const to_set = new Set<string>();
 	for (const { to } of diff_list) {
-		if (to === "") {
-			continue;
-		}
+		if (to === "") { continue; } // Represents deletion
 		if (to_set.has(to)) {
 			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
 			return;
@@ -819,10 +817,9 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	}
 
 	// Destination file already exists
-	for (const { to } of diff_list) {
-		if (to === "") {
-			continue;
-		}
+	for (const { from, to } of diff_list) {
+		if (to === "") { continue; } // Represents deletion
+		if (from === to) { continue; } // Represents no change
 		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to))
 			.then(() => null, (reason) => reason);
 		if (reason === null) {
