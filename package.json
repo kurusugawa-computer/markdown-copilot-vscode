@@ -78,7 +78,7 @@
         "command": "markdown.copilot.editing.listFilePathDiff",
         "title": "%command.editing.listFilePathDiff.title%",
         "icon": "$(comment-discussion)",
-        "enablement": "explorerResourceIsFolder"
+        "enablement": "explorerResourceIsFolder && editorIsOpen"
       }
     ],
     "menus": {
