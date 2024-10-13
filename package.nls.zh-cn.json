@@ -15,6 +15,7 @@
     "command.editing.applyFilePathDiff.error.fileNotFound": "未找到文件: \"{0}\"",
     "command.editing.applyFilePathDiff.error.duplicatedDestination": "目标文件已存在：\"{0}\"",
     "command.editing.applyFilePathDiff.error.destinationExists": "目标文件路径重复：\"{0}\"",
+    "command.editing.applyFilePathDiff.success": "文件路径差异已成功应用",
     "command.editing.listFilePathDiff.title": "列举文件路径的差异",
     "command.completion.context.detail": "插入上下文保护头",
     "command.completion.user.detail": "插入用户消息",

@@ -844,6 +844,8 @@ async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 			return;
 		}
 	}
+
+	vscode.window.showInformationMessage(l10n.t("command.editing.applyFilePathDiff.success"));
 }
 
 async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
