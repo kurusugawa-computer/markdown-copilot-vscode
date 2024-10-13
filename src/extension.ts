@@ -17,6 +17,16 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF = "markdown.copilot.editing.applyFilePathDiff";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF = "markdown.copilot.editing.listFilePathDiff";
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF,
+		(uri: vscode.Uri) => listFilePathDiff(uri)
+	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF,
+		(selectionOverride?: vscode.Selection) => applyFilePathDiff(selectionOverride)
+	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
 		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, selectionOverride)
@@ -199,6 +209,8 @@ export function activate(context: vscode.ExtensionContext) {
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT, l10n.t("command.editing.continueWithoutContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF, l10n.t("command.editing.applyFilePathDiff.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF, l10n.t("command.editing.listFilePathDiff.title")),
 			];
 
 			function newCodeAction(command: string, title: string): vscode.CodeAction {
@@ -670,6 +682,170 @@ async function createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.
 		}, override
 	));
 	return stream;
+}
+
+async function listFilePathDiff(uri: vscode.Uri) {
+	async function insertMessage(message: string) {
+		const edit = new vscode.WorkspaceEdit();
+		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
+		edit.insert(document.uri, anchorPosition, `${message}\n`.replaceAll("\n", toEolString(document.eol)));
+		return vscode.workspace.applyEdit(edit);
+	}
+
+	const textEditor = vscode.window.activeTextEditor;
+	if (textEditor === undefined) { return; }
+
+	const document = textEditor.document;
+	const userRange = toOverflowAdjustedRange(textEditor, undefined);
+
+	// List all files under the `uri` directory recursively
+
+	let diffs = "```diff\n";
+	const pendingDirs: vscode.Uri[] = [uri];
+
+	while (pendingDirs.length > 0) {
+		const currentDir = pendingDirs.pop()!;
+		const entries = await vscode.workspace.fs.readDirectory(currentDir);
+		for (const [name, fileType] of entries) {
+			const fileUri = vscode.Uri.joinPath(currentDir, name);
+			if (fileType === vscode.FileType.Directory) {
+				pendingDirs.push(fileUri);
+			} else if (fileType === vscode.FileType.File) {
+				const path = vscode.workspace.asRelativePath(fileUri, false);
+				diffs += `- ${path}\n+ ${path}\n`;
+			}
+		}
+	}
+
+	diffs += "```";
+	insertMessage(diffs);
+}
+
+async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
+	class Diff {
+		from: string;
+		to: string;
+
+		constructor(from: string, to: string) {
+			this.from = from;
+			this.to = to;
+		}
+	}
+
+	async function insertErrorMessage(message: string) {
+		const edit = new vscode.WorkspaceEdit();
+		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
+		edit.insert(document.uri, anchorPosition, `\nERROR: ${message}`.replaceAll("\n", toEolString(document.eol)));
+		return vscode.workspace.applyEdit(edit);
+	}
+
+	const textEditor = vscode.window.activeTextEditor;
+	if (textEditor === undefined) { return; }
+
+	if (selectionOverride === undefined) {
+		if (textEditor.selection.isEmpty) { return; }
+	} else if (selectionOverride.isEmpty) { return; }
+
+	const document = textEditor.document;
+	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
+	const workspaceFolder = vscode.workspace.workspaceFolders![0];
+	const text = document.getText(userRange);
+
+	// Extract diffs
+
+	let path_from = null, path_to = null;
+	let diff_list: Diff[] = [];
+	for (const line of text.split(/\r?\n/)) {
+		if (path_from === null) { // expecting `-`
+			const match = line.match(/^\-\s*([^\s]+)$/);
+			if (match === null) { // Invalid line
+				insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+				return;
+			}
+			path_from = match[1];
+		} else if (path_to === null) { // expecting `+` or blank line
+			if (line.match(/^\+?\s*$/)) {
+				// The line only containing `+` is used to delete the file.
+				path_to = "";
+			} else {
+				const match = line.match(/^\+\s*([^\s]+)$/);
+				if (match === null) { // Invalid line
+					insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+					return;
+				}
+				path_to = match[1];
+			}
+		}
+
+		if (path_from !== null && path_to !== null) {
+			diff_list.push(new Diff(path_from, path_to));
+			path_from = path_to = null;
+		}
+	}
+
+	// Detect errors
+
+	// Incomplete diff
+	if (path_from !== null || path_to !== null) {
+		insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+		return;
+	}
+
+	// File not found
+	let some_files_missing = false;
+	for (const { from } of diff_list) {
+		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from))
+			.then(() => null, (reason) => reason);
+		if (reason !== null) {
+			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
+			some_files_missing = true;
+		}
+	}
+	if (some_files_missing) {
+		return;
+	}
+
+	// Duplicated destination file
+	const to_set = new Set<string>();
+	for (const { to } of diff_list) {
+		if (to === "") { continue; } // Represents deletion
+		if (to_set.has(to)) {
+			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
+			return;
+		}
+		to_set.add(to);
+	}
+
+	// Destination file already exists
+	for (const { from, to } of diff_list) {
+		if (to === "") { continue; } // Represents deletion
+		if (from === to) { continue; } // Represents no change
+		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to))
+			.then(() => null, (reason) => reason);
+		if (reason === null) {
+			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
+			return;
+		}
+	}
+
+	// Apply diffs
+
+	for (const { from, to } of diff_list) {
+		let reason = null;
+		if (to === "") {
+			reason = await vscode.workspace.fs.delete(vscode.Uri.joinPath(workspaceFolder.uri, from))
+				.then(() => null, (reason) => reason);
+		} else {
+			reason = await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, from),
+				vscode.Uri.joinPath(workspaceFolder.uri, to)).then(() => null, (reason) => reason);
+		}
+		if (reason !== null) {
+			insertErrorMessage(`${l10n.t("command.editing.applyFilePathDiff.error.fatal", from, to)}\n${reason}`);
+			return;
+		}
+	}
+
+	vscode.window.showInformationMessage(l10n.t("command.editing.applyFilePathDiff.success"));
 }
 
 async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
