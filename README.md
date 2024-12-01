@@ -84,13 +84,28 @@ To use override options, simply include a JSON code block labeled `json copilot-
 
 **Example:** Let Markdown Copilot introduce itself with customized response length and model
 
-````markdown
+~~~markdown
 Introduce yourself.
 
 ```json copilot-options
 {"max_tokens":50,"model":"gpt-3.5-turbo"}
 ```
-````
+~~~
+
+**Example:** Using the `o1-preview` model
+
+The `o1-preview` and `o1-mini` models do not support system messages, so we will use `**System(Override):**` to clear the system messages.
+
+~~~markdown
+**System(Override):**
+
+**User:**
+Introduce yourself.
+
+```json copilot-options
+{"model":"o1-preview","temperature":1}
+```
+~~~
 
 For more configuration options, please refer to the [OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create).
 

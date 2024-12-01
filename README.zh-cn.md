@@ -93,6 +93,22 @@ Markdown Copilot根据上下文回答选文。
 ```
 ~~~
 
+**示例：** 使用 `o1-preview` 模型
+
+`o1-preview` 和 `o1-mini` 模型不支持系统消息，因此我们将使用 `**System(Override):**` 清除系统消息。
+
+~~~markdown
+**System(Override):**
+
+**User:**
+自我介绍。
+
+```json copilot-options
+{"model":"o1-preview","temperature":1}
+```
+~~~
+
+
 更多配置选项，请参考 [OpenAI API: 创建聊天完成](https://platform.openai.com/docs/api-reference/chat/create)。
 
 ### 📛 Name and Save File

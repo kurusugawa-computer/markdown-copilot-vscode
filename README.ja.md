@@ -92,6 +92,21 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 ```
 ~~~
 
+**例:** `o1-preview` モデルを利用する
+
+`o1-preview` と `o1-mini` モデルはシステムメッセージをサポートしていないので `**System(Override):**` を使ってシステムメッセージを空にします。
+
+~~~markdown
+**System(Override):**
+
+**User:**
+自己紹介してください。
+
+```json copilot-options
+{"model":"o1-preview","temperature":1}
+```
+~~~
+
 他の設定オプションについては、[OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create)を参照してください。
 
 ### 📛 ファイルに名前をつけて保存
