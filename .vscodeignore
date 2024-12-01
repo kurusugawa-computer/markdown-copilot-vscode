@@ -11,6 +11,7 @@ src/**
 **/*.ts
 
 # Configuration files
+.devcontainer/**
 .github/**
 .vscode/**
 .gitignore
