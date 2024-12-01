@@ -1043,7 +1043,12 @@ class ChatMessageBuilder {
 
 	addChatMessage(flags: ChatRoleFlags, message: string): void {
 		if (this.isInvalid) { return; }
-		if (message.length === 0) { return; }
+
+		const role = toOpenAIChatRole(flags);
+
+		if (flags & ChatRoleFlags.Override) {
+			this.chatMessages = this.chatMessages.filter(m => m.role !== role);
+		}
 
 		for (const match of message.matchAll(/```json +copilot-options\n([^]*?)\n```/gm)) {
 			try {
@@ -1059,11 +1064,8 @@ class ChatMessageBuilder {
 			}
 		}
 
-		const role = toOpenAIChatRole(flags);
-
-		if (flags & ChatRoleFlags.Override) {
-			this.chatMessages = this.chatMessages.filter(m => m.role !== role);
-		}
+		// Ignore empty messages
+		if (message.trim().length === 0) { return; }
 
 		this.chatMessages.push({
 			role: role,
