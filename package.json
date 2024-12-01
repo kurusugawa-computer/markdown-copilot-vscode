@@ -198,22 +198,22 @@
     "vsce:publish": "vsce publish"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.7",
+    "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.91.0",
-    "@typescript-eslint/eslint-plugin": "^7.17.0",
-    "@typescript-eslint/parser": "^7.17.0",
-    "@vscode/test-cli": "^0.0.9",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^2.31.1",
-    "eslint": "^8.57.0",
+    "@vscode/vsce": "^3.2.1",
+    "eslint": "^9.16.0",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.5.4",
+    "typescript": "^5.7.2",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "@vscode/l10n": "^0.0.18",
-    "openai": "^4.53.0"
+    "openai": "^4.73.1"
   }
 }

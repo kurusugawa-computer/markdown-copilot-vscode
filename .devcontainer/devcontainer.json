@@ -8,7 +8,8 @@
 		"vscode": {
 			"extensions": [
 				"ms-vscode.extension-test-runner",
-				"dbaeumer.vscode-eslint"
+				"dbaeumer.vscode-eslint",
+				"amodio.tsl-problem-matcher"
 			]
 		}
 	}
