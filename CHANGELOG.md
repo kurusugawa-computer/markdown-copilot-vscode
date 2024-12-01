@@ -4,8 +4,16 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.4.0] - 2024-12-01
+### Add
+- Add "Example: Using the `o1-preview` model" section to READMEs
+- Add `List File Path Diff` command
+- Add `Apply File Path Diff` command
+- New OpenAI models can be selected in the Settings
+  - `gpt-4o-2024-11-20`
+
 ## [0.3.1] - 2024-06-03
-### Changed
+### Add
 - New OpenAI models can be selected in the Settings
   - `gpt-4o-2024-08-06`
 
@@ -130,6 +138,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.4.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.1.0...v0.2.0
