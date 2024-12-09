@@ -82,10 +82,12 @@
       }
     ],
     "menus": {
-      "explorer/context": [{
-        "when": "explorerResourceIsFolder",
-        "command": "markdown.copilot.editing.listFilePathDiff"
-      }]
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "markdown.copilot.editing.listFilePathDiff"
+        }
+      ]
     },
     "configuration": {
       "title": "Markdown Copilot",
@@ -213,7 +215,9 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@types/mime-types": "^2.1.4",
     "@vscode/l10n": "^0.0.18",
+    "mime-types": "^2.1.35",
     "openai": "^4.73.1"
   }
 }
