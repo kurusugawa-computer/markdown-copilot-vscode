@@ -4,6 +4,8 @@ import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
 import * as path from 'path';
 import * as vscode from 'vscode';
+import fs from 'fs';
+import mime from 'mime-types';
 
 export function activate(context: vscode.ExtensionContext) {
 	initializeL10n(context.extensionUri);
@@ -1067,10 +1069,26 @@ class ChatMessageBuilder {
 		// Ignore empty messages
 		if (message.trim().length === 0) { return; }
 
-		this.chatMessages.push({
-			role: role,
-			content: message,
-		});
+		// Matches images in Markdown (i.e., `![alt](url)`)
+		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))/gm).filter(part => part !== '');
+
+		if (parts.length === 1) {
+			this.chatMessages.push({ role: role, content: message });
+		} else {
+			const content: OpenAI.ChatCompletionContentPart[] = parts.map<OpenAI.ChatCompletionContentPart>(part => {
+				const url = part.match(/!\[[^\]]*\]\(([^)]+)\)/)?.[1];
+				if (url === undefined) { return { type: 'text', text: part }; }
+				if (url.match(/^https?:\/\//)) {
+					return { type: 'image_url', image_url: { url: url } };
+				} else {
+					const fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, url);
+					const text = fs.readFileSync(fullUri.fsPath).toString('base64');
+					const type = mime.lookup(fullUri.fsPath) || "image/png";
+					return { type: 'image_url', image_url: { url: `data:${type};base64,${text}` } };
+				}
+			});
+			this.chatMessages.push({ role: role, content: content });
+		}
 	}
 
 	addLines(lines: string[]) {
@@ -1124,7 +1142,7 @@ enum ChatRoleFlags {
 
 interface OpenAIChatMessage {
 	role: OpenAIChatRole;
-	content: string;
+	content: string | OpenAI.ChatCompletionContentPart[];
 }
 
 const roleRegex = /\*\*(System|User|Copilot)(\(Override\))?:\*\*/;
