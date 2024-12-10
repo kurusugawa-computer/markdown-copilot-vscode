@@ -82,10 +82,12 @@
       }
     ],
     "menus": {
-      "explorer/context": [{
-        "when": "explorerResourceIsFolder",
-        "command": "markdown.copilot.editing.listFilePathDiff"
-      }]
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "markdown.copilot.editing.listFilePathDiff"
+        }
+      ]
     },
     "configuration": {
       "title": "Markdown Copilot",
@@ -192,7 +194,7 @@
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src/**/*.ts",
     "test": "vscode-test",
     "vsce:package": "vsce package",
     "vsce:publish": "vsce publish"
@@ -201,8 +203,8 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.91.0",
-    "@typescript-eslint/eslint-plugin": "^8.16.0",
-    "@typescript-eslint/parser": "^8.16.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^3.2.1",
@@ -213,7 +215,9 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@types/mime-types": "^2.1.4",
     "@vscode/l10n": "^0.0.18",
+    "mime-types": "^2.1.35",
     "openai": "^4.73.1"
   }
 }
