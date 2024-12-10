@@ -4,6 +4,13 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.5.0] - 2024-12-11
+### Add
+- Add `Paste as Markdown` command
+- Add support image attachments
+- Add setting items
+  - `Markdown > Copilot > Instructions: Paste As Markdown Message`
+
 ## [0.4.0] - 2024-12-01
 ### Add
 - Add "Example: Using the `o1-preview` model" section to READMEs
@@ -138,6 +145,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.5.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.2.0...v0.3.0

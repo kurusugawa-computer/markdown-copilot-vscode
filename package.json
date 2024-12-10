@@ -79,6 +79,12 @@
         "title": "%command.editing.listFilePathDiff.title%",
         "icon": "$(comment-discussion)",
         "enablement": "explorerResourceIsFolder && editorIsOpen"
+      },
+      {
+        "command": "markdown.copilot.editing.pasteAsMarkdown",
+        "title": "%command.editing.pasteAsMarkdown.title%",
+        "icon": "$(clippy)",
+        "enablement": "editorLangId == markdown && editorIsOpen"
       }
     ],
     "menus": {
@@ -109,6 +115,12 @@
           "type": "string",
           "default": "memo/${date:yyyy-MM-dd}/${filename}.md",
           "markdownDescription": "%config.instructions.namePathFormat.description%"
+        },
+        "markdown.copilot.instructions.pasteAsMarkdownMessage": {
+          "type": "string",
+          "default": "Convert the following text to Markdown. Follow these rules:\n- Output only Markdown content without quotes and explanations.\n- Preserve all content; no summaries or omissions.\n- Use relative URLs for internal links.\n- Use structured formats (code, JSON, tables, logical operators, math) for clarity.\n- Use VSCode Markdown syntax.\n- Enclose code in ` ` ` or `~~~` only when needed.\n- Use `$...$` for inline math, `$$...$$` for block math.",
+          "editPresentation": "multilineText",
+          "markdownDescription": "%config.instructions.pasteAsMarkdownMessage.description%"
         },
         "markdown.copilot.instructions.systemMessage": {
           "type": "string",
@@ -211,13 +223,13 @@
     "eslint": "^9.16.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.7.2",
-    "webpack": "^5.96.1",
+    "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "@types/mime-types": "^2.1.4",
     "@vscode/l10n": "^0.0.18",
     "mime-types": "^2.1.35",
-    "openai": "^4.73.1"
+    "openai": "^4.76.1"
   }
 }

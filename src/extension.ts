@@ -21,6 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF = "markdown.copilot.editing.applyFilePathDiff";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF = "markdown.copilot.editing.listFilePathDiff";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_PASTE_AS_MARKDOWN = "markdown.copilot.editing.pasteAsMarkdown";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF,
 		(uri: vscode.Uri) => listFilePathDiff(uri)
@@ -187,6 +188,10 @@ export function activate(context: vscode.ExtensionContext) {
 			)
 		);
 	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_PASTE_AS_MARKDOWN,
+		() => pasteAsMarkdown()
+	));
 
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
 		textEditor => contextDecorator.onDidChangeActiveTextEditor(textEditor)
@@ -873,113 +878,40 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 		chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
 	}
 
-	let errorMessage = null;
-
-	if (useContext) {
-		const importedDocumentUriTexts: string[] = [];
-		const activeLineTexts: string[] = [];
-
-		async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
-			async function resolveFragmentUri(document: vscode.TextDocument, fragmentUriText: string) {
-				try {
-					let fullUri = null;
-					if (fragmentUriText.startsWith('/')) {
-						fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, fragmentUriText);
-					} else {
-						if (document.uri.scheme === 'untitled') {
-							throw new AssertionError();
-						}
-						fullUri = vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
-					}
-					return await vscode.workspace.openTextDocument(fullUri);
-				} catch {
-					throw new Error(l10n.t(
-						"command.editing.continueInContext.import.error",
-						fragmentUriText,
-						vscode.workspace.asRelativePath(document.fileName)
-					));
-				}
-			}
-
-			// Avoid recursive import infinity loop.
-			const documentUriText = document.uri.toString();
-			if (importedDocumentUriTexts.includes(documentUriText)) {
-				return;
-			}
-			importedDocumentUriTexts.push(documentUriText);
-			try {
-				// Find lines with `@import "file.md"` and append its content to the active context.
-				for (const line of lineTexts.split(/\r?\n/)) {
-					// Format conforms to crossnote filepath
-					// see: https://github.com/shd101wyy/crossnote/blob/master/src/markdown-engine/transformer.ts#L601
-					const match = line.match(/\@import\s+\"([^\"]+)\"/);
-					if (match === null) {
-						activeLineTexts.push(line);
-						continue;
-					}
-					await resolveFragmentUri(
-						document, match[1].trim()
-					).then(
-						(importedDocument) => resolveImport(importedDocument, importedDocument.getText())
-					);
-				}
-			} finally {
-				importedDocumentUriTexts.pop();
-			}
-		}
-
-		try {
-			for (const lineRange of outline.toActiveLineRanges()) {
-				if (lineRange.start.isAfterOrEqual(userStart)) {
-					break;
-				}
-				const lineTexts = outdentQuote(
-					document.getText(new vscode.Range(
-						lineRange.start,
-						lineRange.end.isAfterOrEqual(userStart)
-							? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
-							: lineRange.end
-					)),
-					lineRange.quoteIndent
-				);
-
-				await resolveImport(document, lineTexts);
-			}
-		} catch (e) {
-			if (e instanceof Error) {
-				errorMessage = e.message;
-			}
-		}
-
-		chatMessageBuilder.addLines(
-			activeLineTexts.join(documentEol).split(documentEol)
-		);
-	}
-
 	const userStartLineText = document.lineAt(userStart.line).text;
 	const userEndLineText = document.lineAt(userEnd.line).text;
 	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
-	const userEndOffset = document.offsetAt(userEnd);
+	let userEndOffset = document.offsetAt(userEnd);
 
 	const userStartLineQuoteIndentText = userStartLineText.match(quoteIndentRegex)?.[0] || '';
 	const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
 
-	const selectionText = document.getText(userRange);
+	const selectedText = document.getText(userRange);
 
-	let lastUserMessage = outdentQuote(
-		selectionText,
+	let selectedUserMessage = outdentQuote(
+		selectedText,
 		userEndLineQuoteIndent
 	).replaceAll(documentEol, LF);
 
+	// Check if the last user message already has a `**User:** ` prefix
 	const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*[ \t]*/);
-
 	if (userStartLineMatchesUser !== null) {
-		lastUserMessage = lastUserMessage.replace(userStartLineMatchesUser[0], "");
+		// Remove `**User:** ` from the start of the last user message
+		selectedUserMessage = selectedUserMessage.replace(userStartLineMatchesUser[0], "");
+	} else {
+		// Insert `**User:** ` at the start of the user selection
+		const edit = new vscode.WorkspaceEdit();
+		const insertText = "**User:** ";
+		edit.insert(
+			document.uri,
+			document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
+			insertText
+		);
+		await vscode.workspace.applyEdit(edit);
+		userEndOffset += countChar(insertText);
 	}
 
-	chatMessageBuilder.addChatMessage(ChatRoleFlags.User, lastUserMessage);
-
-	const titleText = selectionText.replaceAll(/[\r\n]+/g, " ").trim();
+	const titleText = selectedText.replaceAll(/[\r\n]+/g, " ").trim();
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Window,
 		title: `Markdown Copilot: ${titleText.length > 64
@@ -989,46 +921,170 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const completion = new Completion(
-			textEditor,
-			document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))
-		);
+		const completion = new Completion(textEditor, userEndOffset);
 		token.onCancellationRequested(() => completion.cancel());
-		return completion.insertText(
-			userStartLineMatchesUser !== null ? "" : `${userStart.character > 0 ? documentEol : ""}**User:** `,
-			documentEol + userStartLineQuoteIndentText
-		).then(offsetDiff => {
-			completion.setAnchorOffset(userEndOffset + offsetDiff);
-			return completion.insertText(
-				"\n\n**Copilot:** ",
-				userEndLineEol
-			);
-		}).then(offsetDiff => {
+		try {
+			const offsetDiff = await completion.insertText("\n\n**Copilot:** ", userEndLineEol);
 			completion.translateAnchorOffset(offsetDiff);
-			if (errorMessage !== null) {
-				// Show errors to help users correct their text
+
+			if (useContext) {
+				chatMessageBuilder.addLines(await collectActiveLines(outline, userStart, document));
+			}
+			chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
+
+			return await completion.completeText(
+				chatMessageBuilder.toChatMessages(),
+				userEndLineEol,
+				chatMessageBuilder.getCopilotOptions(),
+			);
+		} catch (e) {
+			if (e instanceof Error) {
+				// remove head error code
+				const errorMessage = e.message.replace(/^\d+ /, "");
+				vscode.window.showErrorMessage(errorMessage);
 				return completion.insertText(
 					errorMessage,
 					userEndLineEol
-				).then(() => { });
-			} else {
-				return completion.completeText(
-					chatMessageBuilder.toChatMessages(),
-					userEndLineEol,
-					chatMessageBuilder.getCopilotOptions(),
 				);
 			}
-		}).catch(async error => {
-			// remove head error code
-			const errorMessage = error.message.replace(/^\d+ /, "");
-			vscode.window.showErrorMessage(errorMessage);
-			return completion.insertText(
-				errorMessage,
-				userEndLineEol
-			);
-		}).finally(
-			() => completion.dispose()
+		} finally {
+			completion.dispose();
+		}
+	});
+}
+
+async function collectActiveLines(outline: DocumentOutline, userStart: vscode.Position, document: vscode.TextDocument) {
+	const documentEol = toEolString(document.eol);
+
+	const importedDocumentUriTexts: string[] = [];
+	const activeLineTexts: string[] = [];
+
+	async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
+		async function resolveFragmentUri(document: vscode.TextDocument, fragmentUriText: string) {
+			try {
+				let fullUri = null;
+				if (fragmentUriText.startsWith('/')) {
+					fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, fragmentUriText);
+				} else {
+					if (document.uri.scheme === 'untitled') {
+						throw new AssertionError();
+					}
+					fullUri = vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
+				}
+				return await vscode.workspace.openTextDocument(fullUri);
+			} catch {
+				throw new Error(l10n.t(
+					"command.editing.continueInContext.import.error",
+					fragmentUriText,
+					vscode.workspace.asRelativePath(document.fileName)
+				));
+			}
+		}
+
+		// Avoid recursive import infinity loop.
+		const documentUriText = document.uri.toString();
+		if (importedDocumentUriTexts.includes(documentUriText)) {
+			return;
+		}
+		importedDocumentUriTexts.push(documentUriText);
+		try {
+			// Find lines with `@import "file.md"` and append its content to the active context.
+			for (const line of lineTexts.split(/\r?\n/)) {
+				// Format conforms to crossnote filepath
+				// see: https://github.com/shd101wyy/crossnote/blob/master/src/markdown-engine/transformer.ts#L601
+				const match = line.match(/\@import\s+\"([^\"]+)\"/);
+				if (match === null) {
+					activeLineTexts.push(line);
+					continue;
+				}
+				const importedDocument = await resolveFragmentUri(document, match[1].trim());
+				await resolveImport(importedDocument, importedDocument.getText());
+			}
+		} finally {
+			importedDocumentUriTexts.pop();
+		}
+	}
+
+	for (const lineRange of outline.toActiveLineRanges()) {
+		if (lineRange.start.isAfterOrEqual(userStart)) {
+			break;
+		}
+		const lineTexts = outdentQuote(
+			document.getText(new vscode.Range(
+				lineRange.start,
+				lineRange.end.isAfterOrEqual(userStart)
+					? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
+					: lineRange.end
+			)),
+			lineRange.quoteIndent
 		);
+		await resolveImport(document, lineTexts);
+	}
+
+	return activeLineTexts.join(documentEol).split(documentEol);
+}
+
+async function pasteAsMarkdown() {
+	let clipboardContent = await vscode.env.clipboard.readText();
+	clipboardContent = clipboardContent.trim();
+	if (!clipboardContent) { return; }
+
+	const textEditor = vscode.window.activeTextEditor;
+	if (textEditor === undefined) { return; }
+
+	const userRange = toOverflowAdjustedRange(textEditor);
+	const userStart = userRange.start;
+	const userEnd = userRange.end;
+
+	const document = textEditor.document;
+	const documentEol = toEolString(document.eol);
+
+	const userEndLineText = document.lineAt(userEnd.line).text;
+	const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
+
+	if (!userRange.isEmpty) {
+		const edit = new vscode.WorkspaceEdit();
+		edit.delete(textEditor.document.uri, userRange);
+		await vscode.workspace.applyEdit(edit);
+	}
+
+	const titleText = "Pasting clipboard content as Markdown";
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Window,
+		title: `Markdown Copilot: ${titleText}`,
+		cancellable: true
+	}, async (_progress, token) => {
+		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
+		const completion = new Completion(textEditor, document.offsetAt(userStart));
+		token.onCancellationRequested(() => completion.cancel());
+		try {
+			const configuration = vscode.workspace.getConfiguration();
+			const pasteAsMarkdownMessage = configuration.get<string>("markdown.copilot.instructions.pasteAsMarkdownMessage");
+			if (pasteAsMarkdownMessage === undefined || pasteAsMarkdownMessage.trim().length === 0) {
+				return;
+			}
+
+			return await completion.completeText(
+				[
+					{ role: OpenAIChatRole.User, content: pasteAsMarkdownMessage },
+					{ role: OpenAIChatRole.User, content: clipboardContent },
+				],
+				userEndLineEol,
+				{} as OpenAI.ChatCompletionCreateParamsStreaming
+			);
+		} catch (e) {
+			if (e instanceof Error) {
+				// remove head error code
+				const errorMessage = e.message.replace(/^\d+ /, "");
+				vscode.window.showErrorMessage(errorMessage);
+				await completion.insertText(
+					errorMessage,
+					userEndLineEol
+				);
+			}
+		} finally {
+			completion.dispose();
+		}
 	});
 }
 
