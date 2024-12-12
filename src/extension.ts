@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { ChatCompletion, ChatMessageBuilder, ChatRole, ChatRoleFlags } from './agents/chatCompletion';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
-import { countQuoteIndent, getQuoteIndent, indentQuote, outdentQuote } from './features/indention';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { adjustStartToLineHead, countChar, LF, partialEndsWith, resolveFragmentUri, toEolString, toOverflowAdjustedRange } from './utils';
 import { ContextDecorator, ContextOutline } from './utils/context';
+import { countQuoteIndent, getQuoteIndent, indentQuote, outdentQuote } from './utils/indention';
 import * as l10n from './utils/localization';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -148,6 +148,7 @@ export function activate(context: vscode.ExtensionContext) {
 			ChatCompletion.onDidChangeTextDocument(event);
 		}
 	));
+
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(
 		event => contextDecorator.onDidChangeConfiguration(event)
 	));
@@ -161,7 +162,6 @@ export function activate(context: vscode.ExtensionContext) {
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF, l10n.t("command.editing.applyFilePathDiff.title")),
-				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF, l10n.t("command.editing.listFilePathDiff.title")),
 			];
 
 			function newCodeAction(command: string, title: string): vscode.CodeAction {
@@ -357,7 +357,7 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sel
 			completion.translateAnchorOffset(offsetDiff);
 
 			if (useContext) {
-				chatMessageBuilder.addLines(await collectActiveLines(outline, userStart, document));
+				chatMessageBuilder.addLines(await collectActiveLines(outline, document, userStart));
 			}
 			chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
 
@@ -382,7 +382,7 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sel
 	});
 }
 
-async function collectActiveLines(outline: ContextOutline, userStart: vscode.Position, document: vscode.TextDocument) {
+async function collectActiveLines(outline: ContextOutline, document: vscode.TextDocument, userStart: vscode.Position) {
 	const documentEol = toEolString(document.eol);
 
 	const importedDocumentUriTexts: string[] = [];

@@ -73,4 +73,3 @@ export function resolveFragmentUri(document: vscode.TextDocument, fragmentUriTex
 	}
 	return vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
 }
-

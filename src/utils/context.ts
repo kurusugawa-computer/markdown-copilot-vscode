@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { countQuoteIndent } from '../features/indention';
-import { isSelectionOverflow } from '../utils';
+import { isSelectionOverflow } from '.';
+import { countQuoteIndent } from './indention';
 
 interface LineRange {
 	start: vscode.Position;
