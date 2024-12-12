@@ -1,16 +1,17 @@
-import * as l10n from '@vscode/l10n';
 import { AssertionError } from 'assert';
-import { AzureOpenAI, OpenAI } from 'openai';
-import { Stream } from "openai/streaming";
-import * as path from 'path';
 import * as vscode from 'vscode';
-import fs from 'fs';
-import mime from 'mime-types';
+import { ChatCompletion, ChatMessageBuilder, ChatRole, ChatRoleFlags } from './agents/chatCompletion';
+import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
+import { countQuoteIndent, getQuoteIndent, indentQuote, outdentQuote } from './features/indention';
+import { nameAndSaveAs } from './features/nameAndSave';
+import { adjustStartToLineHead, countChar, LF, partialEndsWith, toEolString, toOverflowAdjustedRange } from './utils';
+import { ContextDecorator, ContextOutline } from './utils/context';
+import * as l10n from './utils/localization';
 
 export function activate(context: vscode.ExtensionContext) {
-	initializeL10n(context.extensionUri);
+	l10n.initialize(context.extensionUri);
 
-	const outline = new DocumentOutline();
+	const outline = new ContextOutline();
 	const contextDecorator = new ContextDecorator(outline, vscode.window.activeTextEditor);
 
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT = "markdown.copilot.editing.continueInContext";
@@ -39,69 +40,9 @@ export function activate(context: vscode.ExtensionContext) {
 		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
 	));
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS, async () => {
-		const textEditor = vscode.window.activeTextEditor;
-		if (textEditor === undefined) { return; }
-
-		const document = textEditor.document;
-
-		const configuration = vscode.workspace.getConfiguration();
-		const nameMessage = configuration.get<string>("markdown.copilot.instructions.nameMessage");
-		if (nameMessage === undefined || nameMessage.trim().length === 0) {
-			return;
-		}
-
-		const currentDateTime = new Date().toLocaleString('sv').replace(' ', 'T');
-		const workspaceFolder = vscode.workspace.workspaceFolders![0];
-
-		const namePathFormat = document.uri.scheme === 'untitled'
-			? configuration.get<string>("markdown.copilot.instructions.namePathFormat")
-			: path.relative(workspaceFolder.uri.fsPath, vscode.Uri.joinPath(document.uri, '..', `\${filename}${path.extname(document.fileName)}`).fsPath);
-
-		if (namePathFormat === undefined || namePathFormat.trim().length === 0) {
-			return;
-		}
-
-		const stream = await createStream(
-			[
-				{ role: OpenAIChatRole.System, content: nameMessage.replace("${namePathFormat}", namePathFormat) },
-				{ role: OpenAIChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${workspaceFolder.uri.fsPath}" }\`` },
-				{ role: OpenAIChatRole.User, content: `Content:\n${document.getText()}` },
-			] as OpenAIChatMessage[],
-			{ "temperature": Number.EPSILON, "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParamsStreaming
-		);
-		let json = "";
-		for await (const chunk of stream) {
-			const chunkText = chunk.choices[0]?.delta?.content || '';
-			json += chunkText;
-		}
-
-		let filepath: string;
-		try {
-			filepath = JSON.parse(json).filepath;
-		} catch {
-			vscode.window.showErrorMessage("Failed to suggest a filepath. Try again.");
-			return;
-		}
-
-		const saveFileUri = vscode.Uri.joinPath(workspaceFolder.uri, filepath);
-		const saveDirUri = vscode.Uri.joinPath(saveFileUri, "..");
-
-		return makeDirectories(saveDirUri)
-			.then(topCreatedDirUri => vscode.window.showSaveDialog({ defaultUri: saveFileUri })
-				.then(async (uri) => {
-					// If user cancels the dialog, uri will be undefined.
-					if (uri) {
-						await vscode.workspace.fs.writeFile(uri, Buffer.from(document.getText()));
-						await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
-						return vscode.workspace.openTextDocument(uri)
-							.then((doc) => vscode.window.showTextDocument(doc));
-					} else if (topCreatedDirUri !== undefined) {
-						return pruneEmptyDirectories(topCreatedDirUri, saveDirUri);
-					}
-				})
-			);
-	}));
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS,
+		() => nameAndSaveAs()
+	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
 		const textEditor = vscode.window.activeTextEditor;
@@ -138,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const lineRangeStartLine = activeLineRangesStart.line;
 			const match = document.lineAt(lineRangeStartLine).text.match(/^(#[ \t]Copilot Context:[ \t]).*$/);
 
-			const completion = new Completion(textEditor, document.offsetAt(activeLineRangesStart));
+			const completion = new ChatCompletion(textEditor, document.offsetAt(activeLineRangesStart));
 			token.onCancellationRequested(() => completion.cancel());
 
 			return (match !== null
@@ -147,9 +88,9 @@ export function activate(context: vscode.ExtensionContext) {
 			).then(() => {
 				completion.setAnchorOffset(document.offsetAt(document.lineAt(lineRangeStartLine).range.end));
 				return completion.completeText([
-					{ role: OpenAIChatRole.User, content: activeContextText },
-					{ role: OpenAIChatRole.User, content: titleMessage },
-				], "", {} as OpenAI.ChatCompletionCreateParamsStreaming);
+					{ role: ChatRole.User, content: activeContextText },
+					{ role: ChatRole.User, content: titleMessage },
+				], "",);
 			}).catch(error => {
 				const errorMessage = error.message.replace(/^\d+ /, "");
 				vscode.window.showErrorMessage(errorMessage);
@@ -202,7 +143,10 @@ export function activate(context: vscode.ExtensionContext) {
 	));
 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(
-		event => contextDecorator.onDidChangeTextDocument(event)
+		event => {
+			contextDecorator.onDidChangeTextDocument(event);
+			ChatCompletion.onDidChangeTextDocument(event);
+		}
 	));
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(
 		event => contextDecorator.onDidChangeConfiguration(event)
@@ -337,525 +281,10 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-	for (const completion of Completion.runningCompletions) {
-		completion.cancel();
-	}
+	ChatCompletion.onDeactivate();
 }
 
-interface LineRange {
-	start: vscode.Position;
-	end: vscode.Position;
-	quoteIndent: number;
-}
-
-const isSelectionOverflow = (selection: vscode.Selection): boolean => !selection.isEmpty && selection.end.character === 0;
-
-function isContextSeparate(lineText: string): boolean {
-	return lineText.match(/^#[ \t]Copilot Context/) !== null;
-}
-
-class DocumentOutline {
-	private readonly lineRanges: LineRange[] = [];
-	private readonly activeLineRangeIndices: number[] = [];
-	private readonly inactiveLineRangeIndices: number[] = [];
-
-	private toRanges(lineRangeIndices: number[]): vscode.Range[] {
-		const lineRanges = this.lineRanges;
-		return Array.from(
-			lineRangeIndices,
-			e => new vscode.Range(lineRanges[e].start, lineRanges[e].end)
-		);
-	}
-
-	toActiveLineRanges(): LineRange[] {
-		const lineRanges = this.lineRanges;
-		return Array.from(
-			this.activeLineRangeIndices,
-			e => lineRanges[e]
-		);
-	}
-
-	toInactiveRanges(): vscode.Range[] {
-		return this.toRanges(this.inactiveLineRangeIndices);
-	}
-
-	update(document: vscode.TextDocument, selection: vscode.Selection) {
-		const activeLine = Math.max(
-			0,
-			selection.end.line - (isSelectionOverflow(selection) ? 1 : 0)
-		);
-
-		const firstLine = document.lineAt(0);
-		const firstLineText = firstLine.text;
-
-		let lineRange: LineRange = {
-			start: firstLine.range.start,
-			end: firstLine.range.end,
-			quoteIndent: countQuoteIndent(firstLineText),
-		};
-
-		const lineRanges = this.lineRanges;
-		lineRanges.length = 0;
-		lineRanges.push(lineRange);
-
-		let activeLineRangeIndex = 0;
-
-		for (let line = 1; line < document.lineCount; ++line) {
-			const textLine = document.lineAt(line);
-			const textLineRange = textLine.range;
-			const textLineText = textLine.text;
-			if (isContextSeparate(textLineText)) {
-				lineRange = {
-					start: textLineRange.start,
-					end: textLineRange.end,
-					quoteIndent: 0,
-				};
-				if (line > activeLine) {
-					lineRanges.push(lineRange);
-					break;
-				}
-				lineRanges.length = 0;
-				lineRanges.push(lineRange);
-			}
-
-			const quoteIndent = countQuoteIndent(textLineText);
-
-			if (quoteIndent === lineRange.quoteIndent) {
-				lineRange.end = textLineRange.end;
-			} else {
-				lineRange = {
-					start: textLineRange.start,
-					end: textLineRange.end,
-					quoteIndent: quoteIndent
-				};
-				lineRanges.push(lineRange);
-				if (line > activeLine) {
-					break;
-				}
-			}
-
-			if (line === activeLine) {
-				activeLineRangeIndex = lineRanges.length - 1;
-			}
-		}
-		// inactive lines up to the end
-		lineRange.end = document.lineAt(document.lineCount - 1).range.end;
-
-		const activeLineRangeIndices = this.activeLineRangeIndices;
-		activeLineRangeIndices.length = 0;
-
-		const inactiveLineRangeIndices = this.inactiveLineRangeIndices;
-		inactiveLineRangeIndices.length = 0;
-
-		let activeQuoteIndent = lineRanges[activeLineRangeIndex].quoteIndent;
-		do {
-			if (lineRanges[activeLineRangeIndex].quoteIndent > activeQuoteIndent) {
-				inactiveLineRangeIndices.push(activeLineRangeIndex);
-			} else {
-				activeLineRangeIndices.push(activeLineRangeIndex);
-				activeQuoteIndent = lineRanges[activeLineRangeIndex].quoteIndent;
-			}
-		} while (--activeLineRangeIndex >= 0);
-		activeLineRangeIndices.reverse();
-
-		const lastLineRangeIndex = lineRanges.length - 1;
-		if (!activeLineRangeIndices.includes(lastLineRangeIndex)) {
-			inactiveLineRangeIndices.push(lastLineRangeIndex);
-		}
-
-		// inactive lines up to the start
-		if (lineRanges[0].start.line > 0) {
-			inactiveLineRangeIndices.push(
-				lineRanges.push({ start: document.positionAt(0), end: lineRanges[0].start, quoteIndent: 0 }) - 1
-			);
-		}
-	}
-}
-
-class ContextDecorator {
-	private _outline: DocumentOutline;
-	private _activeTextEditor?: vscode.TextEditor;
-	private _previousLine: number;
-	private _inactiveDecorationType: vscode.TextEditorDecorationType;
-
-	constructor(outline: DocumentOutline, activeTextEditor?: vscode.TextEditor) {
-		this._outline = outline;
-		this._activeTextEditor = activeTextEditor;
-		this._previousLine = -1;
-		this._inactiveDecorationType = ContextDecorator.toInactiveDecorationType(vscode.workspace.getConfiguration());
-	}
-
-	private updateDecorations(textEditor: vscode.TextEditor) {
-		this._outline.update(textEditor.document, textEditor.selection);
-		textEditor.setDecorations(
-			this._inactiveDecorationType,
-			this._outline.toInactiveRanges()
-		);
-	}
-
-	private static toInactiveDecorationType(configuration: vscode.WorkspaceConfiguration) {
-		const inactiveContextOpacity = configuration.get<number>("markdown.copilot.decorations.inactiveContextOpacity");
-		return vscode.window.createTextEditorDecorationType({
-			opacity: `${Math.round((inactiveContextOpacity || 0.5) * 100)}%`,
-		});
-	}
-
-	get activeTextEditor() { return this._activeTextEditor; }
-
-	onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
-		if (!event.affectsConfiguration("markdown.copilot.decorations.inactiveContextOpacity")) { return; }
-		this._inactiveDecorationType = ContextDecorator.toInactiveDecorationType(vscode.workspace.getConfiguration());
-	}
-
-	onDidChangeActiveTextEditor(textEditor?: vscode.TextEditor) {
-		this._activeTextEditor = textEditor;
-		this._previousLine = -1;
-		if (textEditor === undefined) { return; }
-		this.updateDecorations(textEditor);
-	}
-
-	onDidChangeTextEditorSelection(event: vscode.TextEditorSelectionChangeEvent) {
-		const textEditor = event.textEditor;
-		if (this._activeTextEditor !== textEditor) { return; }
-		const activeLine = textEditor.selection.active.line;
-		if (activeLine === this._previousLine) { return; }
-		this.updateDecorations(textEditor);
-		this._previousLine = activeLine;
-	}
-
-	onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
-		for (const completion of Completion.runningCompletions) {
-			completion.onDidChangeTextDocument(event);
-		}
-		const activeTextEditor = this._activeTextEditor;
-		if (activeTextEditor === undefined) { return; }
-		if (activeTextEditor.document !== event.document) { return; }
-		this.updateDecorations(activeTextEditor);
-	}
-}
-
-/*
- * Completion
- */
-class Completion {
-	static readonly runningCompletions = new Set<Completion>();
-	private textEditor: vscode.TextEditor;
-	private document: vscode.TextDocument;
-	private anchorOffset: number;
-	private changes: Set<string>;
-	private abortController?: AbortController;
-	private completionIndicator: vscode.TextEditorDecorationType;
-
-	constructor(textEditor: vscode.TextEditor, anchorOffset: number) {
-		this.textEditor = textEditor;
-		this.document = textEditor.document;
-		this.anchorOffset = anchorOffset;
-		this.changes = new Set();
-		this.abortController = undefined;
-		this.completionIndicator = vscode.window.createTextEditorDecorationType({
-			after: { contentText: "📝" },
-		});
-		Completion.runningCompletions.add(this);
-	}
-
-	dispose() {
-		this.completionIndicator.dispose();
-		Completion.runningCompletions.delete(this);
-	}
-
-	cancel(reason?: any) {
-		this.abortController?.abort(reason);
-	}
-
-	setAnchorOffset(anchorOffset: number): number {
-		this.anchorOffset = anchorOffset;
-		return this.anchorOffset;
-	}
-
-	translateAnchorOffset(diffAnchorOffset: number) {
-		this.anchorOffset += diffAnchorOffset;
-		return this.anchorOffset;
-	}
-
-	onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
-		if (event.document !== this.document) { return; }
-		for (const change of event.contentChanges) {
-			const changeStartOffset = change.rangeOffset;
-			if (changeStartOffset > this.anchorOffset) { continue; }
-			if (this.changes.delete(`${changeStartOffset},${change.text},${event.document.uri}`)) { continue; }
-
-			const changeOffsetDiff = countChar(change.text) - change.rangeLength;
-			const changeEndOffset = change.rangeOffset + change.rangeLength;
-			if (changeEndOffset > this.anchorOffset) {
-				this.anchorOffset = changeEndOffset;
-			} else {
-				this.anchorOffset += changeOffsetDiff;
-			}
-		}
-	}
-
-	async insertText(text: string, lineSeparator: string): Promise<number> {
-		text = lineSeparator === LF ? text : text.replaceAll(LF, lineSeparator);
-		const edit = new vscode.WorkspaceEdit();
-		const anchorPosition = this.document.positionAt(this.anchorOffset);
-		edit.insert(
-			this.document.uri,
-			anchorPosition,
-			text
-		);
-		this.textEditor.setDecorations(this.completionIndicator, [new vscode.Range(anchorPosition, anchorPosition)]);
-		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
-		return vscode.workspace.applyEdit(
-			edit,
-		).then(() => countChar(text));
-	}
-
-	async replaceLine(text: string, line: number): Promise<number> {
-		const textLine = this.document.lineAt(line);
-		const deleteCharCount = countChar(textLine.text);
-		const edit = new vscode.WorkspaceEdit();
-		edit.replace(
-			this.document.uri,
-			textLine.range,
-			text
-		);
-		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
-		return vscode.workspace.applyEdit(
-			edit,
-		).then(() => countChar(text) - deleteCharCount);
-	}
-
-	async completeText(chatMessages: OpenAIChatMessage[], lineSeparator: string, override: OpenAI.ChatCompletionCreateParamsStreaming) {
-		const stream = await createStream(chatMessages, override);
-		this.abortController = stream.controller;
-
-		const chunkTextBuffer: string[] = [];
-		const submitChunkText = async (chunkText: string): Promise<number> => {
-			chunkTextBuffer.push(chunkText);
-			if (!chunkText.includes(LF)) { return 0; }
-			const chunkTextBufferText = chunkTextBuffer.join("");
-			chunkTextBuffer.length = 0;
-			return this.insertText(chunkTextBufferText, lineSeparator);
-		};
-
-		for await (const chunk of stream) {
-			const chunkText = chunk.choices[0]?.delta?.content || '';
-			if (chunkText.length === 0) { continue; }
-			this.anchorOffset += await submitChunkText(chunkText);
-		}
-		// flush chunkTextBuffer
-		this.anchorOffset += await submitChunkText(LF);
-	}
-}
-
-async function createStream(chatMessages: OpenAIChatMessage[], override: OpenAI.ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
-	const configuration = vscode.workspace.getConfiguration();
-	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
-	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
-	if (!isValidApiKey(apiKey)) {
-		apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
-		if (!isValidApiKey(apiKey)) {
-			throw new Error(`401 Incorrect API key provided: ${apiKey}. You can find your API key at https://platform.openai.com/account/api-keys.`);
-		}
-		configuration.update("markdown.copilot.openAI.apiKey", apiKey);
-	}
-	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
-	const openai: OpenAI | AzureOpenAI = (() => {
-		if (!baseUrl) {
-			return new OpenAI({ apiKey: apiKey });
-		}
-		try {
-			const url = new URL(baseUrl);
-			return new AzureOpenAI({
-				endpoint: url.origin,
-				deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
-				apiKey: apiKey,
-				apiVersion: url.searchParams.get("api-version")!,
-			});
-		} catch {
-			throw new TypeError(l10n.t(
-				"config.openAI.azureBaseUrl.error",
-				baseUrl,
-				l10n.t("config.openAI.azureBaseUrl.description"),
-			));
-		}
-	})();
-	const stream = await openai.chat.completions.create(Object.assign(
-		{
-			model: configuration.get<string>("markdown.copilot.openAI.model")!,
-			messages: chatMessages,
-			temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
-			stream: true,
-		}, override
-	));
-	return stream;
-}
-
-async function listFilePathDiff(uri: vscode.Uri) {
-	async function insertMessage(message: string) {
-		const edit = new vscode.WorkspaceEdit();
-		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
-		edit.insert(document.uri, anchorPosition, `${message}\n`.replaceAll("\n", toEolString(document.eol)));
-		return vscode.workspace.applyEdit(edit);
-	}
-
-	const textEditor = vscode.window.activeTextEditor;
-	if (textEditor === undefined) { return; }
-
-	const document = textEditor.document;
-	const userRange = toOverflowAdjustedRange(textEditor, undefined);
-
-	// List all files under the `uri` directory recursively
-
-	let diffs = "```diff\n";
-	const pendingDirs: vscode.Uri[] = [uri];
-
-	while (pendingDirs.length > 0) {
-		const currentDir = pendingDirs.pop()!;
-		const entries = await vscode.workspace.fs.readDirectory(currentDir);
-		for (const [name, fileType] of entries) {
-			const fileUri = vscode.Uri.joinPath(currentDir, name);
-			if (fileType === vscode.FileType.Directory) {
-				pendingDirs.push(fileUri);
-			} else if (fileType === vscode.FileType.File) {
-				const path = vscode.workspace.asRelativePath(fileUri, false);
-				diffs += `- ${path}\n+ ${path}\n`;
-			}
-		}
-	}
-
-	diffs += "```";
-	insertMessage(diffs);
-}
-
-async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
-	class Diff {
-		from: string;
-		to: string;
-
-		constructor(from: string, to: string) {
-			this.from = from;
-			this.to = to;
-		}
-	}
-
-	async function insertErrorMessage(message: string) {
-		const edit = new vscode.WorkspaceEdit();
-		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
-		edit.insert(document.uri, anchorPosition, `\nERROR: ${message}`.replaceAll("\n", toEolString(document.eol)));
-		return vscode.workspace.applyEdit(edit);
-	}
-
-	const textEditor = vscode.window.activeTextEditor;
-	if (textEditor === undefined) { return; }
-
-	if (selectionOverride === undefined) {
-		if (textEditor.selection.isEmpty) { return; }
-	} else if (selectionOverride.isEmpty) { return; }
-
-	const document = textEditor.document;
-	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
-	const workspaceFolder = vscode.workspace.workspaceFolders![0];
-	const text = document.getText(userRange);
-
-	// Extract diffs
-
-	let path_from = null, path_to = null;
-	let diff_list: Diff[] = [];
-	for (const line of text.split(/\r?\n/)) {
-		if (path_from === null) { // expecting `-`
-			const match = line.match(/^\-\s*([^\s]+)$/);
-			if (match === null) { // Invalid line
-				insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
-				return;
-			}
-			path_from = match[1];
-		} else if (path_to === null) { // expecting `+` or blank line
-			if (line.match(/^\+?\s*$/)) {
-				// The line only containing `+` is used to delete the file.
-				path_to = "";
-			} else {
-				const match = line.match(/^\+\s*([^\s]+)$/);
-				if (match === null) { // Invalid line
-					insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
-					return;
-				}
-				path_to = match[1];
-			}
-		}
-
-		if (path_from !== null && path_to !== null) {
-			diff_list.push(new Diff(path_from, path_to));
-			path_from = path_to = null;
-		}
-	}
-
-	// Detect errors
-
-	// Incomplete diff
-	if (path_from !== null || path_to !== null) {
-		insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
-		return;
-	}
-
-	// File not found
-	let some_files_missing = false;
-	for (const { from } of diff_list) {
-		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from))
-			.then(() => null, (reason) => reason);
-		if (reason !== null) {
-			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
-			some_files_missing = true;
-		}
-	}
-	if (some_files_missing) {
-		return;
-	}
-
-	// Duplicated destination file
-	const to_set = new Set<string>();
-	for (const { to } of diff_list) {
-		if (to === "") { continue; } // Represents deletion
-		if (to_set.has(to)) {
-			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
-			return;
-		}
-		to_set.add(to);
-	}
-
-	// Destination file already exists
-	for (const { from, to } of diff_list) {
-		if (to === "") { continue; } // Represents deletion
-		if (from === to) { continue; } // Represents no change
-		let reason = await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to))
-			.then(() => null, (reason) => reason);
-		if (reason === null) {
-			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
-			return;
-		}
-	}
-
-	// Apply diffs
-
-	for (const { from, to } of diff_list) {
-		let reason = null;
-		if (to === "") {
-			reason = await vscode.workspace.fs.delete(vscode.Uri.joinPath(workspaceFolder.uri, from))
-				.then(() => null, (reason) => reason);
-		} else {
-			reason = await vscode.workspace.fs.rename(vscode.Uri.joinPath(workspaceFolder.uri, from),
-				vscode.Uri.joinPath(workspaceFolder.uri, to)).then(() => null, (reason) => reason);
-		}
-		if (reason !== null) {
-			insertErrorMessage(`${l10n.t("command.editing.applyFilePathDiff.error.fatal", from, to)}\n${reason}`);
-			return;
-		}
-	}
-
-	vscode.window.showInformationMessage(l10n.t("command.editing.applyFilePathDiff.success"));
-}
-
-async function continueEditing(outline: DocumentOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
+async function continueEditing(outline: ContextOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
@@ -883,8 +312,8 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
 	let userEndOffset = document.offsetAt(userEnd);
 
-	const userStartLineQuoteIndentText = userStartLineText.match(quoteIndentRegex)?.[0] || '';
-	const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
+	const userStartLineQuoteIndentText = getQuoteIndent(userStartLineText);
+	const userEndLineQuoteIndentText = getQuoteIndent(userEndLineText);
 
 	const selectedText = document.getText(userRange);
 
@@ -921,7 +350,7 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const completion = new Completion(textEditor, userEndOffset);
+		const completion = new ChatCompletion(textEditor, userEndOffset);
 		token.onCancellationRequested(() => completion.cancel());
 		try {
 			const offsetDiff = await completion.insertText("\n\n**Copilot:** ", userEndLineEol);
@@ -953,7 +382,7 @@ async function continueEditing(outline: DocumentOutline, useContext: boolean, se
 	});
 }
 
-async function collectActiveLines(outline: DocumentOutline, userStart: vscode.Position, document: vscode.TextDocument) {
+async function collectActiveLines(outline: ContextOutline, userStart: vscode.Position, document: vscode.TextDocument) {
 	const documentEol = toEolString(document.eol);
 
 	const importedDocumentUriTexts: string[] = [];
@@ -1040,7 +469,7 @@ async function pasteAsMarkdown() {
 	const documentEol = toEolString(document.eol);
 
 	const userEndLineText = document.lineAt(userEnd.line).text;
-	const userEndLineQuoteIndentText = userEndLineText.match(quoteIndentRegex)?.[0] || '';
+	const userEndLineQuoteIndentText = getQuoteIndent(userEndLineText);
 
 	if (!userRange.isEmpty) {
 		const edit = new vscode.WorkspaceEdit();
@@ -1055,7 +484,7 @@ async function pasteAsMarkdown() {
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const completion = new Completion(textEditor, document.offsetAt(userStart));
+		const completion = new ChatCompletion(textEditor, document.offsetAt(userStart));
 		token.onCancellationRequested(() => completion.cancel());
 		try {
 			const configuration = vscode.workspace.getConfiguration();
@@ -1066,11 +495,10 @@ async function pasteAsMarkdown() {
 
 			return await completion.completeText(
 				[
-					{ role: OpenAIChatRole.User, content: pasteAsMarkdownMessage },
-					{ role: OpenAIChatRole.User, content: clipboardContent },
+					{ role: ChatRole.User, content: pasteAsMarkdownMessage },
+					{ role: ChatRole.User, content: clipboardContent },
 				],
 				userEndLineEol,
-				{} as OpenAI.ChatCompletionCreateParamsStreaming
 			);
 		} catch (e) {
 			if (e instanceof Error) {
@@ -1086,285 +514,4 @@ async function pasteAsMarkdown() {
 			completion.dispose();
 		}
 	});
-}
-
-class ChatMessageBuilder {
-	private copilotOptions: OpenAI.ChatCompletionCreateParamsStreaming;
-	private chatMessages: OpenAIChatMessage[];
-	private isInvalid: boolean;
-
-	constructor() {
-		this.copilotOptions = {} as OpenAI.ChatCompletionCreateParamsStreaming;
-		this.chatMessages = [];
-		this.isInvalid = false;
-	}
-
-	addChatMessage(flags: ChatRoleFlags, message: string): void {
-		if (this.isInvalid) { return; }
-
-		const role = toOpenAIChatRole(flags);
-
-		if (flags & ChatRoleFlags.Override) {
-			this.chatMessages = this.chatMessages.filter(m => m.role !== role);
-		}
-
-		for (const match of message.matchAll(/```json +copilot-options\n([^]*?)\n```/gm)) {
-			try {
-				Object.assign(this.copilotOptions, JSON.parse(match[1]));
-				message = message.replace(match[0], "");
-			} catch {
-				flags = ChatRoleFlags.User;
-				message = "Correct the following JSON and answer in the language of the `" + getLocale() + "` locale:\n```\n" + match[1] + "\n```";
-				this.copilotOptions = {} as OpenAI.ChatCompletionCreateParamsStreaming;
-				this.chatMessages = [];
-				this.isInvalid = true;
-				break;
-			}
-		}
-
-		// Ignore empty messages
-		if (message.trim().length === 0) { return; }
-
-		// Matches images in Markdown (i.e., `![alt](url)`)
-		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))/gm).filter(part => part !== '');
-
-		if (parts.length === 1) {
-			this.chatMessages.push({ role: role, content: message });
-		} else {
-			const content: OpenAI.ChatCompletionContentPart[] = parts.map<OpenAI.ChatCompletionContentPart>(part => {
-				const url = part.match(/!\[[^\]]*\]\(([^)]+)\)/)?.[1];
-				if (url === undefined) { return { type: 'text', text: part }; }
-				if (url.match(/^https?:\/\//)) {
-					return { type: 'image_url', image_url: { url: url } };
-				} else {
-					const fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, url);
-					const text = fs.readFileSync(fullUri.fsPath).toString('base64');
-					const type = mime.lookup(fullUri.fsPath) || "image/png";
-					return { type: 'image_url', image_url: { url: `data:${type};base64,${text}` } };
-				}
-			});
-			this.chatMessages.push({ role: role, content: content });
-		}
-	}
-
-	addLines(lines: string[]) {
-		let previousChatRole = ChatRoleFlags.User;
-		let chatMessagelineTexts: string[] = [];
-		for (const lineText of lines) {
-			const lineChatRoleFlags = toChatRole(lineText);
-			if (ChatRoleFlags.None === lineChatRoleFlags) {
-				chatMessagelineTexts.push(lineText);
-				continue;
-			}
-
-			if (lineChatRoleFlags !== previousChatRole) {
-				this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
-				previousChatRole = lineChatRoleFlags;
-				chatMessagelineTexts = [];
-			}
-
-			chatMessagelineTexts.push(removeChatRole(lineText));
-		}
-		this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
-	}
-
-	toChatMessages(): OpenAIChatMessage[] {
-		return this.chatMessages;
-	}
-
-	getCopilotOptions(): OpenAI.ChatCompletionCreateParamsStreaming {
-		return this.copilotOptions;
-	}
-
-	private addChatMessageLines(flags: ChatRoleFlags, textLines: string[]): void {
-		this.addChatMessage(flags, textLines.join(LF));
-	}
-}
-
-enum OpenAIChatRole {
-	None = "none",
-	System = "system",
-	User = "user",
-	Assistant = "assistant",
-}
-
-enum ChatRoleFlags {
-	None = 0,
-	Override = 1 << 0,
-	System = 1 << 1,
-	User = 1 << 2,
-	Assistant = 1 << 3,
-}
-
-interface OpenAIChatMessage {
-	role: OpenAIChatRole;
-	content: string | OpenAI.ChatCompletionContentPart[];
-}
-
-const roleRegex = /\*\*(System|User|Copilot)(\(Override\))?:\*\*/;
-const matchToChatRoles = new Map<string, ChatRoleFlags>([
-	["System", ChatRoleFlags.System],
-	["User", ChatRoleFlags.User],
-	["Copilot", ChatRoleFlags.Assistant],
-]);
-
-function toChatRole(text: string): ChatRoleFlags {
-	const match = text.match(roleRegex);
-	if (match === null) { return ChatRoleFlags.None; }
-	return matchToChatRoles.get(match[1])!
-		| (match[2] === "(Override)" ? ChatRoleFlags.Override : ChatRoleFlags.None);
-}
-
-function toOpenAIChatRole(flags: ChatRoleFlags): OpenAIChatRole {
-	if (flags & ChatRoleFlags.User) { return OpenAIChatRole.User; }
-	if (flags & ChatRoleFlags.Assistant) { return OpenAIChatRole.Assistant; }
-	if (flags & ChatRoleFlags.System) { return OpenAIChatRole.System; }
-	throw new AssertionError();
-}
-
-function removeChatRole(text: string): string {
-	return text.replace(roleRegex, "");
-}
-
-/*
- * Utilities for ranges
- */
-function toOverflowAdjustedRange(textEditor: vscode.TextEditor, selectionOverride?: vscode.Selection): vscode.Range {
-	const document = textEditor.document;
-	const selection = selectionOverride || textEditor.selection;
-	return new vscode.Range(
-		selection.start,
-		isSelectionOverflow(selection) ? document.lineAt(selection.end.line - 1).range.end : selection.end
-	);
-}
-
-function adjustStartToLineHead(range: vscode.Range): vscode.Range {
-	return range.with(range.start.with({ character: 0 }));
-}
-
-function partialEndsWith(target: string, search: string, ignore?: RegExp): number {
-	if (ignore && target.match(ignore)) { return 0; }
-	const offsetEnd = Math.min(target.length, search.length);
-	for (let offset = offsetEnd; offset >= 0; offset--) {
-		if (target.endsWith(search.slice(0, offset))) { return offset; }
-	}
-	return 0;
-}
-
-/*
- * Utilities for filesystem
- */
-async function makeDirectories(dirUri: vscode.Uri): Promise<vscode.Uri | undefined> {
-	const segments = dirUri.path.split('/').filter(segment => segment);
-	const rootUri = dirUri.with({ path: '/' });
-
-	for (let i = 1; i <= segments.length; i++) {
-		const currentUri = vscode.Uri.joinPath(rootUri, ...segments.slice(0, i));
-		try {
-			// Check if currentUri already exists.
-			await vscode.workspace.fs.stat(currentUri);
-		} catch (error) {
-			// If currentUri does not exist, create directories and return the top of created directory URI.
-			await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(rootUri, ...segments));
-			return currentUri;
-		}
-	}
-	return undefined;
-}
-
-async function pruneEmptyDirectories(rootDirUri: vscode.Uri, leafDirUri: vscode.Uri): Promise<void> {
-	async function isDirectoryEmpty(dirUri: vscode.Uri): Promise<boolean> {
-		return vscode.workspace.fs.readDirectory(dirUri).then(files => files.length === 0);
-	}
-
-	async function deleteIfEmpty(targetDirUri: vscode.Uri): Promise<boolean> {
-		return isDirectoryEmpty(targetDirUri).then(
-			isEmpty => isEmpty
-				? vscode.workspace.fs.delete(targetDirUri, { recursive: false }).then(() => true)
-				: false
-		);
-	}
-
-	const rootDirUriString = rootDirUri.toString();
-
-	async function purgeRecursive(currentDirUri: vscode.Uri): Promise<void> {
-		if (!await deleteIfEmpty(currentDirUri)) { return; }
-		if (currentDirUri.toString() === rootDirUriString) { return; }
-		await purgeRecursive(vscode.Uri.joinPath(currentDirUri, '..'));
-	}
-
-	return purgeRecursive(leafDirUri);
-}
-
-/*
- * Utilities for quote indent
- */
-function outdentQuote(text: string, level: number): string {
-	return text.replace(new RegExp(`^(>[ \t]?){0,${level}}`, "gm"), "");
-}
-
-function indentQuote(text: string, level: number): string {
-	const headQuoteMatch = text.match(/^(>[ \t]?)/);
-	const quoteIndentText = headQuoteMatch === null
-		? "> "
-		: headQuoteMatch[1];
-	return text.replace(/(?<!\r)^/gm, quoteIndentText.repeat(level));
-}
-
-const quoteIndentRegex = /^(>[ \t]?)+/;
-function countQuoteIndent(lineText: string): number {
-	const match = lineText.match(quoteIndentRegex);
-	if (match === null) { return 0; }
-	const quoteHead = match[0];
-
-	let count = 0;
-	for (let i = 0; i < quoteHead.length; i++) {
-		count += +('>' === quoteHead[i]);
-	}
-	return count;
-}
-
-/*
- * Utilities for characters (code points and line breaks)
- */
-const LF = '\n';
-const CRLF = '\r\n';
-
-function toEolString(eol: vscode.EndOfLine): string {
-	switch (eol) {
-		case vscode.EndOfLine.LF:
-			return LF;
-		case vscode.EndOfLine.CRLF:
-			return CRLF;
-		default:
-			throw new AssertionError();
-	}
-}
-
-const intlSegmenter = new Intl.Segmenter();
-export function countChar(text: string): number {
-	let result = 0;
-	for (const data of intlSegmenter.segment(text)) {
-		result += data.segment === CRLF ? 2 : 1;
-	}
-	return result;
-}
-
-/*
- * Utilities for l10n
- */
-function getLocale(): string {
-	return JSON.parse(process.env.VSCODE_NLS_CONFIG as string).locale;
-}
-
-function initializeL10n(baseUri: vscode.Uri, forcedLocale?: string) {
-	const defaultPackageNlsJson = "package.nls.json";
-	const locale: string = forcedLocale || getLocale();
-	const packageNlsJson = locale === 'en' ? defaultPackageNlsJson : `package.nls.${locale}.json`;
-	try {
-		l10n.config(vscode.Uri.joinPath(baseUri, packageNlsJson));
-	} catch {
-		console.warn("Cannot load l10n resource file:", packageNlsJson);
-		l10n.config(vscode.Uri.joinPath(baseUri, defaultPackageNlsJson));
-	}
 }
