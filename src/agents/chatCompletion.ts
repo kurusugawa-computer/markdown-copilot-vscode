@@ -4,7 +4,7 @@ import mime from 'mime-types';
 import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
-import { LF, countChar } from '../utils';
+import { LF, countChar, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 
 export type ChatCompletionCreateParamsStreaming = OpenAI.ChatCompletionCreateParamsStreaming;
@@ -184,9 +184,8 @@ export class ChatCompletion {
 		);
 		this.textEditor.setDecorations(this.completionIndicator, [new vscode.Range(anchorPosition, anchorPosition)]);
 		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
-		return vscode.workspace.applyEdit(
-			edit,
-		).then(() => countChar(text));
+		await vscode.workspace.applyEdit(edit);
+		return countChar(text);
 	}
 
 	async replaceLine(text: string, line: number): Promise<number> {
@@ -199,9 +198,8 @@ export class ChatCompletion {
 			text
 		);
 		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
-		return vscode.workspace.applyEdit(
-			edit,
-		).then(() => countChar(text) - deleteCharCount);
+		await vscode.workspace.applyEdit(edit);
+		return countChar(text) - deleteCharCount;
 	}
 
 	async completeText(chatMessages: ChatMessage[], lineSeparator: string, override?: ChatCompletionCreateParamsStreaming) {
@@ -230,11 +228,13 @@ export class ChatCompletion {
 
 
 export class ChatMessageBuilder {
+	private readonly document: vscode.TextDocument;
 	private copilotOptions: ChatCompletionCreateParamsStreaming;
 	private chatMessages: ChatMessage[];
 	private isInvalid: boolean;
 
-	constructor() {
+	constructor(document: vscode.TextDocument) {
+		this.document = document;
 		this.copilotOptions = {} as ChatCompletionCreateParamsStreaming;
 		this.chatMessages = [];
 		this.isInvalid = false;
@@ -267,18 +267,26 @@ export class ChatMessageBuilder {
 		if (message.trim().length === 0) { return; }
 
 		// Matches images in Markdown (i.e., `![alt](url)`)
+		// TODO: Should handle cases where images are embedded in table cells, etc.
 		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))/gm).filter(part => part !== '');
 
 		if (parts.length === 1) {
 			this.chatMessages.push({ role: role, content: message });
 		} else {
 			const content = parts.map<OpenAI.ChatCompletionContentPart>(part => {
-				const url = part.match(/!\[[^\]]*\]\(([^)]+)\)/)?.[1];
-				if (url === undefined) { return { type: 'text', text: part }; }
-				if (url.match(/^https?:\/\//)) {
-					return { type: 'image_url', image_url: { url: url } };
+				const match = part.match(/!\[[^\]]*\]\(([^)]+)\)/);
+				if (match === null) { return { type: 'text', text: part }; }
+				let uri = match[1];
+				if (uri.startsWith("<") && uri.endsWith(">")) {
+					uri = uri.slice(1, -1);
+				}
+				if (uri.match(/^https?:\/\//)) {
+					return { type: 'image_url', image_url: { url: uri } };
 				} else {
-					const fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, url);
+					const fullUri = resolveFragmentUri(this.document, uri);
+					if (fullUri === null) {
+						return { type: 'text', text: part };
+					}
 					const text = fs.readFileSync(fullUri.fsPath).toString('base64');
 					const type = mime.lookup(fullUri.fsPath) || "image/png";
 					return { type: 'image_url', image_url: { url: `data:${type};base64,${text}` } };

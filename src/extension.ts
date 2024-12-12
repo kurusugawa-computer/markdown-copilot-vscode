@@ -1,10 +1,9 @@
-import { AssertionError } from 'assert';
 import * as vscode from 'vscode';
 import { ChatCompletion, ChatMessageBuilder, ChatRole, ChatRoleFlags } from './agents/chatCompletion';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
 import { countQuoteIndent, getQuoteIndent, indentQuote, outdentQuote } from './features/indention';
 import { nameAndSaveAs } from './features/nameAndSave';
-import { adjustStartToLineHead, countChar, LF, partialEndsWith, toEolString, toOverflowAdjustedRange } from './utils';
+import { adjustStartToLineHead, countChar, LF, partialEndsWith, resolveFragmentUri, toEolString, toOverflowAdjustedRange } from './utils';
 import { ContextDecorator, ContextOutline } from './utils/context';
 import * as l10n from './utils/localization';
 
@@ -82,25 +81,26 @@ export function activate(context: vscode.ExtensionContext) {
 			const completion = new ChatCompletion(textEditor, document.offsetAt(activeLineRangesStart));
 			token.onCancellationRequested(() => completion.cancel());
 
-			return (match !== null
-				? completion.replaceLine(match[1], lineRangeStartLine)
-				: completion.insertText("# Copilot Context: \n", documentEol)
-			).then(() => {
+			try {
+				if (match !== null) {
+					await completion.replaceLine(match[1], lineRangeStartLine);
+				} else {
+					await completion.insertText("# Copilot Context: \n", documentEol);
+				}
 				completion.setAnchorOffset(document.offsetAt(document.lineAt(lineRangeStartLine).range.end));
-				return completion.completeText([
+				await completion.completeText([
 					{ role: ChatRole.User, content: activeContextText },
 					{ role: ChatRole.User, content: titleMessage },
-				], "",);
-			}).catch(error => {
-				const errorMessage = error.message.replace(/^\d+ /, "");
-				vscode.window.showErrorMessage(errorMessage);
-				return completion.insertText(
-					errorMessage,
-					documentEol
-				);
-			}).finally(
-				() => completion.dispose()
-			);
+				], documentEol);
+			} catch (error) {
+				if (error instanceof Error) {
+					const errorMessage = error.message.replace(/^\d+ /, "");
+					vscode.window.showErrorMessage(errorMessage);
+					await completion.insertText(errorMessage, documentEol);
+				}
+			} finally {
+				completion.dispose();
+			}
 		});
 	}));
 
@@ -299,7 +299,7 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sel
 	const userStart = userRange.start;
 	const userEnd = userRange.end;
 
-	const chatMessageBuilder = new ChatMessageBuilder();
+	const chatMessageBuilder = new ChatMessageBuilder(document);
 
 	const configuration = vscode.workspace.getConfiguration();
 	const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
@@ -389,25 +389,16 @@ async function collectActiveLines(outline: ContextOutline, userStart: vscode.Pos
 	const activeLineTexts: string[] = [];
 
 	async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
-		async function resolveFragmentUri(document: vscode.TextDocument, fragmentUriText: string) {
-			try {
-				let fullUri = null;
-				if (fragmentUriText.startsWith('/')) {
-					fullUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, fragmentUriText);
-				} else {
-					if (document.uri.scheme === 'untitled') {
-						throw new AssertionError();
-					}
-					fullUri = vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
-				}
-				return await vscode.workspace.openTextDocument(fullUri);
-			} catch {
+		function openRelativeTextDocument(document: vscode.TextDocument, fragmentUriText: string) {
+			const fullUri = resolveFragmentUri(document, fragmentUriText);
+			if (fullUri === null) {
 				throw new Error(l10n.t(
 					"command.editing.continueInContext.import.error",
 					fragmentUriText,
 					vscode.workspace.asRelativePath(document.fileName)
 				));
 			}
+			return vscode.workspace.openTextDocument(fullUri);
 		}
 
 		// Avoid recursive import infinity loop.
@@ -426,8 +417,8 @@ async function collectActiveLines(outline: ContextOutline, userStart: vscode.Pos
 					activeLineTexts.push(line);
 					continue;
 				}
-				const importedDocument = await resolveFragmentUri(document, match[1].trim());
-				await resolveImport(importedDocument, importedDocument.getText());
+				const importDocument = await openRelativeTextDocument(document, match[1].trim());
+				await resolveImport(importDocument, importDocument.getText());
 			}
 		} finally {
 			importedDocumentUriTexts.pop();
@@ -454,12 +445,12 @@ async function collectActiveLines(outline: ContextOutline, userStart: vscode.Pos
 }
 
 async function pasteAsMarkdown() {
+	const textEditor = vscode.window.activeTextEditor;
+	if (textEditor === undefined) { return; }
+
 	let clipboardContent = await vscode.env.clipboard.readText();
 	clipboardContent = clipboardContent.trim();
 	if (!clipboardContent) { return; }
-
-	const textEditor = vscode.window.activeTextEditor;
-	if (textEditor === undefined) { return; }
 
 	const userRange = toOverflowAdjustedRange(textEditor);
 	const userStart = userRange.start;
@@ -478,7 +469,7 @@ async function pasteAsMarkdown() {
 	}
 
 	const titleText = "Pasting clipboard content as Markdown";
-	vscode.window.withProgress({
+	return vscode.window.withProgress({
 		location: vscode.ProgressLocation.Window,
 		title: `Markdown Copilot: ${titleText}`,
 		cancellable: true
@@ -493,7 +484,7 @@ async function pasteAsMarkdown() {
 				return;
 			}
 
-			return await completion.completeText(
+			await completion.completeText(
 				[
 					{ role: ChatRole.User, content: pasteAsMarkdownMessage },
 					{ role: ChatRole.User, content: clipboardContent },

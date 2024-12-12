@@ -56,3 +56,21 @@ export function partialEndsWith(target: string, search: string, ignore?: RegExp)
 	}
 	return 0;
 }
+
+/**
+ * Resolves a URI based on the provided fragment URI text and the document's URI.
+ *
+ * @param document - The text document from which the URI is resolved.
+ * @param fragmentUriText - The fragment URI text to resolve.
+ * @returns The resolved URI, or `null` if the document is not saved.
+ */
+export function resolveFragmentUri(document: vscode.TextDocument, fragmentUriText: string) {
+	if (fragmentUriText.startsWith('/')) {
+		return vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, fragmentUriText);
+	}
+	if (document.uri.scheme === 'untitled') {
+		return null;
+	}
+	return vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
+}
+
