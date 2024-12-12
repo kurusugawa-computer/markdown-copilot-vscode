@@ -4,6 +4,10 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.5.1] - 2024-12-12
+### Changed
+- Resolve image URI as relative to document
+
 ## [0.5.0] - 2024-12-11
 ### Add
 - Add `Paste as Markdown` command
