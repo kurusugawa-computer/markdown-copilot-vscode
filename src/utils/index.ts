@@ -1,5 +1,6 @@
 import { AssertionError } from 'assert';
 import * as vscode from 'vscode';
+import * as l10n from './localization';
 
 /*
  * Utilities for characters (code points and line breaks)
@@ -69,7 +70,11 @@ export function resolveFragmentUri(document: vscode.TextDocument, fragmentUriTex
 		return vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, fragmentUriText);
 	}
 	if (document.uri.scheme === 'untitled') {
-		return null;
+		throw new Error(l10n.t(
+			"command.editing.continueInContext.import.error",
+			fragmentUriText,
+			vscode.workspace.asRelativePath(document.fileName)
+		));
 	}
 	return vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
 }

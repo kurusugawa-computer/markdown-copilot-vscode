@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -47,6 +47,12 @@
       {
         "command": "markdown.copilot.editing.continueInContext",
         "title": "%command.editing.continueInContext.title%",
+        "icon": "$(comment-discussion)",
+        "enablement": "editorLangId == markdown && editorHasSelection"
+      },
+      {
+        "command": "markdown.copilot.editing.continueInMultimodalContext",
+        "title": "%command.editing.continueInMultimodalContext.title%",
         "icon": "$(comment-discussion)",
         "enablement": "editorLangId == markdown && editorHasSelection"
       },

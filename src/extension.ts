@@ -14,6 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const contextDecorator = new ContextDecorator(outline, vscode.window.activeTextEditor);
 
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT = "markdown.copilot.editing.continueInContext";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_MULTIMODAL_CONTEXT = "markdown.copilot.editing.continueInMultimodalContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT = "markdown.copilot.editing.continueWithoutContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS = "markdown.copilot.editing.nameAndSaveAs";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
@@ -32,11 +33,15 @@ export function activate(context: vscode.ExtensionContext) {
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
-		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, selectionOverride)
+		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, false, selectionOverride)
+	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_MULTIMODAL_CONTEXT,
+		(selectionOverride?: vscode.Selection) => continueEditing(outline, true, true, selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT,
-		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, selectionOverride)
+		(selectionOverride?: vscode.Selection) => continueEditing(outline, false, false, selectionOverride)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS,
@@ -158,6 +163,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (range.isEmpty) { return; }
 			return [
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT, l10n.t("command.editing.continueInContext.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_MULTIMODAL_CONTEXT, l10n.t("command.editing.continueInMultimodalContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT, l10n.t("command.editing.continueWithoutContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
@@ -185,6 +191,13 @@ export function activate(context: vscode.ExtensionContext) {
 					"Copilot continue in context",
 					l10n.t("command.editing.continueInContext.detail"),
 					l10n.t("command.editing.continueInContext.title"),
+					activeTextEditor.selection,
+				),
+				newCompletionItem(
+					COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_MULTIMODAL_CONTEXT,
+					"Copilot continue in multimodal context",
+					l10n.t("command.editing.continueInMultimodalContext.detail"),
+					l10n.t("command.editing.continueInMultimodalContext.title"),
 					activeTextEditor.selection,
 				),
 				newCompletionItem(
@@ -284,7 +297,7 @@ export function deactivate() {
 	ChatCompletion.onDeactivate();
 }
 
-async function continueEditing(outline: ContextOutline, useContext: boolean, selectionOverride?: vscode.Selection) {
+async function continueEditing(outline: ContextOutline, useContext: boolean, supportsMultimodal: boolean, selectionOverride?: vscode.Selection) {
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
@@ -299,7 +312,7 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sel
 	const userStart = userRange.start;
 	const userEnd = userRange.end;
 
-	const chatMessageBuilder = new ChatMessageBuilder(document);
+	const chatMessageBuilder = new ChatMessageBuilder(document, supportsMultimodal);
 
 	const configuration = vscode.workspace.getConfiguration();
 	const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
@@ -391,13 +404,6 @@ async function collectActiveLines(outline: ContextOutline, document: vscode.Text
 	async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
 		function openRelativeTextDocument(document: vscode.TextDocument, fragmentUriText: string) {
 			const fullUri = resolveFragmentUri(document, fragmentUriText);
-			if (fullUri === null) {
-				throw new Error(l10n.t(
-					"command.editing.continueInContext.import.error",
-					fragmentUriText,
-					vscode.workspace.asRelativePath(document.fileName)
-				));
-			}
 			return vscode.workspace.openTextDocument(fullUri);
 		}
 

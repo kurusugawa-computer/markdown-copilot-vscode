@@ -229,18 +229,20 @@ export class ChatCompletion {
 
 export class ChatMessageBuilder {
 	private readonly document: vscode.TextDocument;
+	private readonly supportsMultimodal: boolean;
 	private copilotOptions: ChatCompletionCreateParamsStreaming;
 	private chatMessages: ChatMessage[];
 	private isInvalid: boolean;
 
-	constructor(document: vscode.TextDocument) {
+	constructor(document: vscode.TextDocument, supportsMultimodal: boolean) {
 		this.document = document;
+		this.supportsMultimodal = supportsMultimodal;
 		this.copilotOptions = {} as ChatCompletionCreateParamsStreaming;
 		this.chatMessages = [];
 		this.isInvalid = false;
 	}
 
-	addChatMessage(flags: ChatRoleFlags, message: string): void {
+	addChatMessage(flags: ChatRoleFlags, message: string) {
 		if (this.isInvalid) { return; }
 
 		const role = toOpenAIChatRole(flags);
@@ -265,35 +267,44 @@ export class ChatMessageBuilder {
 
 		// Ignore empty messages
 		if (message.trim().length === 0) { return; }
+		if (!this.supportsMultimodal) {
+			this.chatMessages.push({ role: role, content: message });
+			return;
+		}
 
-		// Matches images in Markdown (i.e., `![alt](url)`)
-		// TODO: Should handle cases where images are embedded in table cells, etc.
-		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))/gm).filter(part => part !== '');
+		// Matches medias in Markdown (i.e., `![alt](url)`)
+		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))/gm).filter(Boolean);
 
 		if (parts.length === 1) {
 			this.chatMessages.push({ role: role, content: message });
-		} else {
-			const content = parts.map<OpenAI.ChatCompletionContentPart>(part => {
-				const match = part.match(/!\[[^\]]*\]\(([^)]+)\)/);
-				if (match === null) { return { type: 'text', text: part }; }
-				let uri = match[1];
-				if (uri.startsWith("<") && uri.endsWith(">")) {
-					uri = uri.slice(1, -1);
-				}
-				if (uri.match(/^https?:\/\//)) {
-					return { type: 'image_url', image_url: { url: uri } };
-				} else {
-					const fullUri = resolveFragmentUri(this.document, uri);
-					if (fullUri === null) {
-						return { type: 'text', text: part };
-					}
-					const text = fs.readFileSync(fullUri.fsPath).toString('base64');
-					const type = mime.lookup(fullUri.fsPath) || "image/png";
-					return { type: 'image_url', image_url: { url: `data:${type};base64,${text}` } };
-				}
-			});
-			this.chatMessages.push({ role: role, content: content });
+			return;
 		}
+
+		const content = parts.map<OpenAI.ChatCompletionContentPart>(part => {
+			const match = part.match(/!\[[^\]]*\]\(([^)]+)\)/);
+			if (!match) { return { type: 'text', text: part }; }
+
+			const uri = match[1].replace(/^<|>$/g, '');
+			const mimeType = mime.lookup(uri);
+			if (!mimeType) { return { type: 'text', text: part }; }
+
+			if (mimeType.startsWith('image/')) {
+				if (/^https?:\/\//.test(uri)) {
+					return { type: 'image_url', image_url: { url: uri } };
+				}
+				const data = fs.readFileSync(resolveFragmentUri(this.document, uri).fsPath).toString('base64');
+				return { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } };
+			}
+
+			if (mimeType === 'audio/mpeg' || mimeType === 'audio/wave') {
+				const data = fs.readFileSync(resolveFragmentUri(this.document, uri).fsPath).toString('base64');
+				const format = mimeType === 'audio/mpeg' ? 'mp3' : 'wav';
+				return { type: 'input_audio', input_audio: { data, format } };
+			}
+
+			throw new Error(`Unsupported media type: ${mimeType}`);
+		});
+		this.chatMessages.push({ role: role, content: content });
 	}
 
 	addLines(lines: string[]) {
