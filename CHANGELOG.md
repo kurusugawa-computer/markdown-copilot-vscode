@@ -4,6 +4,10 @@ All notable changes to the **Markdown Copilot** extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.0] - 2025-01-17
+### Add
+- Change support non-stream API calls
+
 ## [0.6.0] - 2024-12-16
 ### Add
 - Add `Continue in multimodal context` command
@@ -153,6 +157,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
+[0.7.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.4.0...v0.5.0
