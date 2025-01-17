@@ -7,9 +7,7 @@ import * as vscode from 'vscode';
 import { LF, countChar, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 
-export type ChatCompletionCreateParamsStreaming = OpenAI.ChatCompletionCreateParamsStreaming;
-
-export async function createStream(chatMessages: ChatMessage[], override: ChatCompletionCreateParamsStreaming): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+export async function createChatCompletion(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
 	const configuration = vscode.workspace.getConfiguration();
 	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
 	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
@@ -41,7 +39,7 @@ export async function createStream(chatMessages: ChatMessage[], override: ChatCo
 			));
 		}
 	})();
-	const stream = await openai.chat.completions.create(Object.assign(
+	return openai.chat.completions.create(Object.assign(
 		{
 			model: configuration.get<string>("markdown.copilot.openAI.model")!,
 			messages: chatMessages,
@@ -49,9 +47,7 @@ export async function createStream(chatMessages: ChatMessage[], override: ChatCo
 			stream: true,
 		}, override
 	));
-	return stream;
 }
-
 
 export enum ChatRole {
 	None = "none",
@@ -97,7 +93,6 @@ function toOpenAIChatRole(flags: ChatRoleFlags): ChatRole {
 function removeChatRole(text: string): string {
 	return text.replace(roleRegex, "");
 }
-
 
 /*
  * Completion
@@ -202,42 +197,45 @@ export class ChatCompletion {
 		return countChar(text) - deleteCharCount;
 	}
 
-	async completeText(chatMessages: ChatMessage[], lineSeparator: string, override?: ChatCompletionCreateParamsStreaming) {
-		const stream = await createStream(chatMessages, override || {} as ChatCompletionCreateParamsStreaming);
-		this.abortController = stream.controller;
+	async completeText(chatMessages: ChatMessage[], lineSeparator: string, override?: OpenAI.ChatCompletionCreateParams) {
+		const completion = await createChatCompletion(chatMessages, override || {} as OpenAI.ChatCompletionCreateParams);
 
-		const chunkTextBuffer: string[] = [];
-		const submitChunkText = async (chunkText: string): Promise<number> => {
-			chunkTextBuffer.push(chunkText);
-			if (!chunkText.includes(LF)) { return 0; }
-			const chunkTextBufferText = chunkTextBuffer.join("");
-			chunkTextBuffer.length = 0;
-			return this.insertText(chunkTextBufferText, lineSeparator);
-		};
+		if (!(completion instanceof Stream)) {
+			this.anchorOffset += await this.insertText(completion.choices[0].message.content!, lineSeparator);
+		} else {
+			this.abortController = completion.controller;
 
-		for await (const chunk of stream) {
-			const chunkText = chunk.choices[0]?.delta?.content || '';
-			if (chunkText.length === 0) { continue; }
-			this.anchorOffset += await submitChunkText(chunkText);
+			const chunkTextBuffer: string[] = [];
+			const submitChunkText = async (chunkText: string): Promise<number> => {
+				chunkTextBuffer.push(chunkText);
+				if (!chunkText.includes(LF)) { return 0; }
+				const chunkTextBufferText = chunkTextBuffer.join("");
+				chunkTextBuffer.length = 0;
+				return this.insertText(chunkTextBufferText, lineSeparator);
+			};
+
+			for await (const chunk of completion) {
+				const chunkText = chunk.choices[0]?.delta?.content || '';
+				if (chunkText.length === 0) { continue; }
+				this.anchorOffset += await submitChunkText(chunkText);
+			}
+			// flush chunkTextBuffer
+			this.anchorOffset += await submitChunkText(LF);
 		}
-		// flush chunkTextBuffer
-		this.anchorOffset += await submitChunkText(LF);
 	}
 }
-
-
 
 export class ChatMessageBuilder {
 	private readonly document: vscode.TextDocument;
 	private readonly supportsMultimodal: boolean;
-	private copilotOptions: ChatCompletionCreateParamsStreaming;
+	private copilotOptions: OpenAI.ChatCompletionCreateParams;
 	private chatMessages: ChatMessage[];
 	private isInvalid: boolean;
 
 	constructor(document: vscode.TextDocument, supportsMultimodal: boolean) {
 		this.document = document;
 		this.supportsMultimodal = supportsMultimodal;
-		this.copilotOptions = {} as ChatCompletionCreateParamsStreaming;
+		this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 		this.chatMessages = [];
 		this.isInvalid = false;
 	}
@@ -258,7 +256,7 @@ export class ChatMessageBuilder {
 			} catch {
 				flags = ChatRoleFlags.User;
 				message = "Correct the following JSON and answer in the language of the `" + l10n.getLocale() + "` locale:\n```\n" + match[1] + "\n```";
-				this.copilotOptions = {} as ChatCompletionCreateParamsStreaming;
+				this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 				this.chatMessages = [];
 				this.isInvalid = true;
 				break;
@@ -273,7 +271,7 @@ export class ChatMessageBuilder {
 		}
 
 		// Matches medias in Markdown (i.e., `![alt](url)`)
-		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))/gm).filter(Boolean);
+		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))|(<img\s[^>]*src="[^"]+"[^>]*>)/gm).filter(Boolean);
 
 		if (parts.length === 1) {
 			this.chatMessages.push({ role: role, content: message });
@@ -281,10 +279,11 @@ export class ChatMessageBuilder {
 		}
 
 		const content = parts.map<OpenAI.ChatCompletionContentPart>(part => {
-			const match = part.match(/!\[[^\]]*\]\(([^)]+)\)/);
+			// Match media in Markdown and HTML image tags
+			const match = part.match(/!\[[^\]]*\]\(([^)]+)\)|<img\s[^>]*src="([^"]+)"[^>]*>/);
 			if (!match) { return { type: 'text', text: part }; }
 
-			const uri = match[1].replace(/^<|>$/g, '');
+			const uri = match[1]?.replace(/^<|>$/g, '') || match[2];
 			const mimeType = mime.lookup(uri);
 			if (!mimeType) { return { type: 'text', text: part }; }
 
@@ -332,7 +331,7 @@ export class ChatMessageBuilder {
 		return this.chatMessages;
 	}
 
-	getCopilotOptions(): ChatCompletionCreateParamsStreaming {
+	getCopilotOptions(): OpenAI.ChatCompletionCreateParams {
 		return this.copilotOptions;
 	}
 
