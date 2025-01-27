@@ -2,7 +2,8 @@ import OpenAI from 'openai';
 import { Stream } from "openai/streaming";
 import path from 'path';
 import * as vscode from 'vscode';
-import { ChatMessage, ChatRole, createChatCompletion } from '../agents/chatCompletion';
+import { createChatCompletion } from '../agents/chatCompletion';
+import { ChatMessage, ChatRole } from '../utils/llm';
 
 export async function nameAndSaveAs() {
 	const textEditor = vscode.window.activeTextEditor;

@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
-import { ChatCompletion, ChatMessageBuilder, ChatRole, ChatRoleFlags } from './agents/chatCompletion';
+import { ChatCompletion } from './agents/chatCompletion';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { adjustStartToLineHead, countChar, LF, partialEndsWith, resolveFragmentUri, toEolString, toOverflowAdjustedRange } from './utils';
 import { ContextDecorator, ContextOutline } from './utils/context';
 import { countQuoteIndent, getQuoteIndent, indentQuote, outdentQuote } from './utils/indention';
+import { ChatMessageBuilder, ChatRole, ChatRoleFlags } from './utils/llm';
 import * as l10n from './utils/localization';
 
 export function activate(context: vscode.ExtensionContext) {
