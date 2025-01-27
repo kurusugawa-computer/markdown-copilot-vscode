@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ChatCompletion } from './agents/chatCompletion';
+import { Conversation } from './agents/conversations';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { adjustStartToLineHead, countChar, LF, partialEndsWith, resolveFragmentUri, toEolString, toOverflowAdjustedRange } from './utils';
@@ -84,7 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const lineRangeStartLine = activeLineRangesStart.line;
 			const match = document.lineAt(lineRangeStartLine).text.match(/^(#[ \t]Copilot Context:[ \t]).*$/);
 
-			const completion = new ChatCompletion(textEditor, document.offsetAt(activeLineRangesStart));
+			const completion = new Conversation(textEditor, document.offsetAt(activeLineRangesStart));
 			token.onCancellationRequested(() => completion.cancel());
 
 			try {
@@ -151,7 +151,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(
 		event => {
 			contextDecorator.onDidChangeTextDocument(event);
-			ChatCompletion.onDidChangeTextDocument(event);
+			Conversation.onDidChangeTextDocument(event);
 		}
 	));
 
@@ -295,7 +295,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-	ChatCompletion.onDeactivate();
+	Conversation.onDeactivate();
 }
 
 async function continueEditing(outline: ContextOutline, useContext: boolean, supportsMultimodal: boolean, selectionOverride?: vscode.Selection) {
@@ -364,18 +364,18 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const completion = new ChatCompletion(textEditor, userEndOffset);
-		token.onCancellationRequested(() => completion.cancel());
+		const conversation = new Conversation(textEditor, userEndOffset);
+		token.onCancellationRequested(() => conversation.cancel());
 		try {
-			const offsetDiff = await completion.insertText("\n\n**Copilot:** ", userEndLineEol);
-			completion.translateAnchorOffset(offsetDiff);
+			const offsetDiff = await conversation.insertText("\n\n**Copilot:** ", userEndLineEol);
+			conversation.translateAnchorOffset(offsetDiff);
 
 			if (useContext) {
 				chatMessageBuilder.addLines(await collectActiveLines(outline, document, userStart));
 			}
 			chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
 
-			return await completion.completeText(
+			return await conversation.completeText(
 				chatMessageBuilder.toChatMessages(),
 				userEndLineEol,
 				chatMessageBuilder.getCopilotOptions(),
@@ -385,13 +385,13 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 				// remove head error code
 				const errorMessage = e.message.replace(/^\d+ /, "");
 				vscode.window.showErrorMessage(errorMessage);
-				return completion.insertText(
+				return conversation.insertText(
 					errorMessage,
 					userEndLineEol
 				);
 			}
 		} finally {
-			completion.dispose();
+			conversation.dispose();
 		}
 	});
 }
@@ -482,8 +482,8 @@ async function pasteAsMarkdown() {
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const completion = new ChatCompletion(textEditor, document.offsetAt(userStart));
-		token.onCancellationRequested(() => completion.cancel());
+		const conversation = new Conversation(textEditor, document.offsetAt(userStart));
+		token.onCancellationRequested(() => conversation.cancel());
 		try {
 			const configuration = vscode.workspace.getConfiguration();
 			const pasteAsMarkdownMessage = configuration.get<string>("markdown.copilot.instructions.pasteAsMarkdownMessage");
@@ -491,7 +491,7 @@ async function pasteAsMarkdown() {
 				return;
 			}
 
-			await completion.completeText(
+			await conversation.completeText(
 				[
 					{ role: ChatRole.User, content: pasteAsMarkdownMessage },
 					{ role: ChatRole.User, content: clipboardContent },
@@ -503,13 +503,13 @@ async function pasteAsMarkdown() {
 				// remove head error code
 				const errorMessage = e.message.replace(/^\d+ /, "");
 				vscode.window.showErrorMessage(errorMessage);
-				await completion.insertText(
+				await conversation.insertText(
 					errorMessage,
 					userEndLineEol
 				);
 			}
 		} finally {
-			completion.dispose();
+			conversation.dispose();
 		}
 	});
 }

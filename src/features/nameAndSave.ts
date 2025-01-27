@@ -1,9 +1,7 @@
 import OpenAI from 'openai';
-import { Stream } from "openai/streaming";
 import path from 'path';
 import * as vscode from 'vscode';
-import { createChatCompletion } from '../agents/chatCompletion';
-import { ChatMessage, ChatRole } from '../utils/llm';
+import { ChatMessage, ChatRole, executeTask } from '../utils/llm';
 
 export async function nameAndSaveAs() {
 	const textEditor = vscode.window.activeTextEditor;
@@ -28,19 +26,14 @@ export async function nameAndSaveAs() {
 		return;
 	}
 
-	const stream = await createChatCompletion(
+	const json = await executeTask(
 		[
 			{ role: ChatRole.System, content: nameMessage.replace("${namePathFormat}", namePathFormat) },
 			{ role: ChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${workspaceFolder.uri.fsPath}" }\`` },
 			{ role: ChatRole.User, content: `Content:\n${document.getText()}` },
 		] as ChatMessage[],
 		{ "temperature": Number.EPSILON, "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParams
-	) as Stream<OpenAI.Chat.Completions.ChatCompletionChunk>;
-	let json = "";
-	for await (const chunk of stream) {
-		const chunkText = chunk.choices[0]?.delta?.content || '';
-		json += chunkText;
-	}
+	);
 
 	let filepath: string;
 	try {

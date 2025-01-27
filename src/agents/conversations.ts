@@ -1,29 +1,29 @@
-import { AzureOpenAI, OpenAI } from 'openai';
+import { OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
 import { LF, countChar } from '../utils';
-import { ChatMessage, createOpenAIClient } from '../utils/llm';
+import { ChatMessage, createChatCompletion } from '../utils/llm';
 
-export async function createChatCompletion(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
-	const configuration = vscode.workspace.getConfiguration();
-	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
-	return openai.chat.completions.create(Object.assign(
-		{
-			model: configuration.get<string>("markdown.copilot.openAI.model")!,
-			messages: chatMessages,
-			temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
-			stream: true,
-		}, override
-	));
-}
-
-/*
- * Completion
+/**
+ * Represents a conversation session within the VSCode editor.
+ *
+ * The `Conversation` class manages the lifecycle of a conversation, including tracking
+ * running conversations, handling text insertions and replacements, and managing
+ * text document changes. It interacts with the VSCode API to apply workspace edits
+ * and display completion indicators. Additionally, it interfaces with an OpenAI
+ * chat completion service to generate and insert text based on user interactions.
+ *
+ * @remarks
+ * - Utilizes a static `runningConversations` set to keep track of active sessions.
+ * - Listens to document changes to update anchor offsets accordingly.
+ * - Supports cancellation of ongoing completions via an `AbortController`.
+ * - Provides methods to insert text, replace lines, and complete text using chat messages.
+ * - Cleans up resources and disposes decorations upon disposal.
  */
-export class ChatCompletion {
+export class Conversation {
 	// TODO: Remove dependency on events after introducing Anchor Position Update Mechanism
 
-	private static readonly runningCompletions = new Set<ChatCompletion>();
+	private static readonly runningConversations = new Set<Conversation>();
 	private textEditor: vscode.TextEditor;
 	private document: vscode.TextDocument;
 	private anchorOffset: number;
@@ -40,12 +40,12 @@ export class ChatCompletion {
 		this.completionIndicator = vscode.window.createTextEditorDecorationType({
 			after: { contentText: "📝" },
 		});
-		ChatCompletion.runningCompletions.add(this);
+		Conversation.runningConversations.add(this);
 	}
 
 	dispose() {
 		this.completionIndicator.dispose();
-		ChatCompletion.runningCompletions.delete(this);
+		Conversation.runningConversations.delete(this);
 	}
 
 	cancel(reason?: any) {
@@ -63,14 +63,14 @@ export class ChatCompletion {
 	}
 
 	static onDeactivate() {
-		for (const completion of ChatCompletion.runningCompletions) {
-			completion.dispose();
+		for (const conversation of Conversation.runningConversations) {
+			conversation.dispose();
 		}
 	}
 
 	static onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
-		for (const completion of ChatCompletion.runningCompletions) {
-			completion.onDidChangeTextDocument(event);
+		for (const conversation of Conversation.runningConversations) {
+			conversation.onDidChangeTextDocument(event);
 		}
 	}
 

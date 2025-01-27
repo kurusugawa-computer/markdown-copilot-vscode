@@ -2,6 +2,7 @@ import { AssertionError } from 'assert';
 import fs from 'fs';
 import mime from 'mime-types';
 import { AzureOpenAI, OpenAI } from 'openai';
+import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
 import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
@@ -19,6 +20,19 @@ export async function executeTask(chatMessages: ChatMessage[], override: OpenAI.
 		}, override as OpenAI.ChatCompletionCreateParamsNonStreaming
 	));
 	return completion.choices[0].message.content!;
+}
+
+export async function createChatCompletion(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+	const configuration = vscode.workspace.getConfiguration();
+	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
+	return openai.chat.completions.create(Object.assign(
+		{
+			model: configuration.get<string>("markdown.copilot.openAI.model")!,
+			messages: chatMessages,
+			temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
+			stream: true,
+		}, override
+	));
 }
 
 export enum ChatRole {
