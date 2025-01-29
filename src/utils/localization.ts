@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
  * Utilities for l10n
  */
 export function getLocale(): string {
-	return JSON.parse(process.env.VSCODE_NLS_CONFIG as string).locale;
+	return vscode.env.language;
 }
 
 export function initialize(baseUri: vscode.Uri, forcedLocale?: string) {
