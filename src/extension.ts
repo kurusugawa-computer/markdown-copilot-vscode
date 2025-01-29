@@ -318,7 +318,7 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 	const configuration = vscode.workspace.getConfiguration();
 	const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
 	if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
-		chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
+		await chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
 	}
 
 	const userStartLineText = document.lineAt(userStart.line).text;
@@ -371,9 +371,9 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 			conversation.translateAnchorOffset(offsetDiff);
 
 			if (useContext) {
-				chatMessageBuilder.addLines(await collectActiveLines(outline, document, userStart));
+				await chatMessageBuilder.addLines(await collectActiveLines(outline, document, userStart));
 			}
-			chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
+			await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
 
 			return await conversation.completeText(
 				chatMessageBuilder.toChatMessages(),

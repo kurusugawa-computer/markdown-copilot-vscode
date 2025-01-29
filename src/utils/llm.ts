@@ -1,5 +1,4 @@
 import { AssertionError } from 'assert';
-import fs from 'fs';
 import mime from 'mime-types';
 import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
@@ -95,7 +94,7 @@ export class ChatMessageBuilder {
 		this.isInvalid = false;
 	}
 
-	addChatMessage(flags: ChatRoleFlags, message: string) {
+	async addChatMessage(flags: ChatRoleFlags, message: string) {
 		if (this.isInvalid) { return; }
 
 		const role = toOpenAIChatRole(flags);
@@ -133,7 +132,7 @@ export class ChatMessageBuilder {
 			return;
 		}
 
-		const content = parts.map<OpenAI.ChatCompletionContentPart>(part => {
+		async function toContentPart(part: string, document: vscode.TextDocument): Promise<OpenAI.ChatCompletionContentPart> {
 			// Match media in Markdown and HTML image tags
 			const match = part.match(/!\[[^\]]*\]\(([^)]+)\)|<img\s[^>]*src="([^"]+)"[^>]*>/);
 			if (!match) { return { type: 'text', text: part }; }
@@ -146,22 +145,24 @@ export class ChatMessageBuilder {
 				if (/^https?:\/\//.test(uri)) {
 					return { type: 'image_url', image_url: { url: uri } };
 				}
-				const data = fs.readFileSync(resolveFragmentUri(this.document, uri).fsPath).toString('base64');
+				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(document, uri))).toString('base64');
 				return { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } };
 			}
 
 			if (mimeType === 'audio/mpeg' || mimeType === 'audio/wave') {
-				const data = fs.readFileSync(resolveFragmentUri(this.document, uri).fsPath).toString('base64');
+				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(document, uri))).toString('base64');
 				const format = mimeType === 'audio/mpeg' ? 'mp3' : 'wav';
 				return { type: 'input_audio', input_audio: { data, format } };
 			}
 
 			throw new Error(`Unsupported media type: ${mimeType}`);
-		});
+		}
+
+		const content = await Promise.all(parts.map(part => toContentPart(part, this.document)));
 		this.chatMessages.push({ role: role, content: content });
 	}
 
-	addLines(lines: string[]) {
+	async addLines(lines: string[]) {
 		let previousChatRole = ChatRoleFlags.User;
 		let chatMessagelineTexts: string[] = [];
 		for (const lineText of lines) {
@@ -172,14 +173,14 @@ export class ChatMessageBuilder {
 			}
 
 			if (lineChatRoleFlags !== previousChatRole) {
-				this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
+				await this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
 				previousChatRole = lineChatRoleFlags;
 				chatMessagelineTexts = [];
 			}
 
 			chatMessagelineTexts.push(removeChatRole(lineText));
 		}
-		this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
+		await this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
 	}
 
 	toChatMessages(): ChatMessage[] {
@@ -190,10 +191,11 @@ export class ChatMessageBuilder {
 		return this.copilotOptions;
 	}
 
-	private addChatMessageLines(flags: ChatRoleFlags, textLines: string[]): void {
-		this.addChatMessage(flags, textLines.join(LF));
+	private async addChatMessageLines(flags: ChatRoleFlags, textLines: string[]) {
+		return this.addChatMessage(flags, textLines.join(LF));
 	}
 }
+
 export async function createOpenAIClient(configuration: vscode.WorkspaceConfiguration) {
 	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
 	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
