@@ -6,32 +6,36 @@ import * as vscode from 'vscode';
 import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 
+function buildChatParams(
+	configuration: vscode.WorkspaceConfiguration,
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams,
+	stream: boolean,
+): OpenAI.ChatCompletionCreateParams {
+	return Object.assign({
+		model: configuration.get<string>("markdown.copilot.openAI.model")!,
+		messages: chatMessages,
+		temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
+		stream,
+	}, override);
+}
+
+async function createChatCompletion(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams
+): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+	const configuration = vscode.workspace.getConfiguration();
+	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
+	return openai.chat.completions.create(buildChatParams(configuration, chatMessages, override, true));
+}
 
 export async function executeTask(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<string> {
 	const configuration = vscode.workspace.getConfiguration();
 	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
-	const completion = await openai.chat.completions.create(Object.assign(
-		{
-			model: configuration.get<string>("markdown.copilot.openAI.model")!,
-			messages: chatMessages,
-			temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
-			stream: false,
-		}, override as OpenAI.ChatCompletionCreateParamsNonStreaming
-	));
+	const completion = await openai.chat.completions.create(
+		buildChatParams(configuration, chatMessages, override, false) as OpenAI.ChatCompletionCreateParamsNonStreaming
+	);
 	return completion.choices[0].message.content!;
-}
-
-async function createChatCompletion(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
-	const configuration = vscode.workspace.getConfiguration();
-	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
-	return openai.chat.completions.create(Object.assign(
-		{
-			model: configuration.get<string>("markdown.copilot.openAI.model")!,
-			messages: chatMessages,
-			temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
-			stream: true,
-		}, override
-	));
 }
 
 export async function executeChatCompletion(
@@ -150,7 +154,7 @@ function toChatRole(text: string): ChatRoleFlags {
 	const match = text.match(roleRegex);
 	if (match === null) { return ChatRoleFlags.None; }
 	return matchToChatRoles.get(match[1])!
-		| (match[2] === "(Override)" ? ChatRoleFlags.Override : ChatRoleFlags.None);
+		| (match[2] ? ChatRoleFlags.Override : ChatRoleFlags.None);
 }
 
 function toOpenAIChatRole(flags: ChatRoleFlags): ChatRole {
@@ -288,30 +292,28 @@ export async function createOpenAIClient(configuration: vscode.WorkspaceConfigur
 	if (!isValidApiKey(apiKey)) {
 		apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
 		if (!isValidApiKey(apiKey)) {
-			throw new Error(`401 Incorrect API key provided: ${apiKey}. You can find your API key at https://platform.openai.com/account/api-keys.`);
+			throw new Error(`401 Incorrect API key: ${apiKey}. Find yours at https://platform.openai.com/account/api-keys.`);
 		}
 		configuration.update("markdown.copilot.openAI.apiKey", apiKey);
 	}
 	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
-	return (() => {
-		if (!baseUrl) {
-			return new OpenAI({ apiKey: apiKey });
-		}
-		try {
-			const url = new URL(baseUrl);
-			return new AzureOpenAI({
-				endpoint: url.origin,
-				deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
-				apiKey: apiKey,
-				apiVersion: url.searchParams.get("api-version")!,
-			});
-		} catch {
-			throw new TypeError(l10n.t(
-				"config.openAI.azureBaseUrl.error",
-				baseUrl,
-				l10n.t("config.openAI.azureBaseUrl.description")
-			));
-		}
-	})();
-}
+	if (!baseUrl) {
+		return new OpenAI({ apiKey });
+	}
 
+	try {
+		const url = new URL(baseUrl);
+		return new AzureOpenAI({
+			endpoint: url.origin,
+			deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
+			apiKey,
+			apiVersion: url.searchParams.get("api-version")!,
+		});
+	} catch {
+		throw new TypeError(l10n.t(
+			"config.openAI.azureBaseUrl.error",
+			baseUrl,
+			l10n.t("config.openAI.azureBaseUrl.description")
+		));
+	}
+}
