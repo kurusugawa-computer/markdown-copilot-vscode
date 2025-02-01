@@ -40,16 +40,6 @@ export async function listFilePathDiff(uri: vscode.Uri) {
 }
 
 export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
-	class Diff {
-		from: string;
-		to: string;
-
-		constructor(from: string, to: string) {
-			this.from = from;
-			this.to = to;
-		}
-	}
-
 	async function insertErrorMessage(message: string) {
 		const edit = new vscode.WorkspaceEdit();
 		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
@@ -71,13 +61,14 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 
 	// Extract diffs
 
-	let pathFrom = null, pathTo = null;
-	let diffList: Diff[] = [];
+	let pathFrom = null;
+	let pathTo = null;
+	const diffList: { from: string; to: string; }[] = [];
 	for (const line of text.split(/\r?\n/)) {
 		if (pathFrom === null) { // expecting `-`
 			const match = line.match(/^\-\s*([^\s]+)$/);
 			if (match === null) { // Invalid line
-				insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+				await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
 				return;
 			}
 			pathFrom = match[1];
@@ -88,7 +79,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 			} else {
 				const match = line.match(/^\+\s*([^\s]+)$/);
 				if (match === null) { // Invalid line
-					insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+					await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
 					return;
 				}
 				pathTo = match[1];
@@ -96,7 +87,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		}
 
 		if (pathFrom !== null && pathTo !== null) {
-			diffList.push(new Diff(pathFrom, pathTo));
+			diffList.push({ from: pathFrom, to: pathTo });
 			pathFrom = pathTo = null;
 		}
 	}
@@ -105,7 +96,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 
 	// Incomplete diff
 	if (pathFrom !== null || pathTo !== null) {
-		insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+		await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
 		return;
 	}
 
@@ -115,7 +106,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		try {
 			await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from));
 		} catch (error) {
-			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
+			await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
 			someFilesMissing = true;
 		}
 	}
@@ -129,7 +120,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	for (const { to } of diffList) {
 		if (to === "") { continue; } // Represents deletion
 		if (tos.has(to)) {
-			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
+			await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
 			return;
 		}
 		tos.add(to);
@@ -141,7 +132,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		if (from === to) { continue; } // Represents no change
 		try {
 			await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to));
-			insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
+			await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
 			return;
 		} catch (error) {
 		}
@@ -159,11 +150,10 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 				);
 			}
 		} catch (error) {
-			insertErrorMessage(`${l10n.t("command.editing.applyFilePathDiff.error.fatal", from, to)}\n${error}`);
+			await insertErrorMessage(`${l10n.t("command.editing.applyFilePathDiff.error.fatal", from, to)}\n${error}`);
 			return;
 		}
 	}
 
 	vscode.window.showInformationMessage(l10n.t("command.editing.applyFilePathDiff.success"));
 }
-
