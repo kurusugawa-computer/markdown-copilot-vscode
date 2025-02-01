@@ -1,8 +1,7 @@
 import { OpenAI } from 'openai';
-import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
 import { LF, countChar } from '../utils';
-import { ChatMessage, createChatCompletion } from '../utils/llm';
+import { ChatMessage, executeChatCompletion } from '../utils/llm';
 
 /**
  * Represents a conversation session within the VSCode editor.
@@ -121,29 +120,24 @@ export class Conversation {
 	}
 
 	async completeText(chatMessages: ChatMessage[], lineSeparator: string, override?: OpenAI.ChatCompletionCreateParams) {
-		const completion = await createChatCompletion(chatMessages, override || {} as OpenAI.ChatCompletionCreateParams);
+		const chunkTextBuffer: string[] = [];
+		const submitChunkText = async (chunkText: string): Promise<number> => {
+			chunkTextBuffer.push(chunkText);
+			if (!chunkText.includes(LF)) { return 0; }
+			const chunkTextBufferText = chunkTextBuffer.join("");
+			chunkTextBuffer.length = 0;
+			return this.insertText(chunkTextBufferText, lineSeparator);
+		};
 
-		if (!(completion instanceof Stream)) {
-			this.anchorOffset += await this.insertText(completion.choices[0].message.content!, lineSeparator);
-		} else {
-			this.abortController = completion.controller;
-
-			const chunkTextBuffer: string[] = [];
-			const submitChunkText = async (chunkText: string): Promise<number> => {
-				chunkTextBuffer.push(chunkText);
-				if (!chunkText.includes(LF)) { return 0; }
-				const chunkTextBufferText = chunkTextBuffer.join("");
-				chunkTextBuffer.length = 0;
-				return this.insertText(chunkTextBufferText, lineSeparator);
-			};
-
-			for await (const chunk of completion) {
-				const chunkText = chunk.choices[0]?.delta?.content || '';
-				if (chunkText.length === 0) { continue; }
+		return executeChatCompletion(
+			chatMessages,
+			override || {} as OpenAI.ChatCompletionCreateParams,
+			async chunkText => {
 				this.anchorOffset += await submitChunkText(chunkText);
+			},
+			async completion => {
+				this.abortController = completion.controller;
 			}
-			// flush chunkTextBuffer
-			this.anchorOffset += await submitChunkText(LF);
-		}
+		).then(async () => {this.anchorOffset += await submitChunkText(LF);});
 	}
 }

@@ -21,7 +21,7 @@ export async function executeTask(chatMessages: ChatMessage[], override: OpenAI.
 	return completion.choices[0].message.content!;
 }
 
-export async function createChatCompletion(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+async function createChatCompletion(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
 	const configuration = vscode.workspace.getConfiguration();
 	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
 	return openai.chat.completions.create(Object.assign(
@@ -34,11 +34,98 @@ export async function createChatCompletion(chatMessages: ChatMessage[], override
 	));
 }
 
+export async function executeChatCompletion(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams,
+	onDeltaContent: (deltaContent: string) => Promise<void>,
+	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
+) {
+	const completion = await createChatCompletion(chatMessages, override);
+	if (!(completion instanceof Stream)) {
+		const choice = completion.choices[0];
+		return onDeltaContent(choice.message.content!);
+	}
+
+	await onStream?.(completion);
+	for await (const chunk of completion) {
+		const chunkText = chunk.choices[0]?.delta?.content || '';
+		if (chunkText.length === 0) { continue; }
+		await onDeltaContent(chunkText);
+	}
+}
+
+export async function executeChatCompletionWithTools(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams,
+	onDeltaContent: (deltaContent: string) => Promise<void>,
+	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>,
+	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
+) {
+	const completion = await createChatCompletion(chatMessages, override);
+	if (!(completion instanceof Stream)) {
+		const messages = completion.choices[0].message;
+		const toolCalls = messages.tool_calls;
+		if (!toolCalls) {
+			return onDeltaContent(messages.content!);
+		}
+
+		const toolResults = await Promise.all(toolCalls.map(toolCall =>
+			onToolCallFunction(toolCall.function).then(content => ({
+				role: ChatRole.Tool,
+				tool_call_id: toolCall.id,
+				content,
+			} as OpenAI.ChatCompletionToolMessageParam))
+		));
+
+		chatMessages.push(...toolResults);
+		return executeChatCompletionWithTools(chatMessages, override, onDeltaContent, onToolCallFunction, onStream);
+	}
+
+	await onStream?.(completion);
+
+	let finishReason: "length" | "stop" | "tool_calls" | "content_filter" | "function_call" | null = null;
+	const finalToolCalls: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall[] = [];
+	for await (const chunk of completion) {
+		const choice = chunk.choices[0];
+		const delta = choice.delta;
+		const toolCalls = delta.tool_calls || [];
+		for (const toolCall of toolCalls) {
+			const index = toolCall.index;
+			if (!finalToolCalls[index]) {
+				finalToolCalls[index] = toolCall;
+			}
+			finalToolCalls[index].function!.arguments += toolCall.function?.arguments ?? '';
+		}
+		if (delta.content !== undefined && delta.content !== null) {
+			await onDeltaContent(delta.content);
+		}
+		if (choice.finish_reason !== null) {
+			finishReason = choice.finish_reason;
+		}
+	}
+
+	if (finishReason !== "tool_calls") {
+		return;
+	}
+
+	const toolResults = await Promise.all(finalToolCalls.map(toolCall =>
+		onToolCallFunction(toolCall.function!).then(content => ({
+			role: ChatRole.Tool,
+			tool_call_id: toolCall.id,
+			content,
+		} as OpenAI.ChatCompletionToolMessageParam))
+	));
+	chatMessages.push(...toolResults);
+	return executeChatCompletionWithTools(chatMessages, override, onDeltaContent, onToolCallFunction, onStream);
+}
+
 export enum ChatRole {
-	None = "none",
+	Function = "function",
+	Developer = "developer",
 	System = "system",
 	User = "user",
 	Assistant = "assistant",
+	Tool = "tool",
 }
 
 export enum ChatRoleFlags {
@@ -47,12 +134,10 @@ export enum ChatRoleFlags {
 	System = 1 << 1,
 	User = 1 << 2,
 	Assistant = 1 << 3,
+	Tool = 1 << 4,
 }
 
-export interface ChatMessage {
-	role: ChatRole;
-	content: string | OpenAI.ChatCompletionContentPart[];
-}
+export type ChatMessage = OpenAI.ChatCompletionMessageParam;
 
 const roleRegex = /\*\*(System|User|Copilot)(\(Override\))?:\*\*/;
 const matchToChatRoles = new Map<string, ChatRoleFlags>([
@@ -72,6 +157,7 @@ function toOpenAIChatRole(flags: ChatRoleFlags): ChatRole {
 	if (flags & ChatRoleFlags.User) { return ChatRole.User; }
 	if (flags & ChatRoleFlags.Assistant) { return ChatRole.Assistant; }
 	if (flags & ChatRoleFlags.System) { return ChatRole.System; }
+	if (flags & ChatRoleFlags.Tool) { return ChatRole.Tool; }
 	throw new AssertionError();
 }
 
@@ -120,7 +206,7 @@ export class ChatMessageBuilder {
 		// Ignore empty messages
 		if (message.trim().length === 0) { return; }
 		if (!this.supportsMultimodal) {
-			this.chatMessages.push({ role: role, content: message });
+			this.chatMessages.push({ role: role, content: message } as OpenAI.ChatCompletionUserMessageParam);
 			return;
 		}
 
@@ -128,7 +214,7 @@ export class ChatMessageBuilder {
 		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))|(<img\s[^>]*src="[^"]+"[^>]*>)/gm).filter(Boolean);
 
 		if (parts.length === 1) {
-			this.chatMessages.push({ role: role, content: message });
+			this.chatMessages.push({ role: role, content: message } as OpenAI.ChatCompletionUserMessageParam);
 			return;
 		}
 
@@ -159,7 +245,7 @@ export class ChatMessageBuilder {
 		}
 
 		const content = await Promise.all(parts.map(part => toContentPart(part, this.document)));
-		this.chatMessages.push({ role: role, content: content });
+		this.chatMessages.push({ role: role, content: content } as OpenAI.ChatCompletionUserMessageParam);
 	}
 
 	async addLines(lines: string[]) {
