@@ -1,6 +1,6 @@
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
-import { LF, countChar } from '../utils';
+import { LF } from '../utils';
 import { ChatMessage, executeChatCompletion } from '../utils/llm';
 
 /**
@@ -20,21 +20,17 @@ import { ChatMessage, executeChatCompletion } from '../utils/llm';
  * - Cleans up resources and disposes decorations upon disposal.
  */
 export class Conversation {
-	// TODO: Remove dependency on events after introducing Anchor Position Update Mechanism
-
 	private static readonly runningConversations = new Set<Conversation>();
 	private textEditor: vscode.TextEditor;
 	private document: vscode.TextDocument;
-	private anchorOffset: number;
-	private changes: Set<string>;
+	private position: vscode.Position;
 	private abortController?: AbortController;
 	private completionIndicator: vscode.TextEditorDecorationType;
 
-	constructor(textEditor: vscode.TextEditor, anchorOffset: number) {
+	constructor(textEditor: vscode.TextEditor, position: vscode.Position) {
 		this.textEditor = textEditor;
 		this.document = textEditor.document;
-		this.anchorOffset = anchorOffset;
-		this.changes = new Set();
+		this.position = position;
 		this.abortController = undefined;
 		this.completionIndicator = vscode.window.createTextEditorDecorationType({
 			after: { contentText: "📝" },
@@ -51,14 +47,9 @@ export class Conversation {
 		this.abortController?.abort(reason);
 	}
 
-	setAnchorOffset(anchorOffset: number): number {
-		this.anchorOffset = anchorOffset;
-		return this.anchorOffset;
-	}
-
-	translateAnchorOffset(diffAnchorOffset: number) {
-		this.anchorOffset += diffAnchorOffset;
-		return this.anchorOffset;
+	setPosition(position: vscode.Position): vscode.Position {
+		this.position = position;
+		return this.position;
 	}
 
 	static onDeactivate() {
@@ -68,62 +59,45 @@ export class Conversation {
 	}
 
 	static onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
+		const sortedChanges = [...event.contentChanges].sort((a, b) => b.range.start.compareTo(a.range.start));
 		for (const conversation of Conversation.runningConversations) {
-			conversation.onDidChangeTextDocument(event);
+			if (conversation.document !== event.document) { continue; }
+			conversation.updatePosition(sortedChanges);
 		}
 	}
 
-	onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
-		if (event.document !== this.document) { return; }
-		for (const change of event.contentChanges) {
-			const changeStartOffset = change.rangeOffset;
-			if (changeStartOffset > this.anchorOffset) { continue; }
-			if (this.changes.delete(`${changeStartOffset},${change.text},${event.document.uri}`)) { continue; }
-
-			const changeOffsetDiff = countChar(change.text) - change.rangeLength;
-			const changeEndOffset = change.rangeOffset + change.rangeLength;
-			if (changeEndOffset > this.anchorOffset) {
-				this.anchorOffset = changeEndOffset;
-			} else {
-				this.anchorOffset += changeOffsetDiff;
-			}
-		}
+	private updatePosition(contentChanges: vscode.TextDocumentContentChangeEvent[]) {
+		this.position = contentChanges.reduce(toUpdatedPosition, this.position);
 	}
 
-	async insertText(text: string, lineSeparator: string): Promise<number> {
-		text = lineSeparator === LF ? text : text.replaceAll(LF, lineSeparator);
+	async insertText(text: string, lineSeparator: string): Promise<vscode.Position> {
 		const edit = new vscode.WorkspaceEdit();
-		const anchorPosition = this.document.positionAt(this.anchorOffset);
 		edit.insert(
 			this.document.uri,
-			anchorPosition,
-			text
+			this.position,
+			lineSeparator === LF ? text : text.replaceAll(LF, lineSeparator),
 		);
-		this.textEditor.setDecorations(this.completionIndicator, [new vscode.Range(anchorPosition, anchorPosition)]);
-		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
+		this.textEditor.setDecorations(this.completionIndicator, [new vscode.Range(this.position, this.position)]);
 		await vscode.workspace.applyEdit(edit);
-		return countChar(text);
+		return this.position;
 	}
 
-	async replaceLine(text: string, line: number): Promise<number> {
-		const textLine = this.document.lineAt(line);
-		const deleteCharCount = countChar(textLine.text);
+	async replaceLine(text: string, line: number): Promise<vscode.Position> {
 		const edit = new vscode.WorkspaceEdit();
 		edit.replace(
 			this.document.uri,
-			textLine.range,
-			text
+			this.document.lineAt(line).range,
+			text,
 		);
-		this.changes.add(`${this.anchorOffset},${text},${this.document.uri}`);
 		await vscode.workspace.applyEdit(edit);
-		return countChar(text) - deleteCharCount;
+		return this.position;
 	}
 
 	async completeText(chatMessages: ChatMessage[], lineSeparator: string, override?: OpenAI.ChatCompletionCreateParams) {
 		const chunkTextBuffer: string[] = [];
-		const submitChunkText = async (chunkText: string): Promise<number> => {
+		const submitChunkText = async (chunkText: string): Promise<vscode.Position> => {
 			chunkTextBuffer.push(chunkText);
-			if (!chunkText.includes(LF)) { return 0; }
+			if (!chunkText.includes(LF)) { return this.position; }
 			const chunkTextBufferText = chunkTextBuffer.join("");
 			chunkTextBuffer.length = 0;
 			return this.insertText(chunkTextBufferText, lineSeparator);
@@ -132,12 +106,74 @@ export class Conversation {
 		return executeChatCompletion(
 			chatMessages,
 			override || {} as OpenAI.ChatCompletionCreateParams,
-			async chunkText => {
-				this.anchorOffset += await submitChunkText(chunkText);
-			},
+			async chunkText => submitChunkText(chunkText),
 			async completion => {
 				this.abortController = completion.controller;
 			}
-		).then(async () => {this.anchorOffset += await submitChunkText(LF);});
+		).then(() => submitChunkText(LF));
 	}
+}
+
+/**
+ * Updates a given position based on a text document content change.
+ *
+ * The function adjusts the provided position based on a change event by:
+ * - Returning the position unchanged if the change occurs completely after it.
+ * - Resetting the position to the start of the change if it falls within a replaced (deleted) range.
+ * - Shifting the position backwards when the deletion occurs before the original position.
+ * - Updating for any inserted text by increasing the line count and adjusting the character offset,
+ *   taking into account whether the insertion is on the same line or spans multiple lines.
+ *
+ * @param position - The current position to be updated.
+ * @param change - The text document change event that includes the range affected, deleted content, and any inserted text.
+ * @returns The new position after applying the text change.
+ */
+function toUpdatedPosition(
+	position: vscode.Position,
+	change: vscode.TextDocumentContentChangeEvent,
+): vscode.Position {
+	const { start, end } = change.range;
+
+	// If the change occurs completely after the position, no update needed.
+	if (start.isAfter(position)) {
+		return position;
+	}
+
+	let { line, character } = position;
+
+	// If the position is within the replaced (deleted) range, move it to the start of the change.
+	if (start.isBeforeOrEqual(position) && end.isAfter(position)) {
+		line = start.line;
+		character = start.character;
+	} else {
+		// The deletion is entirely before the position.
+		if (!start.isEqual(end)) {
+			if (end.line === line) {
+				const characterDelta = end.character - start.character;
+				character -= characterDelta;
+			}
+			const lineDelta = end.line - start.line;
+			line -= lineDelta;
+		}
+	}
+
+	// Process insertion.
+	const text = change.text;
+	if (text) {
+		const newLineCount = text.split(LF).length - 1;
+		// If the change started on the same line as the updated position,
+		// adjust character based on the inserted text.
+		if (start.line === line) {
+			if (newLineCount === 0) {
+				character += text.length;
+			} else {
+				// For multi-line insertions, the new character offset
+				// becomes that from the last LF to the end in the inserted text.
+				character = text.slice(text.lastIndexOf(LF) + 1).length;
+			}
+		}
+		line += newLineCount;
+	}
+
+	return new vscode.Position(line, character);
 }

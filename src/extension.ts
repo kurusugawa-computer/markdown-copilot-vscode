@@ -84,7 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const lineRangeStartLine = activeLineRangesStart.line;
 			const match = document.lineAt(lineRangeStartLine).text.match(/^(#[ \t]Copilot Context:[ \t]).*$/);
 
-			const completion = new Conversation(textEditor, document.offsetAt(activeLineRangesStart));
+			const completion = new Conversation(textEditor, activeLineRangesStart);
 			token.onCancellationRequested(() => completion.cancel());
 
 			try {
@@ -93,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 				} else {
 					await completion.insertText("# Copilot Context: \n", documentEol);
 				}
-				completion.setAnchorOffset(document.offsetAt(document.lineAt(lineRangeStartLine).range.end));
+				completion.setPosition(document.lineAt(lineRangeStartLine).range.end);
 				await completion.completeText([
 					{ role: ChatRole.User, content: activeContextText },
 					{ role: ChatRole.User, content: titleMessage },
@@ -324,7 +324,6 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 	const userStartLineText = document.lineAt(userStart.line).text;
 	const userEndLineText = document.lineAt(userEnd.line).text;
 	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
-	let userEndOffset = document.offsetAt(userEnd);
 
 	const userStartLineQuoteIndentText = getQuoteIndent(userStartLineText);
 	const userEndLineQuoteIndentText = getQuoteIndent(userEndLineText);
@@ -351,7 +350,6 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 			insertText
 		);
 		await vscode.workspace.applyEdit(edit);
-		userEndOffset += countChar(insertText);
 	}
 
 	const titleText = selectedText.replaceAll(/[\r\n]+/g, " ").trim();
@@ -364,18 +362,16 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const conversation = new Conversation(textEditor, userEndOffset);
+		const conversation = new Conversation(textEditor, document.lineAt(userEnd.line).range.end);
 		token.onCancellationRequested(() => conversation.cancel());
 		try {
-			const offsetDiff = await conversation.insertText("\n\n**Copilot:** ", userEndLineEol);
-			conversation.translateAnchorOffset(offsetDiff);
-
+			await conversation.insertText("\n\n**Copilot:** ", userEndLineEol);
 			if (useContext) {
 				await chatMessageBuilder.addLines(await collectActiveLines(outline, document, userStart));
 			}
 			await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
 
-			return await conversation.completeText(
+			await conversation.completeText(
 				chatMessageBuilder.toChatMessages(),
 				userEndLineEol,
 				chatMessageBuilder.getCopilotOptions(),
@@ -385,7 +381,7 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 				// remove head error code
 				const errorMessage = e.message.replace(/^\d+ /, "");
 				vscode.window.showErrorMessage(errorMessage);
-				return conversation.insertText(
+				await conversation.insertText(
 					errorMessage,
 					userEndLineEol
 				);
@@ -482,7 +478,7 @@ async function pasteAsMarkdown() {
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const conversation = new Conversation(textEditor, document.offsetAt(userStart));
+		const conversation = new Conversation(textEditor, userStart);
 		token.onCancellationRequested(() => conversation.cancel());
 		try {
 			const configuration = vscode.workspace.getConfiguration();
