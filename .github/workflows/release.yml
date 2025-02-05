@@ -19,14 +19,29 @@ jobs:
         cache: npm
     - name: 🛠️ Install dependencies
       run: npm install
+    - name: 🔍 Calculate release type
+      id: release_type
+      run: |
+        release=$(node -p "require('./package.json').version.split('.')[1] % 2 === 0 ? 'release' : 'prerelease'")
+        echo "release=$release" >> $GITHUB_OUTPUT
     - name: 📦 Package .vsix
-      run: npm run vsce:package
+      run: |
+        if [ "${{ steps.release_type.outputs.release }}" == "release" ]; then
+          npm run vsce:package
+        else
+          npm run vsce:package-pre-release
+        fi
     - name: 📤 Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: markdown-copilot-${{github.sha}}
         path: markdown-copilot-*.vsix
     - name: 🚚 Publish to 🛒 Marketplace
-      run: npm run vsce:publish
+      run: |
+        if [ "${{ steps.release_type.outputs.release }}" == "release" ]; then
+          npm run vsce:publish
+        else
+          npm run vsce:publish-pre-release
+        fi
       env:
         VSCE_PAT: ${{secrets.VSCE_PAT}}
