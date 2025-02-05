@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Conversation } from './agents/conversations';
+import { EditCursor } from './features/editCursor';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { adjustStartToLineHead, countChar, LF, partialEndsWith, resolveFragmentUri, toEolString, toOverflowAdjustedRange } from './utils';
@@ -84,28 +84,28 @@ export function activate(context: vscode.ExtensionContext) {
 			const lineRangeStartLine = activeLineRangesStart.line;
 			const match = document.lineAt(lineRangeStartLine).text.match(/^(#[ \t]Copilot Context:[ \t]).*$/);
 
-			const completion = new Conversation(textEditor, activeLineRangesStart);
-			token.onCancellationRequested(() => completion.cancel());
-
+			const editCursor = new EditCursor(textEditor, activeLineRangesStart);
 			try {
 				if (match !== null) {
-					await completion.replaceLine(match[1], lineRangeStartLine);
+					await editCursor.replaceLineText(match[1], lineRangeStartLine);
 				} else {
-					await completion.insertText("# Copilot Context: \n", documentEol);
+					await editCursor.insertText("# Copilot Context: \n", documentEol);
+					editCursor.setPosition(document.lineAt(lineRangeStartLine).range.end);
 				}
-				completion.setPosition(document.lineAt(lineRangeStartLine).range.end);
-				await completion.completeText([
+				const completionPromise = editCursor.insertCompletion([
 					{ role: ChatRole.User, content: activeContextText },
 					{ role: ChatRole.User, content: titleMessage },
 				], documentEol);
+				token.onCancellationRequested(() => completionPromise.cancel());
+				await completionPromise;
 			} catch (error) {
 				if (error instanceof Error) {
 					const errorMessage = error.message.replace(/^\d+ /, "");
 					vscode.window.showErrorMessage(errorMessage);
-					await completion.insertText(errorMessage, documentEol);
+					await editCursor.insertText(errorMessage, documentEol);
 				}
 			} finally {
-				completion.dispose();
+				editCursor.dispose();
 			}
 		});
 	}));
@@ -151,7 +151,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(
 		event => {
 			contextDecorator.onDidChangeTextDocument(event);
-			Conversation.onDidChangeTextDocument(event);
+			EditCursor.onDidChangeTextDocument(event);
 		}
 	));
 
@@ -295,7 +295,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-	Conversation.onDeactivate();
+	EditCursor.onDeactivate();
 }
 
 async function continueEditing(outline: ContextOutline, useContext: boolean, supportsMultimodal: boolean, selectionOverride?: vscode.Selection) {
@@ -362,32 +362,33 @@ async function continueEditing(outline: ContextOutline, useContext: boolean, sup
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const conversation = new Conversation(textEditor, document.lineAt(userEnd.line).range.end);
-		token.onCancellationRequested(() => conversation.cancel());
+		const editCursor = new EditCursor(textEditor, document.lineAt(userEnd.line).range.end);
 		try {
-			await conversation.insertText("\n\n**Copilot:** ", userEndLineEol);
+			await editCursor.insertText("\n\n**Copilot:** ", userEndLineEol);
 			if (useContext) {
 				await chatMessageBuilder.addLines(await collectActiveLines(outline, document, userStart));
 			}
 			await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
 
-			await conversation.completeText(
+			const completionPromise = editCursor.insertCompletion(
 				chatMessageBuilder.toChatMessages(),
 				userEndLineEol,
 				chatMessageBuilder.getCopilotOptions(),
 			);
+			token.onCancellationRequested(() => completionPromise.cancel());
+			await completionPromise;
 		} catch (e) {
 			if (e instanceof Error) {
 				// remove head error code
 				const errorMessage = e.message.replace(/^\d+ /, "");
 				vscode.window.showErrorMessage(errorMessage);
-				await conversation.insertText(
+				await editCursor.insertText(
 					errorMessage,
 					userEndLineEol
 				);
 			}
 		} finally {
-			conversation.dispose();
+			editCursor.dispose();
 		}
 	});
 }
@@ -478,8 +479,7 @@ async function pasteAsMarkdown() {
 		cancellable: true
 	}, async (_progress, token) => {
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const conversation = new Conversation(textEditor, userStart);
-		token.onCancellationRequested(() => conversation.cancel());
+		const editCursor = new EditCursor(textEditor, userStart);
 		try {
 			const configuration = vscode.workspace.getConfiguration();
 			const pasteAsMarkdownMessage = configuration.get<string>("markdown.copilot.instructions.pasteAsMarkdownMessage");
@@ -487,25 +487,24 @@ async function pasteAsMarkdown() {
 				return;
 			}
 
-			await conversation.completeText(
-				[
-					{ role: ChatRole.User, content: pasteAsMarkdownMessage },
-					{ role: ChatRole.User, content: clipboardContent },
-				],
-				userEndLineEol,
-			);
+			const completionPromise = editCursor.insertCompletion([
+				{ role: ChatRole.User, content: pasteAsMarkdownMessage },
+				{ role: ChatRole.User, content: clipboardContent },
+			], userEndLineEol);
+			token.onCancellationRequested(() => completionPromise.cancel());
+			await completionPromise;
 		} catch (e) {
 			if (e instanceof Error) {
 				// remove head error code
 				const errorMessage = e.message.replace(/^\d+ /, "");
 				vscode.window.showErrorMessage(errorMessage);
-				await conversation.insertText(
+				await editCursor.insertText(
 					errorMessage,
 					userEndLineEol
 				);
 			}
 		} finally {
-			conversation.dispose();
+			editCursor.dispose();
 		}
 	});
 }
