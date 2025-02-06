@@ -241,6 +241,7 @@
     "@types/mime-types": "^2.1.4",
     "@vscode/l10n": "^0.0.18",
     "mime-types": "^2.1.35",
-    "openai": "^4.83.0"
+    "openai": "^4.83.0",
+    "ts-debounce": "^4.0.0"
   }
 }

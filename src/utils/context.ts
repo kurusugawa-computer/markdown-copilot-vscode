@@ -1,3 +1,4 @@
+import { debounce } from "ts-debounce";
 import * as vscode from 'vscode';
 import { isSelectionOverflow } from '.';
 import { countQuoteIndent } from './indention';
@@ -19,10 +20,7 @@ export class ContextOutline {
 
 	private toRanges(lineRangeIndices: number[]): vscode.Range[] {
 		const lineRanges = this.lineRanges;
-		return Array.from(
-			lineRangeIndices,
-			e => new vscode.Range(lineRanges[e].start, lineRanges[e].end)
-		);
+		return lineRangeIndices.map(e => new vscode.Range(lineRanges[e].start, lineRanges[e].end));
 	}
 
 	toActiveLineRanges(): LineRange[] {
@@ -38,11 +36,19 @@ export class ContextOutline {
 	}
 
 	update(document: vscode.TextDocument, selection: vscode.Selection) {
+		this.lineRanges.length = 0;
+		this.activeLineRangeIndices.length = 0;
+		this.inactiveLineRangeIndices.length = 0;
+
 		const activeLine = Math.max(
 			0,
 			selection.end.line - (isSelectionOverflow(selection) ? 1 : 0)
 		);
+		const activeLineRangeIndex = this.initializeLineRanges(document, activeLine);
+		this.finalizeLineRanges(activeLineRangeIndex);
+	}
 
+	private initializeLineRanges(document: vscode.TextDocument, activeLine: number): number {
 		const firstLine = document.lineAt(0);
 		const firstLineText = firstLine.text;
 
@@ -53,7 +59,6 @@ export class ContextOutline {
 		};
 
 		const lineRanges = this.lineRanges;
-		lineRanges.length = 0;
 		lineRanges.push(lineRange);
 
 		let activeLineRangeIndex = 0;
@@ -99,11 +104,14 @@ export class ContextOutline {
 		// inactive lines up to the end
 		lineRange.end = document.lineAt(document.lineCount - 1).range.end;
 
-		const activeLineRangeIndices = this.activeLineRangeIndices;
-		activeLineRangeIndices.length = 0;
+		return activeLineRangeIndex;
+	}
 
+	private finalizeLineRanges(activeLineRangeIndex: number) {
+		const lineRanges = this.lineRanges;
+
+		const activeLineRangeIndices = this.activeLineRangeIndices;
 		const inactiveLineRangeIndices = this.inactiveLineRangeIndices;
-		inactiveLineRangeIndices.length = 0;
 
 		let activeQuoteIndent = lineRanges[activeLineRangeIndex].quoteIndent;
 		do {
@@ -124,7 +132,11 @@ export class ContextOutline {
 		// inactive lines up to the start
 		if (lineRanges[0].start.line > 0) {
 			inactiveLineRangeIndices.push(
-				lineRanges.push({ start: document.positionAt(0), end: lineRanges[0].start, quoteIndent: 0 }) - 1
+				lineRanges.push({
+					start: new vscode.Position(0, 0),
+					end: lineRanges[0].start,
+					quoteIndent: 0
+				}) - 1
 			);
 		}
 	}
@@ -150,6 +162,8 @@ export class ContextDecorator {
 			this._outline.toInactiveRanges()
 		);
 	}
+
+	private readonly debouncedUpdateDecorations = debounce((activeTextEditor) => this.updateDecorations(activeTextEditor), 100);
 
 	private static toInactiveDecorationType(configuration: vscode.WorkspaceConfiguration) {
 		const inactiveContextOpacity = configuration.get<number>("markdown.copilot.decorations.inactiveContextOpacity");
@@ -177,7 +191,7 @@ export class ContextDecorator {
 		if (this._activeTextEditor !== textEditor) { return; }
 		const activeLine = textEditor.selection.active.line;
 		if (activeLine === this._previousLine) { return; }
-		this.updateDecorations(textEditor);
+		this.debouncedUpdateDecorations(textEditor);
 		this._previousLine = activeLine;
 	}
 
@@ -185,6 +199,6 @@ export class ContextDecorator {
 		const activeTextEditor = this._activeTextEditor;
 		if (activeTextEditor === undefined) { return; }
 		if (activeTextEditor.document !== event.document) { return; }
-		this.updateDecorations(activeTextEditor);
+		this.debouncedUpdateDecorations(activeTextEditor);
 	}
 }
