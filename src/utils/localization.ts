@@ -13,10 +13,10 @@ export function initialize(baseUri: vscode.Uri, forcedLocale?: string) {
 	const locale: string = forcedLocale || getLocale();
 	const packageNlsJson = locale === 'en' ? defaultPackageNlsJson : `package.nls.${locale}.json`;
 	try {
-		l10n.config(vscode.Uri.joinPath(baseUri, packageNlsJson));
+		l10n.config({ uri: vscode.Uri.joinPath(baseUri, packageNlsJson).toString() });
 	} catch {
 		console.warn("Cannot load l10n resource file:", packageNlsJson);
-		l10n.config(vscode.Uri.joinPath(baseUri, defaultPackageNlsJson));
+		l10n.config({ uri: vscode.Uri.joinPath(baseUri, defaultPackageNlsJson).toString() });
 	}
 }
 

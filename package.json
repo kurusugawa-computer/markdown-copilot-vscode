@@ -29,7 +29,7 @@
     "onLanguage:markdown"
   ],
   "main": "./dist/extension.js",
-  "browser": "./dist/extension.js",
+  "browser": "./dist/web-extension",
   "contributes": {
     "commands": [
       {
@@ -214,6 +214,7 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src/**/*.ts",
     "test": "vscode-test",
+    "chrome": "webpack && vscode-test-web --host=0.0.0.0 --browserType=none --verbose --printServerLog --extensionDevelopmentPath=. .",
     "vsce:package": "vsce package",
     "vsce:publish": "vsce publish",
     "vsce:package-pre-release": "vsce package --pre-release",
@@ -227,8 +228,10 @@
     "@typescript-eslint/parser": "^8.23.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "@vscode/test-web": "^0.0.66",
     "@vscode/vsce": "^3.2.2",
     "eslint": "^9.19.0",
+    "path-browserify": "^1.0.1",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
     "webpack": "^5.97.1",

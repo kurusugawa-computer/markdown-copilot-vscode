@@ -1,5 +1,3 @@
-//@ts-check
-
 'use strict';
 
 const path = require('path');
@@ -8,23 +6,20 @@ const path = require('path');
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
 
 /** @type WebpackConfig */
-const extensionConfig = {
-  target: 'node', // VS Code extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
-  mode: 'none', // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
+const electronConfig = {
+  target: 'node',
+  mode: 'none',
 
-  entry: './src/extension.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+  entry: './src/extension.ts',
   output: {
-    // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
     libraryTarget: 'commonjs2'
   },
   externals: {
-    vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-    // modules added here also need to be added in the .vscodeignore file
+    vscode: 'commonjs vscode'
   },
   resolve: {
-    // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: ['.ts', '.js']
   },
   module: {
@@ -45,4 +40,42 @@ const extensionConfig = {
     level: "log", // enables logging required for problem matchers
   },
 };
-module.exports = [extensionConfig];
+
+/** @type WebpackConfig */
+const browserConfig = {
+  target: 'webworker',
+  mode: 'none',
+
+  entry: './src/extension.ts',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'web-extension.js',
+    libraryTarget: 'commonjs2'
+  },
+  externals: { vscode: 'commonjs vscode' },
+  resolve: {
+    mainFields: ["module", "main"],
+    extensions: ['.ts', '.js'],
+    fallback: {
+      assert: false,
+      os: false,
+      path: require.resolve("path-browserify"),
+    },
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader'
+          }
+        ]
+      }
+    ]
+  },
+  devtool: 'source-map',
+};
+
+module.exports = [electronConfig, browserConfig];
