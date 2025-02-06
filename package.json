@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -214,7 +214,7 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src/**/*.ts",
     "test": "vscode-test",
-    "chrome": "webpack && vscode-test-web --host=0.0.0.0 --browserType=none --verbose --printServerLog --extensionDevelopmentPath=. .",
+    "test:web": "webpack && vscode-test-web --host=0.0.0.0 --browserType=none --verbose --printServerLog --extensionDevelopmentPath=. .",
     "vsce:package": "vsce package",
     "vsce:publish": "vsce publish",
     "vsce:package-pre-release": "vsce package --pre-release",
