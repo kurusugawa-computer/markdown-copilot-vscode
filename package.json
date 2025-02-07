@@ -87,10 +87,10 @@
         "enablement": "explorerResourceIsFolder && editorIsOpen"
       },
       {
-        "command": "markdown.copilot.editing.pasteAsMarkdown",
-        "title": "%command.editing.pasteAsMarkdown.title%",
+        "command": "markdown.copilot.editing.pasteAsPrettyText",
+        "title": "%command.editing.pasteAsPrettyText.title%",
         "icon": "$(clippy)",
-        "enablement": "editorLangId == markdown && editorIsOpen"
+        "enablement": "editorIsOpen"
       }
     ],
     "menus": {
@@ -122,11 +122,11 @@
           "default": "memo/${date:yyyy-MM-dd}/${filename}.md",
           "markdownDescription": "%config.instructions.namePathFormat.description%"
         },
-        "markdown.copilot.instructions.pasteAsMarkdownMessage": {
+        "markdown.copilot.instructions.pasteAsPrettyTextMessage": {
           "type": "string",
-          "default": "Convert the following text to Markdown. Follow these rules:\n- Output only Markdown content without quotes and explanations.\n- Preserve all content; no summaries or omissions.\n- Use relative URLs for internal links.\n- Use structured formats (code, JSON, tables, logical operators, math) for clarity.\n- Use VSCode Markdown syntax.\n- Enclose code in ` ` ` or `~~~` only when needed.\n- Use `$...$` for inline math, `$$...$$` for block math.",
+          "default": "Convert the following text to ${languageId}. Follow these rules:\n- Output only ${languageId} content without quotes and explanations.\n- Preserve all content; no summaries or omissions.\n- Use relative URLs for internal links.",
           "editPresentation": "multilineText",
-          "markdownDescription": "%config.instructions.pasteAsMarkdownMessage.description%"
+          "markdownDescription": "%config.instructions.pasteAsPrettyTextMessage.description%"
         },
         "markdown.copilot.instructions.systemMessage": {
           "type": "string",

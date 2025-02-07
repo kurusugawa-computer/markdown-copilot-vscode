@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { EditCursor } from './features/editCursor';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
 import { nameAndSaveAs } from './features/nameAndSave';
+import { pasteAsPrettyText } from './features/pasteAsPrettyText';
 import { adjustStartToLineHead, countChar, LF, partialEndsWith, resolveFragmentUri, toEolString, toOverflowAdjustedRange } from './utils';
 import { ContextDecorator, ContextOutline } from './utils/context';
 import { countQuoteIndent, getQuoteIndent, indentQuote, outdentQuote } from './utils/indention';
@@ -23,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF = "markdown.copilot.editing.applyFilePathDiff";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF = "markdown.copilot.editing.listFilePathDiff";
-	const COMMAND_MARKDOWN_COPILOT_EDITING_PASTE_AS_MARKDOWN = "markdown.copilot.editing.pasteAsMarkdown";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_PASTE_AS_PRETTY_TEXT = "markdown.copilot.editing.pasteAsPrettyText";
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF,
 		(uri: vscode.Uri) => listFilePathDiff(uri)
@@ -136,8 +137,8 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 	}));
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_PASTE_AS_MARKDOWN,
-		() => pasteAsMarkdown()
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_PASTE_AS_PRETTY_TEXT,
+		() => pasteAsPrettyText()
 	));
 
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(
@@ -446,65 +447,4 @@ async function collectActiveLines(outline: ContextOutline, document: vscode.Text
 	}
 
 	return activeLineTexts.join(documentEol).split(documentEol);
-}
-
-async function pasteAsMarkdown() {
-	const textEditor = vscode.window.activeTextEditor;
-	if (textEditor === undefined) { return; }
-
-	let clipboardContent = await vscode.env.clipboard.readText();
-	clipboardContent = clipboardContent.trim();
-	if (!clipboardContent) { return; }
-
-	const userRange = toOverflowAdjustedRange(textEditor);
-	const userStart = userRange.start;
-	const userEnd = userRange.end;
-
-	const document = textEditor.document;
-	const documentEol = toEolString(document.eol);
-
-	const userEndLineText = document.lineAt(userEnd.line).text;
-	const userEndLineQuoteIndentText = getQuoteIndent(userEndLineText);
-
-	if (!userRange.isEmpty) {
-		const edit = new vscode.WorkspaceEdit();
-		edit.delete(textEditor.document.uri, userRange);
-		await vscode.workspace.applyEdit(edit);
-	}
-
-	const titleText = "Pasting clipboard content as Markdown";
-	return vscode.window.withProgress({
-		location: vscode.ProgressLocation.Window,
-		title: `Markdown Copilot: ${titleText}`,
-		cancellable: true
-	}, async (_progress, token) => {
-		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const editCursor = new EditCursor(textEditor, userStart);
-		try {
-			const configuration = vscode.workspace.getConfiguration();
-			const pasteAsMarkdownMessage = configuration.get<string>("markdown.copilot.instructions.pasteAsMarkdownMessage");
-			if (pasteAsMarkdownMessage === undefined || pasteAsMarkdownMessage.trim().length === 0) {
-				return;
-			}
-
-			const completionPromise = editCursor.insertCompletion([
-				{ role: ChatRole.User, content: pasteAsMarkdownMessage },
-				{ role: ChatRole.User, content: clipboardContent },
-			], userEndLineEol);
-			token.onCancellationRequested(() => completionPromise.cancel());
-			await completionPromise;
-		} catch (e) {
-			if (e instanceof Error) {
-				// remove head error code
-				const errorMessage = e.message.replace(/^\d+ /, "");
-				vscode.window.showErrorMessage(errorMessage);
-				await editCursor.insertText(
-					errorMessage,
-					userEndLineEol
-				);
-			}
-		} finally {
-			editCursor.dispose();
-		}
-	});
 }

@@ -12,6 +12,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Add support for Web Browser environment
 
 ### Changed
+- Replace `Paste as Markdown` command to `Paste as Pretty text` command.
+  - Paste pretty text based on the file type (language) of the destination
+- Change configuration property Id
+  - `markdown.copilot.instructions.pasteAsMarkdownMessage` -> `markdown.copilot.instructions.pasteAsPrettyTextMessage`
 - Update dependent packages
 - Prepare browser support
   - Remove dependency on process.env

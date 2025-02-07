@@ -28,7 +28,7 @@ export async function nameAndSaveAs() {
 
 	const json = await executeTask(
 		[
-			{ role: ChatRole.System, content: nameMessage.replace("${namePathFormat}", namePathFormat) },
+			{ role: ChatRole.System, content: nameMessage.replaceAll("${namePathFormat}", namePathFormat) },
 			{ role: ChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${workspaceFolder.uri.fsPath}" }\`` },
 			{ role: ChatRole.User, content: `Content:\n${document.getText()}` },
 		] as ChatMessage[],
