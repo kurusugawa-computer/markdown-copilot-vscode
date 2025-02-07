@@ -62,65 +62,68 @@ export async function executeChatCompletionWithTools(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams,
 	onDeltaContent: (deltaContent: string) => Promise<any>,
-	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>,
+	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>,
 	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<any>,
 ) {
-	const completion = await createChatCompletion(chatMessages, override);
-	if (!(completion instanceof Stream)) {
-		const messages = completion.choices[0].message;
-		const toolCalls = messages.tool_calls;
-		if (!toolCalls) {
-			return onDeltaContent(messages.content!);
-		}
-
-		const toolResults = await Promise.all(toolCalls.map(toolCall =>
-			onToolCallFunction(toolCall.function).then(content => ({
-				role: ChatRole.Tool,
-				tool_call_id: toolCall.id,
-				content,
-			} as OpenAI.ChatCompletionToolMessageParam))
-		));
-
-		chatMessages.push(...toolResults);
-		return executeChatCompletionWithTools(chatMessages, override, onDeltaContent, onToolCallFunction, onStream);
-	}
-
-	await onStream?.(completion);
-
-	let finishReason: "length" | "stop" | "tool_calls" | "content_filter" | "function_call" | null = null;
-	const finalToolCalls: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall[] = [];
-	for await (const chunk of completion) {
-		const choice = chunk.choices[0];
-		const delta = choice.delta;
-		const toolCalls = delta.tool_calls || [];
-		for (const toolCall of toolCalls) {
-			const index = toolCall.index;
-			if (!finalToolCalls[index]) {
-				finalToolCalls[index] = toolCall;
+	while (true) {
+		const completion = await createChatCompletion(chatMessages, override);
+		if (!(completion instanceof Stream)) {
+			const message = completion.choices[0].message;
+			// If no tool calls, output content and exit.
+			if (!message.tool_calls) {
+				await onDeltaContent(message.content!);
+				return;
 			}
-			finalToolCalls[index].function!.arguments += toolCall.function?.arguments ?? '';
+			chatMessages.push({ role: ChatRole.Assistant, tool_calls: message.tool_calls });
+			const toolResponses = await executeToolCalls(message.tool_calls, onToolCallFunction);
+			chatMessages.push(...toolResponses);
+		} else {
+			await onStream?.(completion);
+			let finishReason: "length" | "stop" | "tool_calls" | "content_filter" | "function_call" | null = null;
+			const resolvedToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = [];
+			for await (const chunk of completion) {
+				const choice = chunk.choices[0];
+				const delta = choice.delta;
+				const toolCalls = delta.tool_calls || [];
+				for (const toolCall of toolCalls) {
+					const index = toolCall.index;
+					if (!resolvedToolCalls[index]) {
+						resolvedToolCalls[index] = toolCall as OpenAI.Chat.Completions.ChatCompletionMessageToolCall;
+					} else {
+						resolvedToolCalls[index].function!.arguments += toolCall.function?.arguments ?? '';
+					}
+				}
+				if (delta.content !== undefined && delta.content !== null) {
+					await onDeltaContent(delta.content);
+				}
+				if (choice.finish_reason !== null) {
+					finishReason = choice.finish_reason;
+				}
+			}
+			if (finishReason !== "tool_calls") {
+				return;
+			}
+			chatMessages.push({ role: ChatRole.Assistant, tool_calls: resolvedToolCalls });
+			const toolResponses = await executeToolCalls(resolvedToolCalls, onToolCallFunction);
+			chatMessages.push(...toolResponses);
 		}
-		if (delta.content !== undefined && delta.content !== null) {
-			await onDeltaContent(delta.content);
-		}
-		if (choice.finish_reason !== null) {
-			finishReason = choice.finish_reason;
-		}
+		// Loop to process the next round of chat completion with updated messages.
 	}
+}
 
-	if (finishReason !== "tool_calls") {
-		return;
-	}
-
-	const toolResults = await Promise.all(finalToolCalls.map(toolCall =>
-		onToolCallFunction(toolCall.function!).then(content => ({
+async function executeToolCalls(
+	toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[],
+	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>
+): Promise<OpenAI.ChatCompletionToolMessageParam[]> {
+	return Promise.all(toolCalls.map(toolCall =>
+		onToolCallFunction(toolCall.function).catch(reason =>
+			reason instanceof Error ? reason.message : String(reason)
+		).then(content => ({
 			role: ChatRole.Tool,
 			tool_call_id: toolCall.id,
 			content,
 		} as OpenAI.ChatCompletionToolMessageParam))
 	));
-	chatMessages.push(...toolResults);
-	return executeChatCompletionWithTools(chatMessages, override, onDeltaContent, onToolCallFunction, onStream);
 }
 
 export enum ChatRole {

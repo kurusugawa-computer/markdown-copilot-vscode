@@ -1,7 +1,7 @@
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
 import { LF } from '../utils';
-import { ChatMessage, executeChatCompletion } from '../utils/llm';
+import { ChatMessage, executeChatCompletionWithTools } from '../utils/llm';
 import { CancelablePromise } from '../utils/promise';
 
 /**
@@ -112,10 +112,21 @@ export class EditCursor {
 				abortController?.abort();
 			});
 
-			executeChatCompletion(
+			executeChatCompletionWithTools(
 				chatMessages,
 				override || {} as OpenAI.ChatCompletionCreateParams,
 				async chunkText => submitChunkText(chunkText),
+				async toolFunction => {
+					const args = JSON.parse(toolFunction.arguments || 'null');
+					switch (toolFunction.name) {
+						case "eval_javascript":
+							console.log(args);
+							const result = String(eval(args.code));
+							console.log(result);
+							return result;
+					}
+					return `Not implemented tool: ${toolFunction.name}`;
+				},
 				async completion => {
 					abortController = completion.controller;
 					if (isCanceled) {
