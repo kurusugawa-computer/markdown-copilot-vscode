@@ -1,6 +1,7 @@
 /*
- * Utilities for quote indent
+ * Utilities for handling quote indentation in markdown text.
  */
+
 export function outdentQuote(text: string, level: number): string {
 	return text.replace(new RegExp(`^(>[ \t]?){0,${level}}`, "gm"), "");
 }
@@ -13,9 +14,9 @@ export function indentQuote(text: string, level: number): string {
 	return text.replace(/(?<!\r)^/gm, quoteIndentText.repeat(level));
 }
 
-const quoteIndentRegex = /^(>[ \t]?)+/;
+const quoteIndentationPattern = /^(>[ \t]?)+/;
 export function getQuoteIndent(lineText: string): string {
-	const match = lineText.match(quoteIndentRegex);
+	const match = lineText.match(quoteIndentationPattern);
 	if (match === null) { return ""; }
 	return match[0];
 }
