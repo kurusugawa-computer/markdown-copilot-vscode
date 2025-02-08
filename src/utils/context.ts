@@ -1,7 +1,7 @@
 import { debounce } from "ts-debounce";
 import * as vscode from 'vscode';
 import { isSelectionOverflow } from '.';
-import { countQuoteIndent } from './indention';
+import { countQuoteIndent, outdentQuote } from './indention';
 
 interface LineRange {
 	start: vscode.Position;
@@ -139,6 +139,51 @@ export class ContextOutline {
 				}) - 1
 			);
 		}
+	}
+
+	async collectActiveLines(document: vscode.TextDocument, userStart: vscode.Position): Promise<string[]> {
+		const toEolString = (eol: number) => eol === vscode.EndOfLine.LF ? "\n" : "\r\n";
+		const documentEol = toEolString(document.eol);
+		const importedDocumentUriTexts: string[] = [];
+		const activeLineTexts: string[] = [];
+
+		async function resolveImport(doc: vscode.TextDocument, lineTexts: string) {
+			function openRelativeTextDocument(doc: vscode.TextDocument, fragmentUriText: string) {
+				// Replace with your existing resolveFragmentUri logic if needed
+				const fullUri = vscode.Uri.joinPath(doc.uri, fragmentUriText);
+				return vscode.workspace.openTextDocument(fullUri);
+			}
+			const docUriText = doc.uri.toString();
+			if (importedDocumentUriTexts.includes(docUriText)) { return; }
+			importedDocumentUriTexts.push(docUriText);
+			try {
+				for (const line of lineTexts.split(/\r?\n/)) {
+					const match = line.match(/\@import\s+\"([^\"]+)\"/);
+					if (match === null) {
+						activeLineTexts.push(line);
+						continue;
+					}
+					const importedDoc = await openRelativeTextDocument(doc, match[1].trim());
+					await resolveImport(importedDoc, importedDoc.getText());
+				}
+			} finally {
+				importedDocumentUriTexts.pop();
+			}
+		}
+
+		for (const lineRange of this.toActiveLineRanges()) {
+			if (lineRange.start.isAfterOrEqual(userStart)) { break; }
+			const range = new vscode.Range(
+				lineRange.start,
+				lineRange.end.isAfterOrEqual(userStart)
+					? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
+					: lineRange.end
+			);
+			const text = document.getText(range);
+			const lineTexts = outdentQuote(text, lineRange.quoteIndent);
+			await resolveImport(document, lineTexts);
+		}
+		return activeLineTexts.join(documentEol).split(documentEol);
 	}
 }
 

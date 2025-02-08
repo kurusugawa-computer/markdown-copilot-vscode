@@ -1,159 +1,140 @@
 import * as vscode from 'vscode';
 import { toEolString, toOverflowAdjustedRange } from '../utils';
+import { EditCursor } from '../utils/editCursor';
 import * as l10n from '../utils/localization';
 
-export async function listFilePathDiff(uri: vscode.Uri) {
-	function insertMessage(message: string) {
-		const edit = new vscode.WorkspaceEdit();
-		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
-		edit.insert(document.uri, anchorPosition, `${message}\n`.replaceAll("\n", toEolString(document.eol)));
-		return vscode.workspace.applyEdit(edit);
-	}
-
+export async function listFilePathDiff(targetUri: vscode.Uri) {
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
 	const document = textEditor.document;
-	const userRange = toOverflowAdjustedRange(textEditor, undefined);
+	const userRange = toOverflowAdjustedRange(textEditor);
 
-	// List all files under the `uri` directory recursively
+	return new EditCursor(textEditor, userRange.end).withProgress("Listing file path diff", async (editCursor, _token) => {
+		const stack: vscode.Uri[] = [targetUri];
+		const documentEol = toEolString(document.eol);
 
-	let diffs = "```diff\n";
-	const pendingDirs: vscode.Uri[] = [uri];
+		await editCursor.insertText("```diff\n", documentEol);
 
-	while (pendingDirs.length > 0) {
-		const currentDir = pendingDirs.pop()!;
-		const entries = await vscode.workspace.fs.readDirectory(currentDir);
-		for (const [name, fileType] of entries) {
-			const fileUri = vscode.Uri.joinPath(currentDir, name);
-			if (fileType === vscode.FileType.Directory) {
-				pendingDirs.push(fileUri);
-			} else if (fileType === vscode.FileType.File) {
-				const path = vscode.workspace.asRelativePath(fileUri, false);
-				diffs += `- ${path}\n+ ${path}\n`;
+		while (stack.length > 0) {
+			const dirUri = stack.pop()!;
+			try {
+				const entries = await vscode.workspace.fs.readDirectory(dirUri);
+				for (const [name, fileType] of entries) {
+					const fileUri = vscode.Uri.joinPath(dirUri, name);
+					switch (fileType) {
+						case vscode.FileType.Directory:
+							stack.push(fileUri);
+							break;
+						case vscode.FileType.File:
+						case vscode.FileType.SymbolicLink: {
+							const path = vscode.workspace.asRelativePath(fileUri, false);
+							await editCursor.insertText(`- ${path}\n+ ${path}\n`, documentEol);
+							break;
+						}
+						default:
+							throw new Error(`Unexpected file type: ${fileType}`);
+					}
+				}
+			} catch {
+				// Ignore directories that cannot be read
 			}
 		}
-	}
 
-	diffs += "```";
-	await insertMessage(diffs);
+		await editCursor.insertText("```\n", documentEol);
+	});
 }
 
 export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
-	async function insertErrorMessage(message: string) {
-		const edit = new vscode.WorkspaceEdit();
-		const anchorPosition = document.positionAt(document.offsetAt(userRange.end));
-		edit.insert(document.uri, anchorPosition, `\nERROR: ${message}`.replaceAll("\n", toEolString(document.eol)));
-		return vscode.workspace.applyEdit(edit);
-	}
-
 	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) { return; }
 
-	if (selectionOverride === undefined) {
-		if (textEditor.selection.isEmpty) { return; }
-	} else if (selectionOverride.isEmpty) { return; }
+	const effectiveSelection = selectionOverride ?? textEditor.selection;
+	if (effectiveSelection.isEmpty) { return; }
 
 	const document = textEditor.document;
-	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
+	const userRange = toOverflowAdjustedRange(textEditor, effectiveSelection);
 	const workspaceFolder = vscode.workspace.workspaceFolders![0];
-	const text = document.getText(userRange);
 
-	// Extract diffs
+	return new EditCursor(textEditor, userRange.end).withProgress("Applying file path diff", async (editCursor, _token) => {
+		const documentEol = toEolString(document.eol);
 
-	let pathFrom = null;
-	let pathTo = null;
-	const diffList: { from: string; to: string; }[] = [];
-	for (const line of text.split(/\r?\n/)) {
-		if (pathFrom === null) { // expecting `-`
-			const match = line.match(/^\-\s*([^\s]+)$/);
-			if (match === null) { // Invalid line
-				await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+		function insertErrorText(message: string) {
+			return editCursor.insertText(`\nERROR: ${message}`, documentEol);
+		}
+
+		// Extract diffs using pair iteration
+		const diffText = document.getText(userRange);
+		const lines = diffText.split(/\r?\n/).filter(line => line.trim() !== '');
+		if (lines.length % 2 !== 0) {
+			await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
+			return;
+		}
+		const diffList: { from: string; to: string; }[] = [];
+		for (let i = 0; i < lines.length; i += 2) {
+			const fromMatch = lines[i].match(/^\-\s*([^\s]+)$/);
+			if (!fromMatch) {
+				await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
 				return;
 			}
-			pathFrom = match[1];
-		} else if (pathTo === null) { // expecting `+` or blank line
-			if (line.match(/^\+?\s*$/)) {
-				// The line only containing `+` is used to delete the file.
-				pathTo = "";
-			} else {
-				const match = line.match(/^\+\s*([^\s]+)$/);
-				if (match === null) { // Invalid line
-					await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
-					return;
+			const fromPath = fromMatch[1];
+			const toMatch = lines[i + 1].match(/^\+\s*([^\s]+)$/);
+			const toPath = toMatch ? toMatch[1] : "";
+			diffList.push({ from: fromPath, to: toPath });
+		}
+
+		let someFilesMissing = false;
+		for (const { from } of diffList) {
+			try {
+				await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from));
+			} catch {
+				await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
+				someFilesMissing = true;
+			}
+		}
+		if (someFilesMissing) { return; }
+
+		// Check if there are duplicated destination files
+		const tos = new Set<string>();
+		for (const { to } of diffList) {
+			if (to === "") { continue; }
+			if (tos.has(to)) {
+				await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
+				return;
+			}
+			tos.add(to);
+		}
+
+		// Check this before applying any diffs
+		for (const { from, to } of diffList) {
+			if (to === "") { continue; } // Represents deletion
+			if (from === to) { continue; } // Represents no change
+			try {
+				await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to));
+				await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
+				return;
+			} catch {
+				// expected: destination does not exist
+			}
+		}
+
+		// Apply diffs
+		for (const { from, to } of diffList) {
+			try {
+				if (to === "") {
+					await vscode.workspace.fs.delete(vscode.Uri.joinPath(workspaceFolder.uri, from));
+				} else {
+					await vscode.workspace.fs.rename(
+						vscode.Uri.joinPath(workspaceFolder.uri, from),
+						vscode.Uri.joinPath(workspaceFolder.uri, to)
+					);
 				}
-				pathTo = match[1];
+			} catch (error) {
+				await insertErrorText(`${l10n.t("command.editing.applyFilePathDiff.error.fatal", from, to)}\n${error}`);
+				return;
 			}
 		}
 
-		if (pathFrom !== null && pathTo !== null) {
-			diffList.push({ from: pathFrom, to: pathTo });
-			pathFrom = pathTo = null;
-		}
-	}
-
-	// Detect errors
-
-	// Incomplete diff
-	if (pathFrom !== null || pathTo !== null) {
-		await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
-		return;
-	}
-
-	// File not found
-	let someFilesMissing = false;
-	for (const { from } of diffList) {
-		try {
-			await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from));
-		} catch (error) {
-			await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
-			someFilesMissing = true;
-		}
-	}
-
-	if (someFilesMissing) {
-		return;
-	}
-
-	// Duplicated destination file
-	const tos = new Set<string>();
-	for (const { to } of diffList) {
-		if (to === "") { continue; } // Represents deletion
-		if (tos.has(to)) {
-			await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.duplicatedDestination", to));
-			return;
-		}
-		tos.add(to);
-	}
-
-	// Destination file already exists
-	for (const { from, to } of diffList) {
-		if (to === "") { continue; } // Represents deletion
-		if (from === to) { continue; } // Represents no change
-		try {
-			await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to));
-			await insertErrorMessage(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
-			return;
-		} catch (error) {
-		}
-	}
-
-	// Apply diffs
-	for (const { from, to } of diffList) {
-		try {
-			if (to === "") {
-				await vscode.workspace.fs.delete(vscode.Uri.joinPath(workspaceFolder.uri, from));
-			} else {
-				await vscode.workspace.fs.rename(
-					vscode.Uri.joinPath(workspaceFolder.uri, from),
-					vscode.Uri.joinPath(workspaceFolder.uri, to)
-				);
-			}
-		} catch (error) {
-			await insertErrorMessage(`${l10n.t("command.editing.applyFilePathDiff.error.fatal", from, to)}\n${error}`);
-			return;
-		}
-	}
-
-	vscode.window.showInformationMessage(l10n.t("command.editing.applyFilePathDiff.success"));
+		vscode.window.showInformationMessage(l10n.t("command.editing.applyFilePathDiff.success"));
+	});
 }

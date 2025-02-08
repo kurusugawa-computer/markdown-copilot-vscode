@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { EditCursor } from './features/editCursor';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
+import { continueEditing, titleActiveContext } from './features/markdownEditing';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { pasteAsPrettyText } from './features/pasteAsPrettyText';
-import { adjustStartToLineHead, countChar, LF, partialEndsWith, resolveFragmentUri, toEolString, toOverflowAdjustedRange } from './utils';
+import { adjustStartToLineHead, partialEndsWith, toOverflowAdjustedRange } from './utils';
 import { ContextDecorator, ContextOutline } from './utils/context';
-import { countQuoteIndent, getQuoteIndent, indentQuote, outdentQuote } from './utils/indention';
-import { ChatMessageBuilder, ChatRole, ChatRoleFlags } from './utils/llm';
+import { EditCursor } from './utils/editCursor';
+import { indentQuote, outdentQuote } from './utils/indention';
 import * as l10n from './utils/localization';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -50,66 +50,9 @@ export function activate(context: vscode.ExtensionContext) {
 		() => nameAndSaveAs()
 	));
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT, async () => {
-		const textEditor = vscode.window.activeTextEditor;
-		if (textEditor === undefined) { return; }
-
-		const activeLineRanges = outline.toActiveLineRanges();
-		if (activeLineRanges.length === 0) { return; }
-
-		const document = textEditor.document;
-		const documentEol = toEolString(document.eol);
-
-		const activeLineRangesStart = activeLineRanges[0].start;
-
-		const activeContextText = document.getText(
-			new vscode.Range(
-				activeLineRangesStart,
-				activeLineRanges.at(-1)!.end
-			)
-		).replaceAll(documentEol, LF);
-
-		if (activeContextText.trim().length === 0) { return; }
-
-		const configuration = vscode.workspace.getConfiguration();
-		const titleMessage = configuration.get<string>("markdown.copilot.instructions.titleMessage");
-		if (titleMessage === undefined || titleMessage.trim().length === 0) {
-			return;
-		}
-
-		vscode.window.withProgress({
-			location: vscode.ProgressLocation.Window,
-			title: "Markdown Copilot: Title the context",
-			cancellable: true
-		}, async (_progress, token) => {
-			const lineRangeStartLine = activeLineRangesStart.line;
-			const match = document.lineAt(lineRangeStartLine).text.match(/^(#[ \t]Copilot Context:[ \t]).*$/);
-
-			const editCursor = new EditCursor(textEditor, activeLineRangesStart);
-			try {
-				if (match !== null) {
-					await editCursor.replaceLineText(match[1], lineRangeStartLine);
-				} else {
-					await editCursor.insertText("# Copilot Context: \n", documentEol);
-					editCursor.setPosition(document.lineAt(lineRangeStartLine).range.end);
-				}
-				const completionPromise = editCursor.insertCompletion([
-					{ role: ChatRole.User, content: activeContextText },
-					{ role: ChatRole.User, content: titleMessage },
-				], documentEol);
-				token.onCancellationRequested(() => completionPromise.cancel());
-				await completionPromise;
-			} catch (error) {
-				if (error instanceof Error) {
-					const errorMessage = error.message.replace(/^\d+ /, "");
-					vscode.window.showErrorMessage(errorMessage);
-					await editCursor.insertText(errorMessage, documentEol);
-				}
-			} finally {
-				editCursor.dispose();
-			}
-		});
-	}));
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT,
+		() => titleActiveContext(outline)
+	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, () => {
 		const textEditor = vscode.window.activeTextEditor;
@@ -299,152 +242,4 @@ export function deactivate() {
 	EditCursor.onDeactivate();
 }
 
-async function continueEditing(outline: ContextOutline, useContext: boolean, supportsMultimodal: boolean, selectionOverride?: vscode.Selection) {
-	const textEditor = vscode.window.activeTextEditor;
-	if (textEditor === undefined) { return; }
 
-	if (selectionOverride === undefined) {
-		if (textEditor.selection.isEmpty) { return; }
-	} else if (selectionOverride.isEmpty) { return; }
-
-	const document = textEditor.document;
-	const documentEol = toEolString(document.eol);
-
-	const userRange = toOverflowAdjustedRange(textEditor, selectionOverride);
-	const userStart = userRange.start;
-	const userEnd = userRange.end;
-
-	const chatMessageBuilder = new ChatMessageBuilder(document, supportsMultimodal);
-
-	const configuration = vscode.workspace.getConfiguration();
-	const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
-	if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
-		await chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
-	}
-
-	const userStartLineText = document.lineAt(userStart.line).text;
-	const userEndLineText = document.lineAt(userEnd.line).text;
-	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
-
-	const userStartLineQuoteIndentText = getQuoteIndent(userStartLineText);
-	const userEndLineQuoteIndentText = getQuoteIndent(userEndLineText);
-
-	const selectedText = document.getText(userRange);
-
-	let selectedUserMessage = outdentQuote(
-		selectedText,
-		userEndLineQuoteIndent
-	).replaceAll(documentEol, LF);
-
-	// Check if the last user message already has a `**User:** ` prefix
-	const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*[ \t]*/);
-	if (userStartLineMatchesUser !== null) {
-		// Remove `**User:** ` from the start of the last user message
-		selectedUserMessage = selectedUserMessage.replace(userStartLineMatchesUser[0], "");
-	} else {
-		// Insert `**User:** ` at the start of the user selection
-		const edit = new vscode.WorkspaceEdit();
-		const insertText = "**User:** ";
-		edit.insert(
-			document.uri,
-			document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
-			insertText
-		);
-		await vscode.workspace.applyEdit(edit);
-	}
-
-	const titleText = selectedText.replaceAll(/[\r\n]+/g, " ").trim();
-	vscode.window.withProgress({
-		location: vscode.ProgressLocation.Window,
-		title: `Markdown Copilot: ${titleText.length > 64
-			? titleText.slice(0, 63) + '…'
-			: titleText
-			}`,
-		cancellable: true
-	}, async (_progress, token) => {
-		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
-		const editCursor = new EditCursor(textEditor, document.lineAt(userEnd.line).range.end);
-		try {
-			await editCursor.insertText("\n\n**Copilot:** ", userEndLineEol);
-			if (useContext) {
-				await chatMessageBuilder.addLines(await collectActiveLines(outline, document, userStart));
-			}
-			await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
-
-			const completionPromise = editCursor.insertCompletion(
-				chatMessageBuilder.toChatMessages(),
-				userEndLineEol,
-				chatMessageBuilder.getCopilotOptions(),
-			);
-			token.onCancellationRequested(() => completionPromise.cancel());
-			await completionPromise;
-		} catch (e) {
-			if (e instanceof Error) {
-				// remove head error code
-				const errorMessage = e.message.replace(/^\d+ /, "");
-				vscode.window.showErrorMessage(errorMessage);
-				await editCursor.insertText(
-					errorMessage,
-					userEndLineEol
-				);
-			}
-		} finally {
-			editCursor.dispose();
-		}
-	});
-}
-
-async function collectActiveLines(outline: ContextOutline, document: vscode.TextDocument, userStart: vscode.Position) {
-	const documentEol = toEolString(document.eol);
-
-	const importedDocumentUriTexts: string[] = [];
-	const activeLineTexts: string[] = [];
-
-	async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
-		function openRelativeTextDocument(document: vscode.TextDocument, fragmentUriText: string) {
-			const fullUri = resolveFragmentUri(document, fragmentUriText);
-			return vscode.workspace.openTextDocument(fullUri);
-		}
-
-		// Avoid recursive import infinity loop.
-		const documentUriText = document.uri.toString();
-		if (importedDocumentUriTexts.includes(documentUriText)) {
-			return;
-		}
-		importedDocumentUriTexts.push(documentUriText);
-		try {
-			// Find lines with `@import "file.md"` and append its content to the active context.
-			for (const line of lineTexts.split(/\r?\n/)) {
-				// Format conforms to crossnote filepath
-				// see: https://github.com/shd101wyy/crossnote/blob/master/src/markdown-engine/transformer.ts#L601
-				const match = line.match(/\@import\s+\"([^\"]+)\"/);
-				if (match === null) {
-					activeLineTexts.push(line);
-					continue;
-				}
-				const importDocument = await openRelativeTextDocument(document, match[1].trim());
-				await resolveImport(importDocument, importDocument.getText());
-			}
-		} finally {
-			importedDocumentUriTexts.pop();
-		}
-	}
-
-	for (const lineRange of outline.toActiveLineRanges()) {
-		if (lineRange.start.isAfterOrEqual(userStart)) {
-			break;
-		}
-		const lineTexts = outdentQuote(
-			document.getText(new vscode.Range(
-				lineRange.start,
-				lineRange.end.isAfterOrEqual(userStart)
-					? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
-					: lineRange.end
-			)),
-			lineRange.quoteIndent
-		);
-		await resolveImport(document, lineTexts);
-	}
-
-	return activeLineTexts.join(documentEol).split(documentEol);
-}
