@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import path from 'path';
 import * as vscode from 'vscode';
+import { resolveRootUri } from '../utils';
 import { ChatMessage, ChatRole, executeTask } from '../utils/llm';
 
 export async function nameAndSaveAs() {
@@ -16,11 +17,11 @@ export async function nameAndSaveAs() {
 	}
 
 	const currentDateTime = new Date().toLocaleString('sv').replace(' ', 'T');
-	const workspaceFolder = vscode.workspace.workspaceFolders![0];
+	const rootUri = resolveRootUri(document.uri);
 
 	const namePathFormat = document.uri.scheme === 'untitled'
 		? configuration.get<string>("markdown.copilot.instructions.namePathFormat")
-		: path.relative(workspaceFolder.uri.fsPath, vscode.Uri.joinPath(document.uri, '..', `\${filename}${path.extname(document.fileName)}`).fsPath);
+		: path.relative(rootUri.path, vscode.Uri.joinPath(document.uri, '..', `\${filename}${path.extname(document.fileName)}`).path);
 
 	if (namePathFormat === undefined || namePathFormat.trim().length === 0) {
 		return;
@@ -29,7 +30,7 @@ export async function nameAndSaveAs() {
 	const json = await executeTask(
 		[
 			{ role: ChatRole.System, content: nameMessage.replaceAll("${namePathFormat}", namePathFormat) },
-			{ role: ChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${workspaceFolder.uri.fsPath}" }\`` },
+			{ role: ChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${rootUri.path}" }\`` },
 			{ role: ChatRole.User, content: `Content:\n${document.getText()}` },
 		] as ChatMessage[],
 		{ "temperature": Number.EPSILON, "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParams
@@ -43,7 +44,7 @@ export async function nameAndSaveAs() {
 		return;
 	}
 
-	const saveFileUri = vscode.Uri.joinPath(workspaceFolder.uri, filepath);
+	const saveFileUri = vscode.Uri.joinPath(rootUri, filepath);
 	const saveDirUri = vscode.Uri.joinPath(saveFileUri, "..");
 
 	const topCreatedDirUri = await makeDirectories(saveDirUri);

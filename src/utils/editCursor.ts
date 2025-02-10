@@ -1,9 +1,11 @@
+import chardet from 'chardet';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
-import { LF, toEolString } from ".";
+import { LF, resolveRootUri, toEolString } from ".";
 import { getQuoteIndent } from './indention';
 import { ChatMessage, executeChatCompletionWithTools } from './llm';
 import { CancelablePromise } from './promise';
+
 
 /**
  * Manages an editable text cursor within a vscode.TextEditor.
@@ -108,7 +110,7 @@ export class EditCursor {
             return this.insertText(joinedText, lineSeparator);
         };
 
-        return new CancelablePromise<vscode.Position>((resolve, reject, onCancel) => {
+        return new CancelablePromise<vscode.Position>(async (resolve, reject, onCancel) => {
             let isCanceled = false;
             let abortController: AbortController | undefined = undefined;
 
@@ -117,32 +119,69 @@ export class EditCursor {
                 abortController?.abort();
             });
 
-            executeChatCompletionWithTools(
-                chatMessages,
-                override || {} as OpenAI.ChatCompletionCreateParams,
-                async chunkText => submitChunkText(chunkText),
-                async toolFunction => {
-                    const args = JSON.parse(toolFunction.arguments || 'null');
-                    switch (toolFunction.name) {
-                        case "eval_javascript":
-                            console.log(args);
-                            const result = String(eval(args.code));
-                            console.log(result);
-                            return result;
+            try {
+                await executeChatCompletionWithTools(
+                    chatMessages,
+                    override || {} as OpenAI.ChatCompletionCreateParams,
+                    async chunkText => await submitChunkText(chunkText),
+                    async toolFunction => {
+                        const args = JSON.parse(toolFunction.arguments || 'null');
+                        switch (toolFunction.name) {
+                            case "eval_javascript":
+                                return this.evaluateJavaScriptCode(args);
+                            case "web_fetch":
+                                return this.webFetch(args);
+                            case "fs_read_file":
+                                return this.fsReadFile(args);
+                            case "fs_read_dir":
+                                return this.fsReadDir(args);
+                            default:
+                                return `Not implemented tool: ${toolFunction.name}`;
+                        }
+                    },
+                    async completion => {
+                        abortController = completion.controller;
+                        if (isCanceled) {
+                            abortController.abort();
+                        }
                     }
-                    return `Not implemented tool: ${toolFunction.name}`;
-                },
-                async completion => {
-                    abortController = completion.controller;
-                    if (isCanceled) {
-                        abortController.abort();
-                    }
+                );
+
+                if (chunkTexts.length > 0) {
+                    resolve(await this.insertText(chunkTexts.join(""), lineSeparator));
+                } else {
+                    resolve(this.position);
                 }
-            ).then(() => chunkTexts.length > 0
-                ? this.insertText(chunkTexts.join(""), lineSeparator)
-                : Promise.resolve(this.position)
-            ).then(resolve).catch(reject);
+            } catch (error) {
+                reject(error);
+            }
         }, false);
+    }
+
+    private async webFetch(args: { url: string, method: string, request_body: string | null }) {
+        const response = await fetch(args.url, { method: args.method, body: args.request_body });
+        const buffer = await response.arrayBuffer();
+        const encoding = chardet.detect(new Uint8Array(buffer));
+        if (encoding === null) { return ''; }
+        return new TextDecoder(encoding).decode(buffer);
+    }
+
+    private async fsReadFile(args: { path: string }) {
+        const fileUri = vscode.Uri.joinPath(resolveRootUri(this.document.uri), args.path);
+        const buffer = await vscode.workspace.fs.readFile(fileUri);
+        const encoding = chardet.detect(buffer);
+        if (encoding === null) { return ''; }
+        return new TextDecoder(encoding).decode(buffer);
+    }
+
+    private async fsReadDir(args: { path: string }) {
+        const directoryUri = vscode.Uri.joinPath(resolveRootUri(this.document.uri), args.path);
+        const entries = await vscode.workspace.fs.readDirectory(directoryUri);
+        return JSON.stringify(entries.map(([name, type]) => ({ name, type })));
+    }
+
+    private evaluateJavaScriptCode(args: { code: string }) {
+        return String(eval(args.code));
     }
 
     async withProgress(title: string, task: (editCursor: EditCursor, token: vscode.CancellationToken) => Promise<void>, disposeOnFinally = true): Promise<EditCursor> {

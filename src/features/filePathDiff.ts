@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { toEolString, toOverflowAdjustedRange } from '../utils';
+import { resolveRootUri, toEolString, toOverflowAdjustedRange } from '../utils';
 import { EditCursor } from '../utils/editCursor';
 import * as l10n from '../utils/localization';
 
@@ -54,7 +54,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 
 	const document = textEditor.document;
 	const userRange = toOverflowAdjustedRange(textEditor, effectiveSelection);
-	const workspaceFolder = vscode.workspace.workspaceFolders![0];
+	const rootUri = resolveRootUri(document.uri);
 
 	return new EditCursor(textEditor, userRange.end).withProgress("Applying file path diff", async (editCursor, _token) => {
 		const documentEol = toEolString(document.eol);
@@ -86,7 +86,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		let someFilesMissing = false;
 		for (const { from } of diffList) {
 			try {
-				await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, from));
+				await vscode.workspace.fs.stat(vscode.Uri.joinPath(rootUri, from));
 			} catch {
 				await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.fileNotFound", from));
 				someFilesMissing = true;
@@ -110,7 +110,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 			if (to === "") { continue; } // Represents deletion
 			if (from === to) { continue; } // Represents no change
 			try {
-				await vscode.workspace.fs.stat(vscode.Uri.joinPath(workspaceFolder.uri, to));
+				await vscode.workspace.fs.stat(vscode.Uri.joinPath(rootUri, to));
 				await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.destinationExists", to));
 				return;
 			} catch {
@@ -122,11 +122,11 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		for (const { from, to } of diffList) {
 			try {
 				if (to === "") {
-					await vscode.workspace.fs.delete(vscode.Uri.joinPath(workspaceFolder.uri, from));
+					await vscode.workspace.fs.delete(vscode.Uri.joinPath(rootUri, from));
 				} else {
 					await vscode.workspace.fs.rename(
-						vscode.Uri.joinPath(workspaceFolder.uri, from),
-						vscode.Uri.joinPath(workspaceFolder.uri, to)
+						vscode.Uri.joinPath(rootUri, from),
+						vscode.Uri.joinPath(rootUri, to)
 					);
 				}
 			} catch (error) {

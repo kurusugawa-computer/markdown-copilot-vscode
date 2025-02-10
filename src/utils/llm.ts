@@ -5,6 +5,7 @@ import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
 import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
+import { deepMergeJsons } from './json';
 
 function buildChatParams(
 	configuration: vscode.WorkspaceConfiguration,
@@ -115,15 +116,16 @@ async function executeToolCalls(
 	toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[],
 	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>
 ): Promise<OpenAI.ChatCompletionToolMessageParam[]> {
-	return Promise.all(toolCalls.map(toolCall =>
-		onToolCallFunction(toolCall.function).catch(reason =>
-			reason instanceof Error ? reason.message : String(reason)
-		).then(content => ({
-			role: ChatRole.Tool,
-			tool_call_id: toolCall.id,
-			content,
-		} as OpenAI.ChatCompletionToolMessageParam))
-	));
+	return Promise.all(toolCalls.map(toolCall => {
+		console.log(toolCall.function);
+		return onToolCallFunction(toolCall.function)
+			.catch(reason => reason instanceof Error ? reason.message : String(reason))
+			.then(content => ({
+				role: ChatRole.Tool,
+				tool_call_id: toolCall.id,
+				content,
+			} as OpenAI.ChatCompletionToolMessageParam));
+	}));
 }
 
 export enum ChatRole {
@@ -198,7 +200,7 @@ export class ChatMessageBuilder {
 
 		for (const match of message.matchAll(/```json +copilot-options\n([^]*?)\n```/gm)) {
 			try {
-				Object.assign(this.copilotOptions, JSON.parse(match[1]));
+				this.copilotOptions = deepMergeJsons(this.copilotOptions, JSON.parse(match[1]));
 				message = message.replace(match[0], "");
 			} catch {
 				flags = ChatRoleFlags.User;
