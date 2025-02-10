@@ -1,6 +1,6 @@
 import { debounce } from "ts-debounce";
 import * as vscode from 'vscode';
-import { isSelectionOverflow } from '.';
+import { isSelectionOverflow, resolveFragmentUri } from '.';
 import { countQuoteIndent, outdentQuote } from './indention';
 
 interface LineRange {
@@ -147,15 +147,10 @@ export class ContextOutline {
 		const importedDocumentUriTexts: string[] = [];
 		const activeLineTexts: string[] = [];
 
-		async function resolveImport(doc: vscode.TextDocument, lineTexts: string) {
-			function openRelativeTextDocument(doc: vscode.TextDocument, fragmentUriText: string) {
-				// Replace with your existing resolveFragmentUri logic if needed
-				const fullUri = vscode.Uri.joinPath(doc.uri, fragmentUriText);
-				return vscode.workspace.openTextDocument(fullUri);
-			}
-			const docUriText = doc.uri.toString();
-			if (importedDocumentUriTexts.includes(docUriText)) { return; }
-			importedDocumentUriTexts.push(docUriText);
+		async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
+			const documentUriText = document.uri.toString();
+			if (importedDocumentUriTexts.includes(documentUriText)) { return; }
+			importedDocumentUriTexts.push(documentUriText);
 			try {
 				for (const line of lineTexts.split(/\r?\n/)) {
 					const match = line.match(/\@import\s+\"([^\"]+)\"/);
@@ -163,7 +158,7 @@ export class ContextOutline {
 						activeLineTexts.push(line);
 						continue;
 					}
-					const importedDoc = await openRelativeTextDocument(doc, match[1].trim());
+					const importedDoc = await vscode.workspace.openTextDocument(resolveFragmentUri(document, match[1].trim()));
 					await resolveImport(importedDoc, importedDoc.getText());
 				}
 			} finally {
