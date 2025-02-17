@@ -94,8 +94,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(
 		event => {
-			contextDecorator.onDidChangeTextDocument(event);
-			EditCursor.onDidChangeTextDocument(event);
+			try { contextDecorator.onDidChangeTextDocument(event); }
+			catch { /* Ignore errors */ }
+			try { EditCursor.onDidChangeTextDocument(event); }
+			catch { /* Ignore errors */ }
 		}
 	));
 
