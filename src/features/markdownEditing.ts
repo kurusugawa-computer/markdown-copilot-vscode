@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LF, countChar, toEolString, toOverflowAdjustedRange } from '../utils';
+import { LF, asyncYield, countChar, toEolString, toOverflowAdjustedRange } from '../utils';
 import { ContextOutline } from '../utils/context';
 import { EditCursor } from '../utils/editCursor';
 import { countQuoteIndent, getQuoteIndent, outdentQuote } from '../utils/indention';
@@ -28,6 +28,10 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 		await chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
 	}
 
+	if (useContext) {
+		await chatMessageBuilder.addLines(await outline.collectActiveLines(document, userStart));
+	}
+
 	const userStartLineText = document.lineAt(userStart.line).text;
 	const userEndLineText = document.lineAt(userEnd.line).text;
 	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
@@ -37,36 +41,35 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 
 	const selectedText = document.getText(userRange);
 
-	let selectedUserMessage = outdentQuote(
-		selectedText,
-		userEndLineQuoteIndent
-	).replaceAll(documentEol, LF);
-
-	// Check if the last user message already has a `**User:** ` prefix
-	const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*[ \t]*/);
-	if (userStartLineMatchesUser !== null) {
-		// Remove `**User:** ` from the start of the last user message
-		selectedUserMessage = selectedUserMessage.replace(userStartLineMatchesUser[0], "");
-	} else {
-		// Insert `**User:** ` at the start of the user selection
-		const edit = new vscode.WorkspaceEdit();
-		const insertText = "**User:** ";
-		edit.insert(
-			document.uri,
-			document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
-			insertText
-		);
-		await vscode.workspace.applyEdit(edit);
-	}
-
 	const titleText = selectedText.replaceAll(/[\r\n]+/g, " ").trim();
 	const editCursor = new EditCursor(textEditor, document.lineAt(userEnd.line).range.end);
 	await editCursor.withProgress(`Markdown Copilot: ${titleText.length > 64 ? titleText.slice(0, 63) + '…' : titleText}`, async (cursor, token) => {
+		let selectedUserMessage = outdentQuote(
+			selectedText,
+			userEndLineQuoteIndent
+		).replaceAll(documentEol, LF);
+
+		// Check if the last user message already has a `**User:** ` prefix
+		const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*[ \t]*/);
+		if (userStartLineMatchesUser !== null) {
+			// Remove `**User:** ` from the start of the last user message
+			selectedUserMessage = selectedUserMessage.replace(userStartLineMatchesUser[0], "");
+		} else {
+			// Insert `**User:** ` at the start of the user selection
+			asyncYield();
+			const edit = new vscode.WorkspaceEdit();
+			const insertText = "**User:** ";
+			edit.insert(
+				document.uri,
+				document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
+				insertText
+			);
+			await vscode.workspace.applyEdit(edit);
+		}
+
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
 		await cursor.insertText("\n\n**Copilot:** ", userEndLineEol);
-		if (useContext) {
-			await chatMessageBuilder.addLines(await outline.collectActiveLines(document, userStart));
-		}
+
 		await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
 		const completionPromise = cursor.insertCompletion(
 			chatMessageBuilder.toChatMessages(),
