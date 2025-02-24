@@ -6,6 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-02-25
+
 ### Added
 - Add support for pre-release
   - `major.EVEN_NUMBER.patch` for release versions and `major.ODD_NUMBER.patch` for pre-release versions
@@ -179,7 +181,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-[unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.5.0...v0.5.1

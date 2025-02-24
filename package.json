@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -29,7 +29,7 @@
     "onLanguage:markdown"
   ],
   "main": "./dist/extension.js",
-  "browser": "./dist/web-extension",
+  "browser": "./dist/web-extension.js",
   "contributes": {
     "commands": [
       {
