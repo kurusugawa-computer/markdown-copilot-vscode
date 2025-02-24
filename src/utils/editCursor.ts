@@ -1,3 +1,4 @@
+import { Mutex } from 'async-mutex';
 import chardet from 'chardet';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
@@ -26,6 +27,7 @@ import { CancelablePromise } from './promise';
  * ```
  */
 export class EditCursor {
+    private static readonly editLock = new Mutex();
     private static readonly runningCursors = new Set<EditCursor>();
     private textEditor: vscode.TextEditor;
     private document: vscode.TextDocument;
@@ -74,29 +76,26 @@ export class EditCursor {
         this.position = contentChanges.reduce(toUpdatedPosition, this.position);
     }
 
-    async insertText(text: string, lineSeparator: string): Promise<vscode.Position> {
-        const edit = new vscode.WorkspaceEdit();
-        edit.insert(
-            this.document.uri,
-            this.position,
-            lineSeparator === LF ? text : text.replaceAll(LF, lineSeparator),
-        );
-        await vscode.workspace.applyEdit(edit);
+    async edit(editCallback: (editBuilder: vscode.TextEditorEdit) => void) {
+        return EditCursor.editLock.runExclusive(async () => {
+            await this.textEditor.edit(editCallback);
+        });
+    }
 
+    async insertText(text: string, lineSeparator: string): Promise<vscode.Position> {
+        await this.edit(editBuilder => {
+            editBuilder.insert(this.position, lineSeparator === LF ? text : text.replaceAll(LF, lineSeparator));
+        });
         this.textEditor.setDecorations(this.cursorIndicator, [new vscode.Range(this.position, this.position)]);
         return this.position;
     }
 
     async replaceLineText(text: string, line: number): Promise<vscode.Position> {
-        const range = this.document.lineAt(line).range;
-        const edit = new vscode.WorkspaceEdit();
-        edit.replace(
-            this.document.uri,
-            range,
-            text,
-        );
-        this.position = range.end;
-        await vscode.workspace.applyEdit(edit);
+        await this.edit(editBuilder => {
+            const range = this.document.lineAt(line).range;
+            this.position = range.end;
+            editBuilder.replace(range, text);
+        });
         return this.position;
     }
 

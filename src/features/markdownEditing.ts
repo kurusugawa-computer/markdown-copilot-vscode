@@ -56,14 +56,12 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 			selectedUserMessage = selectedUserMessage.replace(userStartLineMatchesUser[0], "");
 		} else {
 			// Insert `**User:** ` at the start of the user selection
-			const edit = new vscode.WorkspaceEdit();
-			const insertText = "**User:** ";
-			edit.insert(
-				document.uri,
-				document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
-				insertText
-			);
-			await vscode.workspace.applyEdit(edit);
+			await cursor.edit(editBuilder => {
+				editBuilder.insert(
+					document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
+					"**User:** "
+				);
+			});
 		}
 
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;

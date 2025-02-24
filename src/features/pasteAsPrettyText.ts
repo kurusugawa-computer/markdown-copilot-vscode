@@ -17,9 +17,9 @@ export async function pasteAsPrettyText() {
     const languageId = document.languageId;
 
     if (!userRange.isEmpty) {
-        const edit = new vscode.WorkspaceEdit();
-        edit.delete(document.uri, userRange);
-        await vscode.workspace.applyEdit(edit);
+        await textEditor.edit(editBuilder => {
+            editBuilder.delete(userRange);
+        });
     }
 
     return new EditCursor(textEditor, userStart).withProgress(
