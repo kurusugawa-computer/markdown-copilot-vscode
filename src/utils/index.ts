@@ -114,17 +114,3 @@ export function resolveRootUri(uri = vscode.window.activeTextEditor?.document.ur
 	}
 	return folders?.[0]?.uri ?? vscode.Uri.file('/');
 }
-
-/**
- * Yields execution until the next turn of the event loop.
- *
- * This function returns a promise that resolves after a minimal delay,
- * effectively deferring subsequent execution. It is useful for allowing
- * asynchronous operations to complete or to break up heavy synchronous
- * tasks.
- *
- * @returns A promise that resolves on the next event loop iteration.
- */
-export function asyncYield() {
-	return new Promise<void>(resolve => setTimeout(resolve, 0));
-}

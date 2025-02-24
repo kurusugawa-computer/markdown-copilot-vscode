@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LF, asyncYield, countChar, toEolString, toOverflowAdjustedRange } from '../utils';
+import { LF, countChar, toEolString, toOverflowAdjustedRange } from '../utils';
 import { ContextOutline } from '../utils/context';
 import { EditCursor } from '../utils/editCursor';
 import { countQuoteIndent, getQuoteIndent, outdentQuote } from '../utils/indention';
@@ -56,7 +56,6 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 			selectedUserMessage = selectedUserMessage.replace(userStartLineMatchesUser[0], "");
 		} else {
 			// Insert `**User:** ` at the start of the user selection
-			asyncYield();
 			const edit = new vscode.WorkspaceEdit();
 			const insertText = "**User:** ";
 			edit.insert(

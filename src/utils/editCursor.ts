@@ -1,7 +1,7 @@
 import chardet from 'chardet';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
-import { asyncYield, LF, resolveRootUri, toEolString } from ".";
+import { LF, resolveRootUri, toEolString } from ".";
 import { getQuoteIndent } from './indention';
 import { ChatMessage, executeChatCompletionWithTools } from './llm';
 import { CancelablePromise } from './promise';
@@ -75,7 +75,6 @@ export class EditCursor {
     }
 
     async insertText(text: string, lineSeparator: string): Promise<vscode.Position> {
-        await asyncYield();
         const edit = new vscode.WorkspaceEdit();
         edit.insert(
             this.document.uri,
@@ -89,7 +88,6 @@ export class EditCursor {
     }
 
     async replaceLineText(text: string, line: number): Promise<vscode.Position> {
-        await asyncYield();
         const range = this.document.lineAt(line).range;
         const edit = new vscode.WorkspaceEdit();
         edit.replace(
