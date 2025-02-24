@@ -218,7 +218,14 @@ export function activate(context: vscode.ExtensionContext) {
 				),
 				newCompletionItem(
 					vscode.CompletionItemKind.Module,
-					'```json copilot-options\n{"temperature":${1:0.01},"max_tokens":${2:4096},"model":"${3:gpt-4o}","response_format":{"type":"${4:text}"}}\n```',
+					'```json copilot-options\n{"model":"${1:gpt-4o}","response_format":{"type":"${2:text}","temperature":${3:0.01},"max_tokens":${4:4096}}}\n```',
+					l10n.t("command.completion.copilot-options.detail"),
+					"0",
+					/``` *$/,
+				),
+				newCompletionItem(
+					vscode.CompletionItemKind.Module,
+					'```json copilot-options\n{"model":"${1:o3-mini}","temperature":1}\n```',
 					l10n.t("command.completion.copilot-options.detail"),
 					"0",
 					/``` *$/,
@@ -233,7 +240,7 @@ export function activate(context: vscode.ExtensionContext) {
 				item.insertText = new vscode.SnippetString(insertText);
 				item.detail = detail;
 				const range = document.lineAt(position.line).range;
-				item.range = range.with(new vscode.Position(position.line, range.end.character - offset));
+				item.range = range.with(position.with({ character: range.end.character - offset }));
 				return item;
 			}
 		}
