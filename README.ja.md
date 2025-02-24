@@ -19,6 +19,7 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 4. 会話履歴を編集して会話を続ける
 5. 会話をもとにファイルに名前をつける
 6. 会話にタイトルをつける
+7. クリップボードの内容をファイルタイプに基づいて賢く貼り付ける
 
 ***注***: この拡張機能を使用するには、OpenAIまたはAzure OpenAIのAPIキーが必要です。詳細については、[OpenAI公式FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)を参照してください。
 
@@ -133,6 +134,19 @@ Markdown Copilotは会話履歴をもとに会話にタイトルを付けられ�
 | Windows / Linux | Mac |
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
+
+### 📋⤵ いい感じのテキストとして貼り付ける
+
+Markdown Copilotはクリップボードの内容をファイルタイプに応じて賢くドキュメントに貼り付けることができます。
+この機能により、貼り付けた内容が編集中のファイルにシームレスに統合され、不要なフォーマットの問題を回避できます。
+
+使用するには、貼り付けたい場所を選択し`Markdown Copilot: Paste as Pretty Text`コマンドを使用します。
+
+または、次のショートカットキーを使用します:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Paste as pretty</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Paste as pretty</kbd> |
 
 ### 📥 他のMarkdownファイルをインポート
 

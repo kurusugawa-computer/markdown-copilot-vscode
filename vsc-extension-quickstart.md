@@ -44,6 +44,14 @@
   * The provided test runner will only consider files matching the name pattern `**.test.ts`.
   * You can create folders inside the `test` folder to structure your tests any way you want.
 
+### Run tests in the browser
+
+* To run tests in a browser environment, use the following command:
+  ```bash
+  npm run test:web
+  ```
+* This will execute the tests in a browser-compatible environment, ensuring your extension works as expected in web-based VS Code.
+
 ## Run GitHub Actions tests
 
 ### Pre-requirement

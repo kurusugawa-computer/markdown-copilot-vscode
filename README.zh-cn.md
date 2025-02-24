@@ -19,6 +19,7 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 4. 随时编辑之前的对话并继续对话
 5. 根据对话命名文件
 6. 标题对话
+7. 根据文件类型智能粘贴剪贴板内容
 
 ***注意***: 使用此扩展需要 OpenAI 或 Azure OpenAI API 密钥。更多信息，请参考 [OpenAI 官方常见问题](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)或 [Azure OpenAI Quickstart](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart)。
 
@@ -147,6 +148,19 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 | Windows / Linux | Mac |
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
+
+### ### 📋⤵ 粘贴为美化文本
+
+Markdown Copilot 允许您以智能方式将剪贴板内容粘贴到文档中，并根据文件类型进行适配。  
+此功能确保粘贴的内容能够无缝集成到您的编辑文件中，避免不必要的格式问题。
+
+要使用此功能，请选择您希望粘贴内容的位置，然后使用 `Markdown Copilot: 粘贴为美化文本` 命令。
+
+或者使用快捷键快速访问：
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Paste as pretty</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Paste as pretty</kbd> |
 
 ### 📥 导入其他 Markdown 文件
 Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档。

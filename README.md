@@ -19,6 +19,7 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 4. Editing previous conversations at any point and continuing the conversation
 5. Nameing files based on conversations
 6. Titling conversations
+7. Pasting clipboard content intelligently based on file type
 
 ***Note***: An OpenAI or Azure OpenAI API key is required to use this extension. For more information, please refer to the [OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).
 
@@ -133,6 +134,19 @@ Or use shortcuts for quick access:
 | Windows / Linux | Mac |
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
+
+### 📋⤵ Paste as Pretty Text
+
+Markdown Copilot allows you to paste clipboard content into your document in an intelligent way, adapting to the file type.
+This feature ensures that pasted content integrates seamlessly into your editing files, avoiding unnecessary formatting issues.
+
+To use this feature, select the location where you want to paste the content and use the `Markdown Copilot: Paste as Pretty Text` command.
+
+Or use shortcuts for quick access:
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Paste as pretty</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Paste as pretty</kbd> |
 
 ### 📥 Import Other Markdown Files
 

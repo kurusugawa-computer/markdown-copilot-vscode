@@ -10,10 +10,15 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Add support for pre-release
   - `major.EVEN_NUMBER.patch` for release versions and `major.ODD_NUMBER.patch` for pre-release versions
 - Add support for Web Browser environment
+- Add "Paste as Pretty Text" section to READMEs
+- New OpenAI models can be selected in the Settings
+  - `chatgpt-4o-latest`
 
 ### Changed
 - Replace `Paste as Markdown` command to `Paste as Pretty text` command.
   - Paste pretty text based on the file type (language) of the destination
+- Improve stability of editing position
+  - Serialize editing events
 - Change configuration property Id
   - `markdown.copilot.instructions.pasteAsMarkdownMessage` -> `markdown.copilot.instructions.pasteAsPrettyTextMessage`
 - Update dependent packages
