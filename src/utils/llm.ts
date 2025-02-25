@@ -359,8 +359,17 @@ export async function createOpenAIClient(configuration: vscode.WorkspaceConfigur
 	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
 	const openRouterApiKey = configuration.get<string>("markdown.copilot.openAI.openRouterApiKey");
 	const openRouterBaseUrl = configuration.get<string>("markdown.copilot.openAI.openRouterBaseUrl");
+	const ollamaApiKey = configuration.get<string>("markdown.copilot.openAI.ollamaApiKey");
+	const ollamaBaseUrl = configuration.get<string>("markdown.copilot.openAI.ollamaBaseUrl");
 	
 	// Determine which service we're using
+	if (ollamaBaseUrl) {
+		return new OpenAI({
+			apiKey: ollamaApiKey || 'ollama', // API key optional for local Ollama instances
+			baseURL: ollamaBaseUrl,
+		});
+	}
+	
 	if (openRouterBaseUrl) {
 		if (!openRouterApiKey) {
 			throw new Error(`401 OpenRouter API key required. Get yours at https://openrouter.ai/keys`);

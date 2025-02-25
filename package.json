@@ -160,6 +160,16 @@
           "default": "",
           "markdownDescription": "OpenRouter API key (https://openrouter.ai/keys)"
         },
+        "markdown.copilot.openAI.ollamaBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:11434/v1",
+          "markdownDescription": "Ollama API base URL (default: http://localhost:11434/v1)"
+        },
+        "markdown.copilot.openAI.ollamaApiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional API key for Ollama (typically not needed for local instances)"
+        },
         "markdown.copilot.openAI.model": {
           "type": "string",
           "enum": [

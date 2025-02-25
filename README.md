@@ -21,10 +21,11 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 6. Titling conversations
 7. Pasting clipboard content intelligently based on file type
 
-***Note***: An OpenAI, Azure OpenAI, or OpenRouter API key is required to use this extension. For more information, please refer to:
+***Note***: An OpenAI, Azure OpenAI, OpenRouter, or local Ollama instance is required to use this extension. For configuration:
 - [OpenAI API Key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)
 - [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart)
 - [OpenRouter API Keys](https://openrouter.ai/keys) (supports Claude, Gemini, Llama 3, and more)
+- Local Ollama instance (default: http://localhost:11434/v1)
 
 ## 🌟 Key Features
 
@@ -93,6 +94,11 @@ Introduce yourself.
 
 ```json copilot-options
 {"max_tokens":50,"model":"gpt-3.5-turbo"}
+```
+
+**Ollama example:**
+```json copilot-options
+{"model":"llama2", "baseURL":"http://localhost:11434/v1"}
 ```
 ~~~
 
