@@ -21,7 +21,10 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 6. Titling conversations
 7. Pasting clipboard content intelligently based on file type
 
-***Note***: An OpenAI or Azure OpenAI API key is required to use this extension. For more information, please refer to the [OpenAI official FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key) or [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart).
+***Note***: An OpenAI, Azure OpenAI, or OpenRouter API key is required to use this extension. For more information, please refer to:
+- [OpenAI API Key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)
+- [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart)
+- [OpenRouter API Keys](https://openrouter.ai/keys) (supports Claude, Gemini, Llama 3, and more)
 
 ## 🌟 Key Features
 
