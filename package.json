@@ -140,8 +140,14 @@
           "editPresentation": "multilineText",
           "markdownDescription": "%config.instructions.titleMessage.description%"
         },
-        "markdown.copilot.openAI.apiKey": {
+        "markdown.copilot.backendType": {
           "type": "string",
+          "enum": ["openai", "azure", "openrouter", "ollama"],
+          "default": "openai",
+          "markdownDescription": "Select which AI backend to use"
+        },
+        "markdown.copilot.openAI.apiKey": {
+          "type": "string", 
           "default": "",
           "markdownDescription": "%config.openAI.apiKey.description%"
         },
