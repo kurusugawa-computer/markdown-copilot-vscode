@@ -111,7 +111,7 @@ export class EditCursor {
 
         return new CancelablePromise<vscode.Position>(async (resolve, reject, onCancel) => {
             let isCanceled = false;
-            let abortController: AbortController | undefined = undefined;
+            let abortController: AbortController | undefined;
 
             onCancel(() => {
                 isCanceled = true;
@@ -180,6 +180,7 @@ export class EditCursor {
     }
 
     private evaluateJavaScriptCode(args: { code: string }) {
+        // eslint-disable-next-line no-eval
         return String(eval(args.code));
     }
 

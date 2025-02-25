@@ -29,6 +29,7 @@ export async function nameAndSaveAs() {
 
 	const json = await executeTask(
 		[
+			// eslint-disable-next-line no-template-curly-in-string
 			{ role: ChatRole.System, content: nameMessage.replaceAll("${namePathFormat}", namePathFormat) },
 			{ role: ChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${rootUri.path}" }\`` },
 			{ role: ChatRole.User, content: `Content:\n${document.getText()}` },
@@ -72,7 +73,7 @@ async function makeDirectories(dirUri: vscode.Uri): Promise<vscode.Uri | null> {
 		try {
 			// Check if currentUri already exists.
 			await vscode.workspace.fs.stat(currentUri);
-		} catch (error) {
+		} catch {
 			// If currentUri does not exist, create directories and return the top of created directory URI.
 			await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(rootUri, ...segments));
 			return currentUri;

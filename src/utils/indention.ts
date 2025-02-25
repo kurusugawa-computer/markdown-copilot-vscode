@@ -24,8 +24,8 @@ export function getQuoteIndent(lineText: string): string {
 export function countQuoteIndent(lineText: string): number {
 	const quoteHead = getQuoteIndent(lineText);
 	let count = 0;
-	for (let i = 0; i < quoteHead.length; i++) {
-		count += +('>' === quoteHead[i]);
+	for (const c of quoteHead) {
+		count += +(c === '>');
 	}
 	return count;
 }

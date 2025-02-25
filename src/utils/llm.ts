@@ -13,6 +13,7 @@ function buildChatParams(
 	override: OpenAI.ChatCompletionCreateParams,
 	stream: boolean,
 ): OpenAI.ChatCompletionCreateParams {
+	// eslint-disable-next-line prefer-object-spread
 	return Object.assign({
 		model: configuration.get<string>("markdown.copilot.openAI.model")!,
 		messages: chatMessages,
@@ -215,7 +216,7 @@ export class ChatMessageBuilder {
 		// Ignore empty messages
 		if (message.trim().length === 0) { return; }
 		if (!this.supportsMultimodal) {
-			this.chatMessages.push({ role: role, content: message } as OpenAI.ChatCompletionUserMessageParam);
+			this.chatMessages.push({ role, content: message } as OpenAI.ChatCompletionUserMessageParam);
 			return;
 		}
 
@@ -223,7 +224,7 @@ export class ChatMessageBuilder {
 		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))|(<img\s[^>]*src="[^"]+"[^>]*>)/gm).filter(Boolean);
 
 		if (parts.length === 1) {
-			this.chatMessages.push({ role: role, content: message } as OpenAI.ChatCompletionUserMessageParam);
+			this.chatMessages.push({ role, content: message } as OpenAI.ChatCompletionUserMessageParam);
 			return;
 		}
 
@@ -254,7 +255,7 @@ export class ChatMessageBuilder {
 		}
 
 		const content = await Promise.all(parts.map(part => toContentPart(part, this.document)));
-		this.chatMessages.push({ role: role, content: content } as OpenAI.ChatCompletionUserMessageParam);
+		this.chatMessages.push({ role, content } as OpenAI.ChatCompletionUserMessageParam);
 	}
 
 	async addLines(lines: string[]) {

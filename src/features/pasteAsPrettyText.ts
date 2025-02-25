@@ -32,6 +32,7 @@ export async function pasteAsPrettyText() {
             }
 
             const completionPromise = editCursor.insertCompletion([
+                // eslint-disable-next-line no-template-curly-in-string
                 { role: ChatRole.System, content: pasteMessage.replaceAll("${languageId}", languageId) },
                 { role: ChatRole.User, content: clipboardContent },
             ], editCursor.getLineEolWithIndent());

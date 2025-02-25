@@ -89,7 +89,7 @@ export class ContextOutline {
 				lineRange = {
 					start: textLineRange.start,
 					end: textLineRange.end,
-					quoteIndent: quoteIndent
+					quoteIndent,
 				};
 				lineRanges.push(lineRange);
 				if (line > activeLine) {
@@ -153,7 +153,7 @@ export class ContextOutline {
 			importedDocumentUriTexts.push(documentUriText);
 			try {
 				for (const line of lineTexts.split(/\r?\n/)) {
-					const match = line.match(/\@import\s+\"([^\"]+)\"/);
+					const match = line.match(/@import\s+"([^"]+)"/);
 					if (match === null) {
 						activeLineTexts.push(line);
 						continue;

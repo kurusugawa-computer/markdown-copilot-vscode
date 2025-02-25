@@ -119,7 +119,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			function newCodeAction(command: string, title: string): vscode.CodeAction {
 				const action = new vscode.CodeAction(title, vscode.CodeActionKind.Empty);
-				action.command = { command: command, title: title };
+				action.command = { command, title };
 				return action;
 			}
 		}
@@ -163,8 +163,8 @@ export function activate(context: vscode.ExtensionContext) {
 				item.detail = detail;
 				item.keepWhitespace = false;
 				item.command = {
-					command: command,
-					title: title,
+					command,
+					title,
 					arguments: [selection],
 				};
 				return item;
@@ -212,12 +212,14 @@ export function activate(context: vscode.ExtensionContext) {
 				),
 				newCompletionItem(
 					vscode.CompletionItemKind.Reference,
+					// eslint-disable-next-line no-template-curly-in-string
 					'@import "${1:target_file_path}"',
 					l10n.t("command.completion.import.detail"),
 					"1",
 				),
 				newCompletionItem(
 					vscode.CompletionItemKind.Module,
+					// eslint-disable-next-line no-template-curly-in-string
 					'```json copilot-options\n{"model":"${1:gpt-4o}","response_format":{"type":"${2:text}","temperature":${3:0.01},"max_tokens":${4:4096}}}\n```',
 					l10n.t("command.completion.copilot-options.detail"),
 					"0",
@@ -225,6 +227,7 @@ export function activate(context: vscode.ExtensionContext) {
 				),
 				newCompletionItem(
 					vscode.CompletionItemKind.Module,
+					// eslint-disable-next-line no-template-curly-in-string
 					'```json copilot-options\n{"model":"${1:o3-mini}","temperature":1}\n```',
 					l10n.t("command.completion.copilot-options.detail"),
 					"0",

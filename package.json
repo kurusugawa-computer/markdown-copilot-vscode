@@ -213,7 +213,7 @@
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint",
     "test": "vscode-test",
     "test:web": "webpack && vscode-test-web --host=0.0.0.0 --browserType=none --verbose --printServerLog --extensionDevelopmentPath=. .",
     "vsce:package": "vsce package",
@@ -235,6 +235,7 @@
     "path-browserify": "^1.0.1",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.25.0",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"

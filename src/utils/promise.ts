@@ -39,7 +39,7 @@ enum PromiseState {
  * @see CancelError
  */
 export class CancelablePromise<T = unknown> extends Promise<T> {
-	private cancelHandlers: Array<() => void> = [];
+	private cancelHandlers: (() => void)[] = [];
 	private rejectOnCancel: boolean;
 	private state = PromiseState.pending;
 	private reject!: (reason?: any) => void;
@@ -85,7 +85,7 @@ export class CancelablePromise<T = unknown> extends Promise<T> {
 		this.cancelHandlers.forEach(handler => {
 			try {
 				handler();
-			} catch { }
+			} catch { /* empty */ }
 		});
 		if (this.rejectOnCancel) {
 			this.reject(new CancelError(reason));

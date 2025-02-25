@@ -72,7 +72,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		}
 		const diffList: { from: string; to: string; }[] = [];
 		for (let i = 0; i < lines.length; i += 2) {
-			const fromMatch = lines[i].match(/^\-\s+(.+)$/);
+			const fromMatch = lines[i].match(/^-\s+(.+)$/);
 			if (!fromMatch) {
 				await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
 				return;
