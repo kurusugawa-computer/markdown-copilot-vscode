@@ -418,33 +418,4 @@ export async function createOpenAIClient(configuration: vscode.WorkspaceConfigur
 			}
 			return new OpenAI({ apiKey });
 	}
-
-	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
-	if (!isValidApiKey(apiKey)) {
-		apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
-		if (!isValidApiKey(apiKey)) {
-			throw new Error(`401 Incorrect API key: ${apiKey}. Find yours at https://platform.openai.com/account/api-keys.`);
-		}
-		configuration.update("markdown.copilot.openAI.apiKey", apiKey);
-	}
-	
-	if (!baseUrl) {
-		return new OpenAI({ apiKey });
-	}
-
-	try {
-		const url = new URL(baseUrl);
-		return new AzureOpenAI({
-			endpoint: url.origin,
-			deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
-			apiKey,
-			apiVersion: url.searchParams.get("api-version")!,
-		});
-	} catch {
-		throw new TypeError(l10n.t(
-			"config.openAI.azureBaseUrl.error",
-			baseUrl,
-			l10n.t("config.openAI.azureBaseUrl.description")
-		));
-	}
 }
