@@ -355,33 +355,68 @@ export class ChatMessageBuilder {
 }
 
 export async function createOpenAIClient(configuration: vscode.WorkspaceConfiguration) {
+	const backendType = configuration.get<"openai"|"azure"|"openrouter"|"ollama">("markdown.copilot.backendType") || "openai";
 	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
-	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
-	const openRouterApiKey = configuration.get<string>("markdown.copilot.openAI.openRouterApiKey");
-	const openRouterBaseUrl = configuration.get<string>("markdown.copilot.openAI.openRouterBaseUrl");
-	const ollamaApiKey = configuration.get<string>("markdown.copilot.openAI.ollamaApiKey");
-	const ollamaBaseUrl = configuration.get<string>("markdown.copilot.openAI.ollamaBaseUrl");
 	
-	// Determine which service we're using
-	if (ollamaBaseUrl) {
-		return new OpenAI({
-			apiKey: ollamaApiKey || 'ollama', // API key optional for local Ollama instances
-			baseURL: ollamaBaseUrl,
-		});
-	}
-	
-	if (openRouterBaseUrl) {
-		if (!openRouterApiKey) {
-			throw new Error(`401 OpenRouter API key required. Get yours at https://openrouter.ai/keys`);
-		}
-		return new OpenAI({
-			apiKey: openRouterApiKey,
-			baseURL: openRouterBaseUrl,
-			defaultHeaders: {
-				'HTTP-Referer': 'https://github.com/kurusugawa-computer/markdown-copilot-vscode',
-				'X-Title': 'Markdown Copilot'
+	switch(backendType) {
+		case "ollama":
+			const ollamaBaseUrl = configuration.get<string>("markdown.copilot.openAI.ollamaBaseUrl");
+			if (!ollamaBaseUrl) {
+				throw new Error("Ollama base URL required in settings");
 			}
-		});
+			return new OpenAI({
+				apiKey: configuration.get<string>("markdown.copilot.openAI.ollamaApiKey") || 'ollama',
+				baseURL: ollamaBaseUrl
+			});
+
+		case "openrouter":
+			const openRouterApiKey = configuration.get<string>("markdown.copilot.openAI.openRouterApiKey");
+			const openRouterBaseUrl = configuration.get<string>("markdown.copilot.openAI.openRouterBaseUrl");
+			if (!openRouterApiKey || !openRouterBaseUrl) {
+				throw new Error("OpenRouter API key and base URL required in settings");
+			}
+			return new OpenAI({
+				apiKey: openRouterApiKey,
+				baseURL: openRouterBaseUrl,
+				defaultHeaders: {
+					'HTTP-Referer': 'https://github.com/kurusugawa-computer/markdown-copilot-vscode',
+					'X-Title': 'Markdown Copilot'
+				}
+			});
+
+		case "azure":
+			const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
+			if (!baseUrl) {
+				throw new Error("Azure base URL required in settings");
+			}
+			try {
+				const url = new URL(baseUrl);
+				return new AzureOpenAI({
+					endpoint: url.origin,
+					deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
+					apiKey: apiKey,
+					apiVersion: url.searchParams.get("api-version")!,
+				});
+			} catch {
+				throw new TypeError(l10n.t(
+					"config.openAI.azureBaseUrl.error",
+					baseUrl,
+					l10n.t("config.openAI.azureBaseUrl.description")
+				));
+			}
+
+		default: // openai
+			if (!apiKey) {
+				apiKey = await vscode.window.showInputBox({ 
+					placeHolder: 'Enter your OpenAI API key',
+					validateInput: value => value?.length > 6 ? null : "Invalid API key"
+				});
+				if (!apiKey) {
+					throw new Error(`401 Missing OpenAI API key`);
+				}
+				configuration.update("markdown.copilot.openAI.apiKey", apiKey);
+			}
+			return new OpenAI({ apiKey });
 	}
 
 	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
