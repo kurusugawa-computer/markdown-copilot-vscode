@@ -150,6 +150,16 @@
           "default": "",
           "markdownDescription": "%config.openAI.azureBaseUrl.description%"
         },
+        "markdown.copilot.openAI.openRouterBaseUrl": {
+          "type": "string",
+          "default": "https://openrouter.ai/api/v1",
+          "markdownDescription": "OpenRouter API base URL"
+        },
+        "markdown.copilot.openAI.openRouterApiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "OpenRouter API key (https://openrouter.ai/keys)"
+        },
         "markdown.copilot.openAI.model": {
           "type": "string",
           "enum": [
@@ -170,7 +180,13 @@
             "gpt-3.5-turbo",
             "gpt-3.5-turbo-0125",
             "gpt-3.5-turbo-1106",
-            "gpt-3.5-turbo-0613"
+            "gpt-3.5-turbo-0613",
+            "openrouter/auto",
+            "anthropic/claude-3-opus",
+            "anthropic/claude-3-sonnet",
+            "google/palm-2",
+            "meta-llama/llama-3-70b-instruct",
+            "mistralai/mistral-7b-instruct"
           ],
           "default": "gpt-4o",
           "markdownDescription": "%config.openAI.model.description%"

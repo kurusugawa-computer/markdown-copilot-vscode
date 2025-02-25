@@ -293,6 +293,25 @@ export class ChatMessageBuilder {
 
 export async function createOpenAIClient(configuration: vscode.WorkspaceConfiguration) {
 	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
+	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
+	const openRouterApiKey = configuration.get<string>("markdown.copilot.openAI.openRouterApiKey");
+	const openRouterBaseUrl = configuration.get<string>("markdown.copilot.openAI.openRouterBaseUrl");
+	
+	// Determine which service we're using
+	if (openRouterBaseUrl) {
+		if (!openRouterApiKey) {
+			throw new Error(`401 OpenRouter API key required. Get yours at https://openrouter.ai/keys`);
+		}
+		return new OpenAI({
+			apiKey: openRouterApiKey,
+			baseURL: openRouterBaseUrl,
+			defaultHeaders: {
+				'HTTP-Referer': 'https://github.com/kurusugawa-computer/markdown-copilot-vscode',
+				'X-Title': 'Markdown Copilot'
+			}
+		});
+	}
+
 	const isValidApiKey = (apiKey?: string): boolean => apiKey !== undefined && apiKey.length > 6;
 	if (!isValidApiKey(apiKey)) {
 		apiKey = await vscode.window.showInputBox({ placeHolder: 'Enter your OpenAI API key.' });
@@ -301,7 +320,7 @@ export async function createOpenAIClient(configuration: vscode.WorkspaceConfigur
 		}
 		configuration.update("markdown.copilot.openAI.apiKey", apiKey);
 	}
-	const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
+	
 	if (!baseUrl) {
 		return new OpenAI({ apiKey });
 	}
