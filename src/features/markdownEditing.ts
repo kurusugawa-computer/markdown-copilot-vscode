@@ -55,7 +55,7 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
 		await cursor.insertText("\n\n**Copilot:** ", userEndLineEol);
 
-		const chatMessageBuilder = new ChatMessageBuilder(document, supportsMultimodal);
+		const chatMessageBuilder = new ChatMessageBuilder(document.uri, supportsMultimodal);
 
 		const configuration = vscode.workspace.getConfiguration();
 		const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");

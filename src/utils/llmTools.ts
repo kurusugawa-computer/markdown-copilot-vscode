@@ -4,19 +4,19 @@ import * as vscode from 'vscode';
 import { resolveRootUri } from ".";
 
 
-export function toolTextToTools(_document: vscode.TextDocument, toolText: string): OpenAI.ChatCompletionTool[] {
+export function toolTextToTools(_uri: vscode.Uri, toolText: string): OpenAI.ChatCompletionTool[] {
 	if (toolText.startsWith('@')) {
-		const presetToolsKey = toolText.slice(1);
-		const presetTools = PRESET_TOOLS[presetToolsKey];
-		if (!presetTools) {
-			throw new Error(`Undefined preset tool: ${presetToolsKey}. Available presets: ${Object.keys(PRESET_TOOLS).join(", ")}`);
+		const builtinToolsKey = toolText.slice(1);
+		const builtinTools = BUILTIN_TOOLS[builtinToolsKey];
+		if (!builtinTools) {
+			throw new Error(`Undefined preset tool: ${builtinToolsKey}. Available presets: ${Object.keys(BUILTIN_TOOLS).join(", ")}`);
 		}
-		return presetTools;
+		return builtinTools;
 	}
 	return [] as OpenAI.ChatCompletionTool[];
 }
 
-export async function executeToolFunction(document: vscode.TextDocument, toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
+export async function executeToolFunction(uri: vscode.Uri, toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
 	const args = JSON.parse(toolCallFunction.arguments || 'null');
 	switch (toolCallFunction.name) {
 		case "eval_js":
@@ -24,9 +24,9 @@ export async function executeToolFunction(document: vscode.TextDocument, toolCal
 		case "web_fetch":
 			return webFetch(args);
 		case "fs_read_file":
-			return fsReadFile(document, args);
+			return fsReadFile(uri, args);
 		case "fs_read_dir":
-			return fsReadDir(document, args);
+			return fsReadDir(uri, args);
 		default:
 			return `Not implemented tool: ${toolCallFunction.name}`;
 	}
@@ -40,8 +40,8 @@ async function webFetch(args: { url: string, method: string, request_body: strin
 	return new TextDecoder(encoding).decode(buffer);
 }
 
-async function fsReadFile(document: vscode.TextDocument, args: { path: string }) {
-	const fileUri = vscode.Uri.joinPath(resolveRootUri(document.uri), args.path);
+async function fsReadFile(uri: vscode.Uri, args: { path: string }) {
+	const fileUri = vscode.Uri.joinPath(resolveRootUri(uri), args.path);
 	const buffer = await vscode.workspace.fs.readFile(fileUri);
 	const encoding = chardet.detect(buffer);
 	if (encoding === null) { return ''; }
@@ -64,8 +64,8 @@ function toFileTypeString(type: vscode.FileType): FileTypeString {
 	}
 }
 
-async function fsReadDir(document: vscode.TextDocument, args: { path: string }) {
-	const directoryUri = vscode.Uri.joinPath(resolveRootUri(document.uri), args.path);
+async function fsReadDir(uri: vscode.Uri, args: { path: string }) {
+	const directoryUri = vscode.Uri.joinPath(resolveRootUri(uri), args.path);
 	const entries = await vscode.workspace.fs.readDirectory(directoryUri);
 	const entriesWithStats = await Promise.all(entries.map(async ([name, type]) => {
 		const entryUri = vscode.Uri.joinPath(directoryUri, name);
@@ -87,7 +87,7 @@ async function evaluateJavaScriptCode(args: { code: string }) {
 }
 
 
-const PRESET_TOOLS: { [key: string]: OpenAI.ChatCompletionTool[] } = {
+const BUILTIN_TOOLS: { [key: string]: OpenAI.ChatCompletionTool[] } = {
 	"file": [
 		{
 			type: "function",

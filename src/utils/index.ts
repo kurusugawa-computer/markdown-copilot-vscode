@@ -78,21 +78,21 @@ export function partialEndsWith(target: string, search: string, ignore?: RegExp)
  * @param fragmentUriText - The fragment URI text to resolve.
  * @returns The resolved URI, or `null` if the document is not saved.
  */
-export function resolveFragmentUri(document: vscode.TextDocument, fragmentUriText: string) {
+export function resolveFragmentUri(uri: vscode.Uri, fragmentUriText: string) {
 	function throwError() {
 		throw l10n.t(
 			"command.editing.continueInContext.import.error",
 			fragmentUriText,
-			vscode.workspace.asRelativePath(document.fileName)
+			vscode.workspace.asRelativePath(uri.fsPath)
 		);
 	}
 	if (fragmentUriText.startsWith('/')) {
-		const rootUri = resolveRootUri(document.uri);
+		const rootUri = resolveRootUri(uri);
 		if (!rootUri) { throwError(); }
 		return vscode.Uri.joinPath(rootUri, fragmentUriText);
 	}
-	if (document.uri.scheme === 'untitled') { throwError(); }
-	return vscode.Uri.joinPath(document.uri, '..', fragmentUriText);
+	if (uri.scheme === 'untitled') { throwError(); }
+	return vscode.Uri.joinPath(uri, '..', fragmentUriText);
 }
 
 /**

@@ -177,14 +177,14 @@ function removeChatRole(text: string): string {
 }
 
 export class ChatMessageBuilder {
-	private readonly document: vscode.TextDocument;
+	private readonly uri: vscode.Uri;
 	private readonly supportsMultimodal: boolean;
 	private copilotOptions: OpenAI.ChatCompletionCreateParams;
 	private chatMessages: ChatMessage[];
 	private isInvalid: boolean;
 
-	constructor(document: vscode.TextDocument, supportsMultimodal: boolean) {
-		this.document = document;
+	constructor(uri: vscode.Uri, supportsMultimodal: boolean) {
+		this.uri = uri;
 		this.supportsMultimodal = supportsMultimodal;
 		this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 		this.chatMessages = [];
@@ -222,7 +222,7 @@ export class ChatMessageBuilder {
 
 			// Process parsed tools.
 			const tools = (parsed as string[]).reduce(
-				(results, toolText) => results.concat(toolTextToTools(this.document, toolText)),
+				(results, toolText) => results.concat(toolTextToTools(this.uri, toolText)),
 				[] as OpenAI.ChatCompletionTool[]
 			);
 
@@ -264,11 +264,11 @@ export class ChatMessageBuilder {
 				if (/^https?:\/\//.test(uri)) {
 					return { type: 'image_url', image_url: { url: uri } } as OpenAI.ChatCompletionContentPart;
 				}
-				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.document, uri))).toString('base64');
+				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.uri, uri))).toString('base64');
 				return { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } } as OpenAI.ChatCompletionContentPart;
 			}
 			if (mimeType === 'audio/mpeg' || mimeType === 'audio/wave') {
-				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.document, uri))).toString('base64');
+				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.uri, uri))).toString('base64');
 				const format = mimeType === 'audio/mpeg' ? 'mp3' : 'wav';
 				return { type: 'input_audio', input_audio: { data, format } } as OpenAI.ChatCompletionContentPart;
 			}

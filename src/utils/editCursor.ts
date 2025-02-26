@@ -123,7 +123,7 @@ export class EditCursor {
                     chatMessages,
                     override || {} as OpenAI.ChatCompletionCreateParams,
                     chunkText => submitChunkText(chunkText),
-                    toolFunction => executeToolFunction(this.document, toolFunction),
+                    toolFunction => executeToolFunction(this.document.uri, toolFunction),
                     async completion => {
                         abortController = completion.controller;
                         if (isCanceled) {

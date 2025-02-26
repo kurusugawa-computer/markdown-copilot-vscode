@@ -157,7 +157,7 @@ export class ContextOutline {
 						activeLineTexts.push(line);
 						continue;
 					}
-					const importedDoc = await vscode.workspace.openTextDocument(resolveFragmentUri(document, match[1].trim()));
+					const importedDoc = await vscode.workspace.openTextDocument(resolveFragmentUri(document.uri, match[1].trim()));
 					await resolveImport(importedDoc, importedDoc.getText());
 				}
 			} finally {
