@@ -1,6 +1,6 @@
 import { debounce } from "ts-debounce";
 import * as vscode from 'vscode';
-import { isSelectionOverflow, resolveFragmentUri } from '.';
+import { isSelectionOverflow, resolveFragmentUri, toEolString } from '.';
 import { countQuoteIndent, outdentQuote } from './indention';
 
 interface LineRange {
@@ -142,7 +142,6 @@ export class ContextOutline {
 	}
 
 	async collectActiveLines(document: vscode.TextDocument, userStart: vscode.Position): Promise<string[]> {
-		const toEolString = (eol: number) => eol === vscode.EndOfLine.LF ? "\n" : "\r\n";
 		const documentEol = toEolString(document.eol);
 		const importedDocumentUriTexts: string[] = [];
 		const activeLineTexts: string[] = [];
