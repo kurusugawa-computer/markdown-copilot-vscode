@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 import { deepMergeJsons } from './json';
+import { toolTextToTools } from './llmTools';
 
 function buildChatParams(
 	configuration: vscode.WorkspaceConfiguration,
@@ -192,29 +193,54 @@ export class ChatMessageBuilder {
 
 	async addChatMessage(flags: ChatRoleFlags, message: string) {
 		if (this.isInvalid) { return; }
-
 		const role = toOpenAIChatRole(flags);
-
 		if (flags & ChatRoleFlags.Override) {
 			this.chatMessages = this.chatMessages.filter(m => m.role !== role);
 		}
 
-		for (const match of message.matchAll(/```json +copilot-options\n([^]*?)\n```/gm)) {
+		for (const match of message.matchAll(/```json +copilot-(options|tools)\n([^]*?)\n```/gm)) {
+			const [matched, type, jsonText] = match;
+
+			let parsed: OpenAI.ChatCompletionCreateParams | string[];
 			try {
-				this.copilotOptions = deepMergeJsons(this.copilotOptions, JSON.parse(match[1]));
-				message = message.replace(match[0], "");
+				parsed = JSON.parse(jsonText);
 			} catch {
 				flags = ChatRoleFlags.User;
-				message = "Correct the following JSON and answer in the language of the `" + l10n.getLocale() + "` locale:\n```\n" + match[1] + "\n```";
+				message = "Correct the following JSON and answer in the language of the `" + l10n.getLocale() + "` locale:\n```\n" + jsonText + "\n```";
 				this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 				this.chatMessages = [];
 				this.isInvalid = true;
 				break;
 			}
+
+			message = message.replace(matched, "");
+
+			if (type === "options") {
+				this.copilotOptions = deepMergeJsons(this.copilotOptions, parsed);
+				continue;
+			}
+
+			// Process parsed tools.
+			const tools = (parsed as string[]).reduce(
+				(results, toolText) => results.concat(toolTextToTools(this.document, toolText)),
+				[] as OpenAI.ChatCompletionTool[]
+			);
+
+			// Merge tools into copilotOptions.tools, ensuring each function name is unique.
+			const mergedTools = this.copilotOptions.tools || [];
+			tools.forEach(tool => {
+				const index = mergedTools.findIndex(e => e.function.name === tool.function.name);
+				if (index >= 0) {
+					mergedTools[index] = tool;
+				} else {
+					mergedTools.push(tool);
+				}
+			});
+			this.copilotOptions.tools = mergedTools;
 		}
 
-		// Ignore empty messages
-		if (message.trim().length === 0) { return; }
+		if (!message.trim()) return;
+
 		if (!this.supportsMultimodal) {
 			this.chatMessages.push({ role, content: message } as OpenAI.ChatCompletionUserMessageParam);
 			return;
@@ -228,34 +254,27 @@ export class ChatMessageBuilder {
 			return;
 		}
 
-		async function toContentPart(part: string, document: vscode.TextDocument): Promise<OpenAI.ChatCompletionContentPart> {
-			// Match media in Markdown and HTML image tags
+		const contentParts = await Promise.all(parts.map(async part => {
 			const match = part.match(/!\[[^\]]*\]\(([^)]+)\)|<img\s[^>]*src="([^"]+)"[^>]*>/);
-			if (!match) { return { type: 'text', text: part }; }
-
-			const uri = match[1]?.replace(/^<|>$/g, '') || match[2];
+			if (!match) return { type: 'text', text: part } as OpenAI.ChatCompletionContentPart;
+			const uri = match[1] || match[2];
 			const mimeType = mime.lookup(uri);
-			if (!mimeType) { return { type: 'text', text: part }; }
-
+			if (!mimeType) return { type: 'text', text: part } as OpenAI.ChatCompletionContentPart;
 			if (mimeType.startsWith('image/')) {
 				if (/^https?:\/\//.test(uri)) {
-					return { type: 'image_url', image_url: { url: uri } };
+					return { type: 'image_url', image_url: { url: uri } } as OpenAI.ChatCompletionContentPart;
 				}
-				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(document, uri))).toString('base64');
-				return { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } };
+				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.document, uri))).toString('base64');
+				return { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } } as OpenAI.ChatCompletionContentPart;
 			}
-
 			if (mimeType === 'audio/mpeg' || mimeType === 'audio/wave') {
-				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(document, uri))).toString('base64');
+				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.document, uri))).toString('base64');
 				const format = mimeType === 'audio/mpeg' ? 'mp3' : 'wav';
-				return { type: 'input_audio', input_audio: { data, format } };
+				return { type: 'input_audio', input_audio: { data, format } } as OpenAI.ChatCompletionContentPart;
 			}
-
 			throw new Error(`Unsupported media type: ${mimeType}`);
-		}
-
-		const content = await Promise.all(parts.map(part => toContentPart(part, this.document)));
-		this.chatMessages.push({ role, content } as OpenAI.ChatCompletionUserMessageParam);
+		}));
+		this.chatMessages.push({ role, content: contentParts } as OpenAI.ChatCompletionUserMessageParam);
 	}
 
 	async addLines(lines: string[]) {

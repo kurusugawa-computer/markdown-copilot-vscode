@@ -20,18 +20,6 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 	const userStart = userRange.start;
 	const userEnd = userRange.end;
 
-	const chatMessageBuilder = new ChatMessageBuilder(document, supportsMultimodal);
-
-	const configuration = vscode.workspace.getConfiguration();
-	const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
-	if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
-		await chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
-	}
-
-	if (useContext) {
-		await chatMessageBuilder.addLines(await outline.collectActiveLines(document, userStart));
-	}
-
 	const userStartLineText = document.lineAt(userStart.line).text;
 	const userEndLineText = document.lineAt(userEnd.line).text;
 	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
@@ -66,6 +54,18 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 
 		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
 		await cursor.insertText("\n\n**Copilot:** ", userEndLineEol);
+
+		const chatMessageBuilder = new ChatMessageBuilder(document, supportsMultimodal);
+
+		const configuration = vscode.workspace.getConfiguration();
+		const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
+		if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
+			await chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
+		}
+
+		if (useContext) {
+			await chatMessageBuilder.addLines(await outline.collectActiveLines(document, userStart));
+		}
 
 		await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
 		const completionPromise = cursor.insertCompletion(

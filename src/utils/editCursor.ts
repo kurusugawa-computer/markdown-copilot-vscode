@@ -1,11 +1,11 @@
 import { Mutex } from 'async-mutex';
-import chardet from 'chardet';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
-import { LF, resolveRootUri, toEolString } from ".";
+import { LF, toEolString } from ".";
 import { getQuoteIndent } from './indention';
 import { ChatMessage, executeChatCompletionWithTools } from './llm';
 import { CancelablePromise } from './promise';
+import { executeToolFunction } from './llmTools';
 
 /**
  * Manages an editable text cursor within a vscode.TextEditor.
@@ -123,21 +123,7 @@ export class EditCursor {
                     chatMessages,
                     override || {} as OpenAI.ChatCompletionCreateParams,
                     chunkText => submitChunkText(chunkText),
-                    async toolFunction => {
-                        const args = JSON.parse(toolFunction.arguments || 'null');
-                        switch (toolFunction.name) {
-                            case "eval_javascript":
-                                return this.evaluateJavaScriptCode(args);
-                            case "web_fetch":
-                                return this.webFetch(args);
-                            case "fs_read_file":
-                                return this.fsReadFile(args);
-                            case "fs_read_dir":
-                                return this.fsReadDir(args);
-                            default:
-                                return `Not implemented tool: ${toolFunction.name}`;
-                        }
-                    },
+                    toolFunction => executeToolFunction(this.document, toolFunction),
                     async completion => {
                         abortController = completion.controller;
                         if (isCanceled) {
@@ -155,33 +141,6 @@ export class EditCursor {
                 reject(error);
             }
         }, false);
-    }
-
-    private async webFetch(args: { url: string, method: string, request_body: string | null }) {
-        const response = await fetch(args.url, { method: args.method, body: args.request_body });
-        const buffer = await response.arrayBuffer();
-        const encoding = chardet.detect(new Uint8Array(buffer));
-        if (encoding === null) { return ''; }
-        return new TextDecoder(encoding).decode(buffer);
-    }
-
-    private async fsReadFile(args: { path: string }) {
-        const fileUri = vscode.Uri.joinPath(resolveRootUri(this.document.uri), args.path);
-        const buffer = await vscode.workspace.fs.readFile(fileUri);
-        const encoding = chardet.detect(buffer);
-        if (encoding === null) { return ''; }
-        return new TextDecoder(encoding).decode(buffer);
-    }
-
-    private async fsReadDir(args: { path: string }) {
-        const directoryUri = vscode.Uri.joinPath(resolveRootUri(this.document.uri), args.path);
-        const entries = await vscode.workspace.fs.readDirectory(directoryUri);
-        return JSON.stringify(entries.map(([name, type]) => ({ name, type })));
-    }
-
-    private evaluateJavaScriptCode(args: { code: string }) {
-        // eslint-disable-next-line no-eval
-        return String(eval(args.code));
     }
 
     async withProgress(title: string, task: (editCursor: EditCursor, token: vscode.CancellationToken) => Promise<void>, disposeOnFinally = true): Promise<EditCursor> {
