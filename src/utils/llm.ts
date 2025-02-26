@@ -44,8 +44,8 @@ export async function executeTask(chatMessages: ChatMessage[], override: OpenAI.
 export async function executeChatCompletion(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams,
-	onDeltaContent: (deltaContent: string) => Promise<any>,
-	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<any>,
+	onDeltaContent: (deltaContent: string) => Promise<void>,
+	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
 ) {
 	const completion = await createChatCompletion(chatMessages, override);
 	if (!(completion instanceof Stream)) {
@@ -64,9 +64,9 @@ export async function executeChatCompletion(
 export async function executeChatCompletionWithTools(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams,
-	onDeltaContent: (deltaContent: string) => Promise<any>,
+	onDeltaContent: (deltaContent: string) => Promise<void>,
 	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>,
-	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<any>,
+	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
 ) {
 	while (true) {
 		const completion = await createChatCompletion(chatMessages, override);

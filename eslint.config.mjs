@@ -56,23 +56,9 @@ export default tseslint.config(
             ],
 
             "@typescript-eslint/unified-signatures": "error",
-            "no-unused-expressions": "off",
             "@typescript-eslint/no-unused-expressions": ["error", { allowTernary: true }],
-
-            // Rules enabled in typescript-eslint configs that are not applicable here
-            "@typescript-eslint/ban-ts-comment": "off",
             "@typescript-eslint/class-literal-property-style": "off",
             "@typescript-eslint/consistent-indexed-object-style": "off",
-            "@typescript-eslint/consistent-generic-constructors": "off",
-            "@typescript-eslint/no-duplicate-enum-values": "off",
-            "@typescript-eslint/no-empty-function": "off",
-            "@typescript-eslint/no-namespace": "off",
-            "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
-            "@typescript-eslint/no-var-requires": "off",
-            "@typescript-eslint/no-empty-interface": "off",
-            "@typescript-eslint/no-explicit-any": "off",
-            "@typescript-eslint/no-empty-object-type": "off", // {} is a totally useful and valid type.
-            "@typescript-eslint/no-require-imports": "off",
             "@typescript-eslint/no-unused-vars": [
                 "warn",
                 {
@@ -83,6 +69,12 @@ export default tseslint.config(
                 },
             ],
             "@typescript-eslint/no-inferrable-types": "off",
-      },
-    }
+        },
+    },
+    {
+        files: ["**/*.{js,cjs,mjs}"],
+        rules: {
+            "@typescript-eslint/no-require-imports": "off",
+        }
+    },
 );

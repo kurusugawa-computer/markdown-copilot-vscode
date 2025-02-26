@@ -42,30 +42,30 @@ export class CancelablePromise<T = unknown> extends Promise<T> {
 	private cancelHandlers: (() => void)[] = [];
 	private rejectOnCancel: boolean;
 	private state = PromiseState.pending;
-	private reject!: (reason?: any) => void;
+	private reject!: (reason?: unknown) => void;
 
 	constructor(
 		executor: (
 			resolve: (value: T | PromiseLike<T>) => void,
-			reject: (reason?: any) => void,
+			reject: (reason?: unknown) => void,
 			onCancel: (handler: () => void) => void
 		) => void,
 		rejectOnCancel: boolean = true
 	) {
 		let resolveRef!: (value: T | PromiseLike<T>) => void;
-		let rejectRef!: (reason?: any) => void;
+		let rejectRef!: (reason?: unknown) => void;
 		super((resolve, reject) => { resolveRef = resolve; rejectRef = reject; });
 		this.rejectOnCancel = rejectOnCancel;
 		this.reject = rejectRef;
 
-		const complete = (callback: (v: any) => void, value: any, finalState: PromiseState) => {
+		const complete = <U>(callback: (v: U) => void, value: U, finalState: PromiseState) => {
 			if (this.state !== PromiseState.canceled || !this.rejectOnCancel) {
 				callback(value);
 				this.state = finalState;
 			}
 		};
 		const onResolve = (value: T | PromiseLike<T>) => complete(resolveRef, value, PromiseState.resolved);
-		const onReject = (error: any) => complete(rejectRef, error, PromiseState.rejected);
+		const onReject = (error: unknown) => complete(rejectRef, error, PromiseState.rejected);
 		const onCancel = (handler: () => void) => {
 			if (this.state === PromiseState.pending) {
 				this.cancelHandlers.push(handler);

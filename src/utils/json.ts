@@ -1,3 +1,6 @@
+type JsonKey = string;
+type JsonObject = { [key in JsonKey]: unknown };
+
 /**
  * Deeply merges two JSON objects.
  *
@@ -16,12 +19,16 @@
  * @param seen - A WeakMap to track already processed objects for circular reference handling.
  * @returns A new JSON object resulting from the deep merge of the base and update objects.
  */
-export function deepMergeJsons<B, U>(base: B, update: U, seen = new WeakMap<any, any>()): B & U {
+export function deepMergeJsons<B extends object, U extends object>(
+	base: B,
+	update: U,
+	seen: WeakMap<object, unknown> = new WeakMap<object, unknown>()
+): B & U {
 	if (update === undefined || update === null) {
 		return base as B & U;
 	}
 	if (seen.has(base)) {
-		return seen.get(base);
+		return seen.get(base) as B & U;
 	}
 
 	const merged = { ...base } as B & U;
@@ -29,20 +36,20 @@ export function deepMergeJsons<B, U>(base: B, update: U, seen = new WeakMap<any,
 
 	for (const key in update) {
 		if (Object.prototype.hasOwnProperty.call(update, key)) {
-			const preValue = base[key as keyof B];
+			const preValue = base[key as unknown as keyof B];
 			const posValue = update[key];
 			if (isObject(preValue) && isObject(posValue)) {
-				(merged as any)[key] = deepMergeJsons(preValue, posValue, seen);
+				(merged as JsonObject)[key] = deepMergeJsons(preValue, posValue, seen);
 			} else if (Array.isArray(preValue) && Array.isArray(posValue)) {
-				(merged as any)[key] = [...preValue, ...posValue];
+				(merged as JsonObject)[key] = [...preValue, ...posValue];
 			} else {
-				(merged as any)[key] = posValue;
+				(merged as JsonObject)[key] = posValue;
 			}
 		}
 	}
 	return merged;
 }
 
-function isObject(item: any): item is Record<string, unknown> {
+function isObject(item: unknown): item is JsonObject {
 	return item !== null && typeof item === 'object' && !Array.isArray(item);
 }

@@ -101,12 +101,12 @@ export class EditCursor {
 
     insertCompletion(chatMessages: ChatMessage[], lineSeparator: string, override?: OpenAI.ChatCompletionCreateParams) {
         const chunkTexts: string[] = [];
-        const submitChunkText = async (chunkText: string): Promise<vscode.Position> => {
+        const submitChunkText = async (chunkText: string): Promise<void> => {
             chunkTexts.push(chunkText);
-            if (!chunkText.includes(LF)) { return this.position; }
+            if (!chunkText.includes(LF)) { return; }
             const joinedText = chunkTexts.join("");
             chunkTexts.length = 0;
-            return this.insertText(joinedText, lineSeparator);
+            await this.insertText(joinedText, lineSeparator);
         };
 
         return new CancelablePromise<vscode.Position>(async (resolve, reject, onCancel) => {
