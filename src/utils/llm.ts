@@ -183,8 +183,8 @@ export class ChatMessageBuilder {
 	private chatMessages: ChatMessage[];
 	private isInvalid: boolean;
 
-	constructor(uri: vscode.Uri, supportsMultimodal: boolean) {
-		this.uri = uri;
+	constructor(documentUri: vscode.Uri, supportsMultimodal: boolean) {
+		this.uri = documentUri;
 		this.supportsMultimodal = supportsMultimodal;
 		this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 		this.chatMessages = [];
@@ -193,60 +193,74 @@ export class ChatMessageBuilder {
 
 	async addChatMessage(flags: ChatRoleFlags, message: string) {
 		if (this.isInvalid) { return; }
+
 		const role = toOpenAIChatRole(flags);
 		if (flags & ChatRoleFlags.Override) {
 			this.chatMessages = this.chatMessages.filter(m => m.role !== role);
 		}
 
+		// Process special JSON blocks
+		message = await this.processJsonBlocks(message);
+
+		// Skip empty messages
+		if (!message.trim()) return;
+
+		// Add message to chat history
+		await this.addMessageToChat(role, message);
+	}
+
+	private async processJsonBlocks(message: string): Promise<string> {
 		for (const match of message.matchAll(/```json +copilot-(options|tools)\n([^]*?)\n```/gm)) {
 			const [matched, type, jsonText] = match;
 
-			let parsed: OpenAI.ChatCompletionCreateParams | string[];
+			let parsed;
 			try {
 				parsed = JSON.parse(jsonText);
 			} catch {
-				flags = ChatRoleFlags.User;
-				message = "Correct the following JSON and answer in the language of the `" + l10n.getLocale() + "` locale:\n```\n" + jsonText + "\n```";
 				this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 				this.chatMessages = [];
 				this.isInvalid = true;
-				break;
+				return "Correct the following JSON and answer in the language of the `" + l10n.getLocale() + "` locale:\n```\n" + jsonText + "\n```";
 			}
 
+			// Remove matched JSON block from the message
 			message = message.replace(matched, "");
 
 			if (type === "options") {
 				this.copilotOptions = deepMergeJsons(this.copilotOptions, parsed);
-				continue;
+			} else {
+				await this.processToolsJson(parsed);
 			}
-
-			// Process parsed tools.
-			const tools = (parsed as string[]).reduce(
-				(results, toolText) => results.concat(toolTextToTools(this.uri, toolText)),
-				[] as OpenAI.ChatCompletionTool[]
-			);
-
-			// Merge tools into copilotOptions.tools, ensuring each function name is unique.
-			const mergedTools = this.copilotOptions.tools || [];
-			tools.forEach(tool => {
-				const index = mergedTools.findIndex(e => e.function.name === tool.function.name);
-				if (index >= 0) {
-					mergedTools[index] = tool;
-				} else {
-					mergedTools.push(tool);
-				}
-			});
-			this.copilotOptions.tools = mergedTools;
 		}
 
-		if (!message.trim()) return;
+		return message;
+	}
 
+	private async processToolsJson(toolTexts: string[]) {
+		const tools = (await Promise.all(
+			toolTexts.map(toolText => toolTextToTools(this.uri, toolText))
+		)).flat();
+
+		const mergedTools = this.copilotOptions.tools || [];
+		for (const tool of tools) {
+			const index = mergedTools.findIndex(e => e.function.name === tool.function.name);
+			if (index >= 0) {
+				mergedTools[index] = tool;
+			} else {
+				mergedTools.push(tool);
+			}
+		}
+		this.copilotOptions.tools = mergedTools;
+	}
+
+	private async addMessageToChat(role: ChatRole, message: string) {
+		// Simple case: No multimodal support or no media in message
 		if (!this.supportsMultimodal) {
 			this.chatMessages.push({ role, content: message } as OpenAI.ChatCompletionUserMessageParam);
 			return;
 		}
 
-		// Matches medias in Markdown (i.e., `![alt](url)`)
+		// Split message by media elements
 		const parts = message.split(/(!\[[^\]]*\]\([^)]+\))|(<img\s[^>]*src="[^"]+"[^>]*>)/gm).filter(Boolean);
 
 		if (parts.length === 1) {
@@ -254,27 +268,42 @@ export class ChatMessageBuilder {
 			return;
 		}
 
-		const contentParts = await Promise.all(parts.map(async part => {
-			const match = part.match(/!\[[^\]]*\]\(([^)]+)\)|<img\s[^>]*src="([^"]+)"[^>]*>/);
-			if (!match) return { type: 'text', text: part } as OpenAI.ChatCompletionContentPart;
-			const uri = match[1] || match[2];
-			const mimeType = mime.lookup(uri);
-			if (!mimeType) return { type: 'text', text: part } as OpenAI.ChatCompletionContentPart;
-			if (mimeType.startsWith('image/')) {
-				if (/^https?:\/\//.test(uri)) {
-					return { type: 'image_url', image_url: { url: uri } } as OpenAI.ChatCompletionContentPart;
-				}
-				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.uri, uri))).toString('base64');
-				return { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } } as OpenAI.ChatCompletionContentPart;
+		// Process multi-part message with media
+		this.chatMessages.push({ role, content: await Promise.all(parts.map(part => this.processMessagePart(part))) } as OpenAI.ChatCompletionUserMessageParam);
+	}
+
+	private async processMessagePart(part: string): Promise<OpenAI.ChatCompletionContentPart> {
+		const match = part.match(/!\[[^\]]*\]\(([^)]+)\)|<img\s[^>]*src="([^"]+)"[^>]*>/);
+		if (!match) return { type: 'text', text: part } as OpenAI.ChatCompletionContentPart;
+
+		const uri = match[1] || match[2];
+		const mimeType = mime.lookup(uri);
+		if (!mimeType) return { type: 'text', text: part } as OpenAI.ChatCompletionContentPart;
+
+		// Handle images
+		if (mimeType.startsWith('image/')) {
+			if (/^https?:\/\//.test(uri)) {
+				return { type: 'image_url', image_url: { url: uri } } as OpenAI.ChatCompletionContentPart;
 			}
-			if (mimeType === 'audio/mpeg' || mimeType === 'audio/wave') {
-				const data = Buffer.from(await vscode.workspace.fs.readFile(resolveFragmentUri(this.uri, uri))).toString('base64');
-				const format = mimeType === 'audio/mpeg' ? 'mp3' : 'wav';
-				return { type: 'input_audio', input_audio: { data, format } } as OpenAI.ChatCompletionContentPart;
-			}
-			throw new Error(`Unsupported media type: ${mimeType}`);
-		}));
-		this.chatMessages.push({ role, content: contentParts } as OpenAI.ChatCompletionUserMessageParam);
+			const data = Buffer.from(await vscode.workspace.fs.readFile(
+				resolveFragmentUri(this.uri, uri)
+			)).toString('base64');
+			return {
+				type: 'image_url',
+				image_url: { url: `data:${mimeType};base64,${data}` }
+			} as OpenAI.ChatCompletionContentPart;
+		}
+
+		// Handle audio
+		if (mimeType === 'audio/mpeg' || mimeType === 'audio/wave') {
+			const data = Buffer.from(await vscode.workspace.fs.readFile(
+				resolveFragmentUri(this.uri, uri)
+			)).toString('base64');
+			const format = mimeType === 'audio/mpeg' ? 'mp3' : 'wav';
+			return { type: 'input_audio', input_audio: { data, format } } as OpenAI.ChatCompletionContentPart;
+		}
+
+		throw new Error(`Unsupported media type: ${mimeType}`);
 	}
 
 	async addLines(lines: string[]) {
