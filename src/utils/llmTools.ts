@@ -1,10 +1,10 @@
 import chardet from 'chardet';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
-import { resolveRootUri } from ".";
+import { resolveFragmentUri } from ".";
 
 
-export function toolTextToTools(_uri: vscode.Uri, toolText: string): OpenAI.ChatCompletionTool[] {
+export async function toolTextToTools(documentUri: vscode.Uri, toolText: string): Promise<OpenAI.ChatCompletionTool[]> {
 	if (toolText.startsWith('@')) {
 		const builtinToolsKey = toolText.slice(1);
 		const builtinTools = BUILTIN_TOOLS[builtinToolsKey];
@@ -13,35 +13,36 @@ export function toolTextToTools(_uri: vscode.Uri, toolText: string): OpenAI.Chat
 		}
 		return builtinTools;
 	}
+	const _toolDefinitionText = await fsReadFile(documentUri, toolText);
 	return [] as OpenAI.ChatCompletionTool[];
 }
 
-export async function executeToolFunction(uri: vscode.Uri, toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
+export async function executeToolFunction(documentUri: vscode.Uri, toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
 	const args = JSON.parse(toolCallFunction.arguments || 'null');
 	switch (toolCallFunction.name) {
 		case "eval_js":
-			return evaluateJavaScriptCode(args);
+			return evaluateJavaScriptCode(args.code);
 		case "web_fetch":
-			return webFetch(args);
+			return webFetch(args.url, args.method, args.request_body);
 		case "fs_read_file":
-			return fsReadFile(uri, args);
+			return fsReadFile(documentUri, args.path);
 		case "fs_read_dir":
-			return fsReadDir(uri, args);
+			return fsReadDir(documentUri, args.path);
 		default:
 			return `Not implemented tool: ${toolCallFunction.name}`;
 	}
 }
 
-async function webFetch(args: { url: string, method: string, request_body: string | null }) {
-	const response = await fetch(args.url, { method: args.method, body: args.request_body });
+async function webFetch(url: string, method: string, body: string | null) {
+	const response = await fetch(url, { method, body });
 	const buffer = await response.arrayBuffer();
 	const encoding = chardet.detect(new Uint8Array(buffer));
 	if (encoding === null) { return ''; }
 	return new TextDecoder(encoding).decode(buffer);
 }
 
-async function fsReadFile(uri: vscode.Uri, args: { path: string }) {
-	const fileUri = vscode.Uri.joinPath(resolveRootUri(uri), args.path);
+async function fsReadFile(documentUri: vscode.Uri, path: string) {
+	const fileUri = resolveFragmentUri(documentUri, path);
 	const buffer = await vscode.workspace.fs.readFile(fileUri);
 	const encoding = chardet.detect(buffer);
 	if (encoding === null) { return ''; }
@@ -64,8 +65,8 @@ function toFileTypeString(type: vscode.FileType): FileTypeString {
 	}
 }
 
-async function fsReadDir(uri: vscode.Uri, args: { path: string }) {
-	const directoryUri = vscode.Uri.joinPath(resolveRootUri(uri), args.path);
+async function fsReadDir(documentUri: vscode.Uri, path: string) {
+	const directoryUri = resolveFragmentUri(documentUri, path);
 	const entries = await vscode.workspace.fs.readDirectory(directoryUri);
 	const entriesWithStats = await Promise.all(entries.map(async ([name, type]) => {
 		const entryUri = vscode.Uri.joinPath(directoryUri, name);
@@ -74,16 +75,14 @@ async function fsReadDir(uri: vscode.Uri, args: { path: string }) {
 			type: toFileTypeString(type),
 			size: stat.size,
 			mtime: new Date(stat.mtime).toISOString(),
-			ctime: new Date(stat.ctime).toISOString(),
 		}];
 	}));
-	const result = JSON.stringify(Object.fromEntries(entriesWithStats));
-	return result;
+	return JSON.stringify(Object.fromEntries(entriesWithStats));
 }
 
-async function evaluateJavaScriptCode(args: { code: string }) {
+async function evaluateJavaScriptCode(code: string) {
 	// eslint-disable-next-line no-eval
-	return String(eval(args.code));
+	return String(eval(code));
 }
 
 
