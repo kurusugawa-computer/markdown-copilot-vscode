@@ -7,6 +7,7 @@ import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 import { deepMergeJsons } from './json';
 import { toolTextToTools } from './llmTools';
+import { logger } from './logging';
 
 function buildChatParams(
 	configuration: vscode.WorkspaceConfiguration,
@@ -119,14 +120,17 @@ async function executeToolCalls(
 	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>
 ): Promise<OpenAI.ChatCompletionToolMessageParam[]> {
 	return Promise.all(toolCalls.map(toolCall => {
-		console.log(toolCall.function);
+		logger.info(`[tool] ${toolCall.function.name} invoke:`, toolCall.function.arguments);
 		return onToolCallFunction(toolCall.function)
 			.catch(reason => reason instanceof Error ? reason.message : String(reason))
-			.then(content => ({
-				role: ChatRole.Tool,
-				tool_call_id: toolCall.id,
-				content,
-			} as OpenAI.ChatCompletionToolMessageParam));
+			.then(content => {
+				logger.debug(`[tool] ${toolCall.function.name} finish:`, content);
+				return {
+					role: ChatRole.Tool,
+					tool_call_id: toolCall.id,
+					content,
+				} as OpenAI.ChatCompletionToolMessageParam;
+			})
 	}));
 }
 

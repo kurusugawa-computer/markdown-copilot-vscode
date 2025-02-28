@@ -8,8 +8,11 @@ import { ContextDecorator, ContextOutline } from './utils/context';
 import { EditCursor } from './utils/editCursor';
 import { indentQuote, outdentQuote } from './utils/indention';
 import * as l10n from './utils/localization';
+import * as logging from './utils/logging';
 
 export function activate(context: vscode.ExtensionContext) {
+	context.subscriptions.push(logging.initialize());
+
 	l10n.initialize(context.extensionUri);
 
 	const outline = new ContextOutline();

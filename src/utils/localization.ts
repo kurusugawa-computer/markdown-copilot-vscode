@@ -1,5 +1,6 @@
 import * as l10n from '@vscode/l10n';
 import * as vscode from 'vscode';
+import { logger } from './logging';
 
 /*
  * Utilities for l10n
@@ -15,7 +16,7 @@ export function initialize(baseUri: vscode.Uri, forcedLocale?: string) {
 	try {
 		l10n.config({ uri: vscode.Uri.joinPath(baseUri, packageNlsJson).toString() });
 	} catch {
-		console.warn("Cannot load l10n resource file:", packageNlsJson);
+		logger.warn("Cannot load l10n resource file:", packageNlsJson);
 		l10n.config({ uri: vscode.Uri.joinPath(baseUri, defaultPackageNlsJson).toString() });
 	}
 }
