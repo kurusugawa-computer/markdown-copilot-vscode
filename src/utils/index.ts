@@ -19,6 +19,24 @@ export function toEolString(eol: vscode.EndOfLine): string {
 	}
 }
 
+export function splitLines(text: string): string[] {
+	return text.split(/\r?\n/);
+}
+
+export function replaceLineSeparatorsWith(text: string, lineSeparator: string): string {
+	return text.replaceAll(/\r?\n/g, lineSeparator);
+}
+
+/**
+ * Normalizes line separators in a string by converting all line separator variants to LF ('\n').
+ * 
+ * @param text - The input string whose line separators will be normalized
+ * @returns A new string with all line separators normalized to LF
+ */
+export function normalizeLineSeparators(text: string): string {
+	return replaceLineSeparatorsWith(text, LF);
+}
+
 const intlSegmenter = new Intl.Segmenter();
 export function countChar(text: string): number {
 	let result = 0;

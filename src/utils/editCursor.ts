@@ -1,11 +1,11 @@
 import { Mutex } from 'async-mutex';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
-import { LF, toEolString } from ".";
+import { LF, replaceLineSeparatorsWith, splitLines, toEolString } from ".";
 import { getQuoteIndent } from './indention';
 import { ChatMessage, executeChatCompletionWithTools } from './llm';
-import { CancelablePromise } from './promise';
 import { executeToolFunction } from './llmTools';
+import { CancelablePromise } from './promise';
 
 /**
  * Manages an editable text cursor within a vscode.TextEditor.
@@ -84,7 +84,7 @@ export class EditCursor {
 
     async insertText(text: string, lineSeparator: string): Promise<vscode.Position> {
         await this.edit(editBuilder => {
-            editBuilder.insert(this.position, lineSeparator === LF ? text : text.replaceAll(LF, lineSeparator));
+            editBuilder.insert(this.position, lineSeparator === LF ? text : replaceLineSeparatorsWith(text, lineSeparator));
         });
         this.textEditor.setDecorations(this.cursorIndicator, [new vscode.Range(this.position, this.position)]);
         return this.position;
@@ -194,7 +194,7 @@ function toUpdatedPosition(
     const text = change.text;
 
     // Split the inserted text into lines.
-    const insertedLines = text.split(/\r?\n/);
+    const insertedLines = splitLines(text);
     const insertedLineCount = insertedLines.length - 1;
 
     // If the cursor is within the range that was replaced...

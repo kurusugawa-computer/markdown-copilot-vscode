@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { resolveRootUri, toEolString, toOverflowAdjustedRange } from '../utils';
+import { resolveRootUri, splitLines, toEolString, toOverflowAdjustedRange } from '../utils';
 import { EditCursor } from '../utils/editCursor';
 import * as l10n from '../utils/localization';
 
@@ -65,7 +65,7 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 
 		// Extract diffs using pair iteration
 		const diffText = document.getText(userRange);
-		const lines = diffText.split(/\r?\n/).filter(line => line.trim() !== '');
+		const lines = splitLines(diffText).filter(line => line.trim() !== '');
 		if (lines.length % 2 !== 0) {
 			await insertErrorText(l10n.t("command.editing.applyFilePathDiff.error.incomplete"));
 			return;

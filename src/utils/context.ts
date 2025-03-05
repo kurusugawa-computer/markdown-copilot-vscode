@@ -1,6 +1,6 @@
 import { debounce } from "ts-debounce";
 import * as vscode from 'vscode';
-import { isSelectionOverflow, resolveFragmentUri, toEolString } from '.';
+import { isSelectionOverflow, resolveFragmentUri, splitLines, toEolString } from '.';
 import { countQuoteIndent, outdentQuote } from './indention';
 
 interface LineRange {
@@ -151,7 +151,7 @@ export class ContextOutline {
 			if (importedDocumentUriTexts.includes(documentUriText)) { return; }
 			importedDocumentUriTexts.push(documentUriText);
 			try {
-				for (const line of lineTexts.split(/\r?\n/)) {
+				for (const line of splitLines(lineTexts)) {
 					const match = line.match(/@import\s+"([^"]+)"/);
 					if (match === null) {
 						activeLineTexts.push(line);

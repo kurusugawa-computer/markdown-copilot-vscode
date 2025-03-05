@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LF, countChar, toEolString, toOverflowAdjustedRange } from '../utils';
+import { countChar, normalizeLineSeparators, toEolString, toOverflowAdjustedRange } from '../utils';
 import { ContextOutline } from '../utils/context';
 import { EditCursor } from '../utils/editCursor';
 import { countQuoteIndent, getQuoteIndent, outdentQuote } from '../utils/indention';
@@ -29,13 +29,13 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 
 	const selectedText = document.getText(userRange);
 
-	const titleText = selectedText.replaceAll(/[\r\n]+/g, " ").trim();
+	const titleText = selectedText.replaceAll(/[\r\n\t]+/g, " ").trim();
 	const editCursor = new EditCursor(textEditor, document.lineAt(userEnd.line).range.end);
 	await editCursor.withProgress(`Markdown Copilot: ${titleText.length > 64 ? titleText.slice(0, 63) + '…' : titleText}`, async (cursor, token) => {
-		let selectedUserMessage = outdentQuote(
+		let selectedUserMessage = normalizeLineSeparators(outdentQuote(
 			selectedText,
 			userEndLineQuoteIndent
-		).replaceAll(documentEol, LF);
+		));
 
 		// Check if the last user message already has a `**User:** ` prefix
 		const userStartLineMatchesUser = userStartLineText.match(/\*\*User:\*\*[ \t]*/);
@@ -88,12 +88,12 @@ export async function titleActiveContext(outline: ContextOutline): Promise<void>
 	const document = textEditor.document;
 	const documentEol = toEolString(document.eol);
 	const activeLineRangesStart = activeLineRanges[0].start;
-	const activeContextText = document.getText(
+	const activeContextText = normalizeLineSeparators(document.getText(
 		new vscode.Range(
 			activeLineRangesStart,
 			activeLineRanges.at(-1)!.end
 		)
-	).replaceAll(documentEol, LF);
+	));
 
 	if (activeContextText.trim().length === 0) { return; }
 
