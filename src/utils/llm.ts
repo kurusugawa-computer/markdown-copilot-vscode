@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 import { deepMergeJsons } from './json';
-import { toolTextToTools } from './llmTools';
+import { executeToolFunction, ToolContext, ToolDefinitions, toolTextToTools } from './llmTools';
 import { logger } from './logging';
 
 function buildChatParams(
@@ -65,11 +65,12 @@ export async function executeChatCompletion(
 export async function executeChatCompletionWithTools(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams,
+	toolContext: ToolContext,
 	onDeltaContent: (deltaContent: string) => Promise<void>,
-	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>,
 	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
 ) {
 	while (true) {
+		const toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = [];
 		const completion = await createChatCompletion(chatMessages, override);
 		if (!(completion instanceof Stream)) {
 			const message = completion.choices[0].message;
@@ -79,22 +80,19 @@ export async function executeChatCompletionWithTools(
 				return;
 			}
 			chatMessages.push({ role: ChatRole.Assistant, tool_calls: message.tool_calls });
-			const toolResponses = await executeToolCalls(message.tool_calls, onToolCallFunction);
-			chatMessages.push(...toolResponses);
+			toolCalls.push(...message.tool_calls);
 		} else {
 			await onStream?.(completion);
 			let finishReason: "length" | "stop" | "tool_calls" | "content_filter" | "function_call" | null = null;
-			const resolvedToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = [];
 			for await (const chunk of completion) {
 				const choice = chunk.choices[0];
 				const delta = choice.delta;
-				const toolCalls = delta.tool_calls || [];
-				for (const toolCall of toolCalls) {
+				for (const toolCall of (delta.tool_calls || [])) {
 					const index = toolCall.index;
-					if (!resolvedToolCalls[index]) {
-						resolvedToolCalls[index] = toolCall as OpenAI.Chat.Completions.ChatCompletionMessageToolCall;
+					if (!toolCalls[index]) {
+						toolCalls[index] = toolCall as OpenAI.Chat.Completions.ChatCompletionMessageToolCall;
 					} else {
-						resolvedToolCalls[index].function!.arguments += toolCall.function?.arguments ?? '';
+						toolCalls[index].function!.arguments += toolCall.function?.arguments ?? '';
 					}
 				}
 				if (delta.content !== undefined && delta.content !== null) {
@@ -107,10 +105,16 @@ export async function executeChatCompletionWithTools(
 			if (finishReason !== "tool_calls") {
 				return;
 			}
-			chatMessages.push({ role: ChatRole.Assistant, tool_calls: resolvedToolCalls });
-			const toolResponses = await executeToolCalls(resolvedToolCalls, onToolCallFunction);
-			chatMessages.push(...toolResponses);
+			chatMessages.push({ role: ChatRole.Assistant, tool_calls: toolCalls });
 		}
+		const toolResponses = await executeToolCalls(
+			toolCalls,
+			toolCallFunction => executeToolFunction(
+				toolContext,
+				toolCallFunction,
+			),
+		);
+		chatMessages.push(...toolResponses);
 		// Loop to process the next round of chat completion with updated messages.
 	}
 }
@@ -119,18 +123,15 @@ async function executeToolCalls(
 	toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[],
 	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>
 ): Promise<OpenAI.ChatCompletionToolMessageParam[]> {
-	return Promise.all(toolCalls.map(toolCall => {
-		logger.info(`[tool] ${toolCall.function.name} invoke:`, toolCall.function.arguments);
-		return onToolCallFunction(toolCall.function)
-			.catch(reason => reason instanceof Error ? reason.message : String(reason))
-			.then(content => {
-				logger.debug(`[tool] ${toolCall.function.name} finish:`, content);
-				return {
-					role: ChatRole.Tool,
-					tool_call_id: toolCall.id,
-					content,
-				} as OpenAI.ChatCompletionToolMessageParam;
-			})
+	return Promise.all(toolCalls.map(async toolCall => {
+		logger.info(`[tool] invoke ${toolCall.function.name}:`, toolCall.function.arguments);
+		const content = await onToolCallFunction(toolCall.function);
+		logger.debug(`[tool] finish ${toolCall.function.name}:`, content);
+		return {
+			role: ChatRole.Tool,
+			tool_call_id: toolCall.id,
+			content,
+		} as OpenAI.ChatCompletionToolMessageParam;
 	}));
 }
 
@@ -183,6 +184,7 @@ function removeChatRole(text: string): string {
 export class ChatMessageBuilder {
 	private readonly uri: vscode.Uri;
 	private readonly supportsMultimodal: boolean;
+	private readonly toolDefinitions: ToolDefinitions;
 	private copilotOptions: OpenAI.ChatCompletionCreateParams;
 	private chatMessages: ChatMessage[];
 	private isInvalid: boolean;
@@ -190,6 +192,7 @@ export class ChatMessageBuilder {
 	constructor(documentUri: vscode.Uri, supportsMultimodal: boolean) {
 		this.uri = documentUri;
 		this.supportsMultimodal = supportsMultimodal;
+		this.toolDefinitions = new Map();
 		this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 		this.chatMessages = [];
 		this.isInvalid = false;
@@ -242,7 +245,10 @@ export class ChatMessageBuilder {
 
 	private async processToolsJson(toolTexts: string[]) {
 		const tools = (await Promise.all(
-			toolTexts.map(toolText => toolTextToTools(this.uri, toolText))
+			toolTexts.map(toolText => toolTextToTools(
+				{ documentUri: this.uri, toolDefinitions: this.toolDefinitions },
+				toolText
+			))
 		)).flat();
 
 		const mergedTools = this.copilotOptions.tools || [];
@@ -331,12 +337,16 @@ export class ChatMessageBuilder {
 		await this.addChatMessageLines(previousChatRole, chatMessagelineTexts);
 	}
 
-	toChatMessages(): ChatMessage[] {
-		return this.chatMessages;
-	}
-
-	getCopilotOptions(): OpenAI.ChatCompletionCreateParams {
-		return this.copilotOptions;
+	build(): {
+		chatMessages: ChatMessage[],
+		copilotOptions: OpenAI.ChatCompletionCreateParams,
+		toolContext: ToolContext,
+	} {
+		return {
+			chatMessages: this.chatMessages,
+			copilotOptions: this.copilotOptions,
+			toolContext: { toolDefinitions: this.toolDefinitions, documentUri: this.uri },
+		};
 	}
 
 	private async addChatMessageLines(flags: ChatRoleFlags, textLines: string[]) {

@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { LF, replaceLineSeparatorsWith, splitLines, toEolString } from ".";
 import { getQuoteIndent } from './indention';
 import { ChatMessage, executeChatCompletionWithTools } from './llm';
-import { executeToolFunction } from './llmTools';
+import { ToolContext } from './llmTools';
 import { CancelablePromise } from './promise';
 
 /**
@@ -99,7 +99,7 @@ export class EditCursor {
         return this.position;
     }
 
-    insertCompletion(chatMessages: ChatMessage[], lineSeparator: string, override?: OpenAI.ChatCompletionCreateParams) {
+    insertCompletion(chatMessages: ChatMessage[], lineSeparator: string, override?: OpenAI.ChatCompletionCreateParams, toolContext?: ToolContext) {
         const chunkTexts: string[] = [];
         const submitChunkText = async (chunkText: string): Promise<void> => {
             chunkTexts.push(chunkText);
@@ -122,8 +122,8 @@ export class EditCursor {
                 await executeChatCompletionWithTools(
                     chatMessages,
                     override || {} as OpenAI.ChatCompletionCreateParams,
+                    toolContext || { documentUri: this.document.uri, toolDefinitions: new Map() },
                     chunkText => submitChunkText(chunkText),
-                    toolFunction => executeToolFunction(this.document.uri, toolFunction),
                     async completion => {
                         abortController = completion.controller;
                         if (isCanceled) {

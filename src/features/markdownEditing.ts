@@ -68,10 +68,13 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 		}
 
 		await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
+
+		const { chatMessages, copilotOptions, toolContext } = chatMessageBuilder.build();
 		const completionPromise = cursor.insertCompletion(
-			chatMessageBuilder.toChatMessages(),
+			chatMessages,
 			userEndLineEol,
-			chatMessageBuilder.getCopilotOptions()
+			copilotOptions,
+			toolContext,
 		);
 		token.onCancellationRequested(() => completionPromise.cancel());
 		await completionPromise;
