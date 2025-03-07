@@ -36,7 +36,8 @@ suite('Signature Parser Test Suite', () => {
                     }
                 },
                 required: ['directoryUri', 'regexPattern']
-            }
+            },
+            strict: true
         });
     });
 
@@ -62,7 +63,8 @@ suite('Signature Parser Test Suite', () => {
                     }
                 },
                 required: ['directoryUri', 'regexPattern']
-            }
+            },
+            strict: true
         });
     });
 
@@ -91,7 +93,8 @@ suite('Signature Parser Test Suite', () => {
                     }
                 },
                 required: ['people']
-            }
+            },
+            strict: true
         });
     });
 
@@ -116,7 +119,8 @@ suite('Signature Parser Test Suite', () => {
                     }
                 },
                 required: ['people']
-            }
+            },
+            strict: true
         });
     });
 });

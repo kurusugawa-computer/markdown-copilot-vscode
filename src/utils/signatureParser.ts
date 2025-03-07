@@ -92,7 +92,7 @@ function parseJSDoc(code: string): TSDocInfo {
     return docInfo;
 }
 
-export function parseFunctionSignature(code: string): OpenAI.FunctionDefinition | null {
+export function parseFunctionSignature(code: string): OpenAI.FunctionDefinition {
     // Try to extract from function declaration first
     const funcRegex = /(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?function|\((\w+)\)\s*=>)\s*\(([\s\S]*?)\)(?:\s*:\s*([^{]*))?/;
     const match = funcRegex.exec(code);
@@ -108,8 +108,10 @@ export function parseFunctionSignature(code: string): OpenAI.FunctionDefinition 
             parameters: {
                 type: "object",
                 properties,
+                additionalProperties: false,
                 ...(required.length > 0 ? { required } : {})
-            }
+            },
+            strict: true,
         };
     }
 
@@ -146,12 +148,14 @@ export function parseFunctionSignature(code: string): OpenAI.FunctionDefinition 
             parameters: {
                 type: "object",
                 properties,
+                additionalProperties: false,
                 ...(required.length > 0 ? { required } : {})
-            }
+            },
+            strict: true,
         };
     }
 
-    return null;
+    throw new Error("Could not parse function signature");
 }
 
 // Helper functions

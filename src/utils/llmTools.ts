@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { resolveFragmentUri, splitLines } from ".";
 import { ChatMessageBuilder, executeChatCompletionWithTools } from './llm';
 import { logger } from './logging';
+import { parseFunctionSignature } from './signatureParser';
 
 // ```json copilot-tool-definition
 // https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools
@@ -29,29 +30,34 @@ class ToolContent {
 			throw new Error(`[copilot-tool-definition] Failed to read file: ${toolDocumentUri}. Error: ${errorMessage}`);
 		}
 
-		const match = toolDocumentText.match(/```json +copilot-tool-definition\n([^]*?)\n```/m);
+		const match = toolDocumentText.match(/```(ts|typescript) +copilot-tool-definition\n([^]*?)\n```/m);
 		if (!match) {
-			throw new Error(`[copilot-tool-definition] JSON block not found: ${toolDocumentUri}`);
+			throw new Error(`[copilot-tool-definition] TypeScript block not found: ${toolDocumentUri}`);
 		}
-		const toolDefinitionJson = match[1];
-
-		let chatCompletionTool: OpenAI.ChatCompletionTool | undefined;
-		try {
-			chatCompletionTool = JSON.parse(toolDefinitionJson) as OpenAI.ChatCompletionTool;
-		} catch {
-			throw new Error(`[copilot-tool-definition] JSON block is not valid JSON: ${toolDocumentUri}`);
-		}
-
-		if (chatCompletionTool.function === undefined) {
-			throw new Error(`[copilot-tool-definition] JSON block is missing required 'function' property: ${toolDocumentUri}`);
-		}
-
-		if (chatCompletionTool.function.name === undefined) {
-			chatCompletionTool.function.name = ToolContent.toSafeFunctionName(toolDocumentUri);
-		}
-
 		toolDocumentText = toolDocumentText.replace(match[0], "");
-		return new ToolContent(chatCompletionTool.function.name, chatCompletionTool, toolDocumentText);
+
+		let functionDefinition: OpenAI.FunctionDefinition | undefined;
+		try {
+			functionDefinition = parseFunctionSignature(match[2]);
+		} catch {
+			throw new Error(`[copilot-tool-definition] TypeScript block is not valid: ${toolDocumentUri}`);
+		}
+
+		if (functionDefinition.name === 'anonymous') {
+			functionDefinition.name = ToolContent.toSafeFunctionName(toolDocumentUri);
+		}
+
+		const paramsMatch = toolDocumentText.match(/```json +copilot-tool-parameters\r?\n([^]*?)\r?\n```/m);
+		if (paramsMatch) {
+			toolDocumentText = toolDocumentText.replace(paramsMatch[0], "");
+		}
+
+		const chatCompletionTool: OpenAI.ChatCompletionTool = {
+			type: "function",
+			function: functionDefinition,
+		};
+
+		return new ToolContent(functionDefinition.name, chatCompletionTool, toolDocumentText);
 	}
 
 	private static toSafeFunctionName(toolDocumentUri: vscode.Uri): string {
@@ -91,17 +97,11 @@ export class ToolDefinition {
 
 	async execute(parentToolContext: ToolContext, args: { [key: string]: string | number | boolean | null }): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
 		const toolContent = await this.toolContent;
-		const match = toolContent.toolDocumentText.match(/```json +copilot-tool-parameters\r?\n([^]*?)\r?\n```/gm);
-		if (!match) {
-			throw new Error(`[copilot-tool-parameters] not found in tool document: ${this.toolDocumentUri}`);
-		}
-
 		const documentUri = parentToolContext.documentUri;
 		args.current_document_uri = `${documentUri}`;
 		args.current_date_time = new Date().toISOString();
 
-		const toolParameterInjectionText = toolContent.toolDocumentText.replace(match[0], "```json copilot-tool-parameters\n" + JSON.stringify(args) + "\n```");
-
+		const toolParameterInjectionText = "```json copilot-tool-parameters\n" + JSON.stringify(args) + "\n```\n" + toolContent.toolDocumentText;
 		const chatMessageBuilder = new ChatMessageBuilder(this.toolDocumentUri, false);
 		await chatMessageBuilder.addLines(splitLines(toolParameterInjectionText));
 
@@ -162,7 +162,10 @@ export async function toolTextToTools(toolContext: ToolContext, toolText: string
 	return [toolContent.chatCompletionTool];
 }
 
-export async function executeToolFunction(toolContext: ToolContext, toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
+export async function executeToolFunction(
+	toolContext: ToolContext,
+	toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function
+): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
 	const args = JSON.parse(toolCallFunction.arguments || 'null');
 	switch (toolCallFunction.name) {
 		case "eval_js":
@@ -246,42 +249,42 @@ async function fsReadDir(directoryUri: vscode.Uri) {
  * @returns An array of objects with the path (relative to the `directoryUri`) of the files that match the regex pattern.
  */
 async function fsSearchTree(directoryUri: vscode.Uri, regexPattern: string, maxDepth: number = 10, ignoreDotfiles: boolean = true): Promise<{ path: string }[]> {
-  const regex = new RegExp(regexPattern);
-  const results: { path: string }[] = [];
-  
-  async function searchDirectory(dir: vscode.Uri, currentDepth: number): Promise<void> {
-    if (currentDepth > maxDepth) {
-      return;
-    }
-    
-    try {
-      const entries = await vscode.workspace.fs.readDirectory(dir);
-      
-      for (const [name, type] of entries) {
-        // Skip dotfiles if ignoring them
-        if (ignoreDotfiles && name.startsWith('.')) {
-          continue;
-        }
-        
-        const entryUri = vscode.Uri.joinPath(dir, name);
-        // Get path relative to the search root directory
-        const relativePath = entryUri.path.slice(directoryUri.path.length + (directoryUri.path.endsWith('/') ? 0 : 1));
-        
-        if (type === vscode.FileType.File) {
-          if (regex.test(relativePath)) {
-            results.push({ path: relativePath });
-          }
-        } else if (type === vscode.FileType.Directory) {
-          await searchDirectory(entryUri, currentDepth + 1);
-        }
-      }
-    } catch (error) {
-      logger.warn(`Error reading directory ${dir.path}:`, error);
-    }
-  }
-  
-  await searchDirectory(directoryUri, 0);
-  return results;
+	const regex = new RegExp(regexPattern);
+	const results: { path: string }[] = [];
+
+	async function searchDirectory(dir: vscode.Uri, currentDepth: number): Promise<void> {
+		if (currentDepth > maxDepth) {
+			return;
+		}
+
+		try {
+			const entries = await vscode.workspace.fs.readDirectory(dir);
+
+			for (const [name, type] of entries) {
+				// Skip dotfiles if ignoring them
+				if (ignoreDotfiles && name.startsWith('.')) {
+					continue;
+				}
+
+				const entryUri = vscode.Uri.joinPath(dir, name);
+				// Get path relative to the search root directory
+				const relativePath = entryUri.path.slice(directoryUri.path.length + (directoryUri.path.endsWith('/') ? 0 : 1));
+
+				if (type === vscode.FileType.File) {
+					if (regex.test(relativePath)) {
+						results.push({ path: relativePath });
+					}
+				} else if (type === vscode.FileType.Directory) {
+					await searchDirectory(entryUri, currentDepth + 1);
+				}
+			}
+		} catch (error) {
+			logger.warn(`Error reading directory ${dir.path}:`, error);
+		}
+	}
+
+	await searchDirectory(directoryUri, 0);
+	return results;
 }
 
 async function evaluateJavaScriptCode(code: string) {
