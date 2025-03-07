@@ -6,11 +6,11 @@ export class CancelError extends Error {
 	get isCanceled(): boolean { return true; }
 }
 
-enum PromiseState {
-	pending = 'pending',
-	canceled = 'canceled',
-	resolved = 'resolved',
-	rejected = 'rejected',
+const enum PromiseState {
+	Pending,
+	Canceled,
+	Resolved,
+	Rejected,
 }
 
 /**
@@ -33,16 +33,16 @@ enum PromiseState {
  *
  * @remarks
  * - The cancellation logic is only executed if the promise is pending.
- * - Once cancelled, the promise’s state changes to 'canceled' and subsequent resolve or reject actions are ignored
+ * - Once cancelled, the promise's state changes to 'canceled' and subsequent resolve or reject actions are ignored
  *   (unless rejectOnCancel is false, in which case the promise may resolve/reject normally).
  *
  * @see CancelError
  */
 export class CancelablePromise<T = unknown> extends Promise<T> {
 	private cancelHandlers: (() => void)[] = [];
-	private rejectOnCancel: boolean;
-	private state = PromiseState.pending;
-	private reject!: (reason?: unknown) => void;
+	private state = PromiseState.Pending;
+	private rejectFn!: (reason?: unknown) => void;
+	private readonly rejectOnCancel: boolean;
 
 	constructor(
 		executor: (
@@ -52,43 +52,65 @@ export class CancelablePromise<T = unknown> extends Promise<T> {
 		) => void,
 		rejectOnCancel: boolean = true
 	) {
-		let resolveRef!: (value: T | PromiseLike<T>) => void;
-		let rejectRef!: (reason?: unknown) => void;
-		super((resolve, reject) => { resolveRef = resolve; rejectRef = reject; });
-		this.rejectOnCancel = rejectOnCancel;
-		this.reject = rejectRef;
+		let resolveFn!: (value: T | PromiseLike<T>) => void;
+		let rejectFn!: (reason?: unknown) => void;
 
-		const complete = <U>(callback: (v: U) => void, value: U, finalState: PromiseState) => {
-			if (this.state !== PromiseState.canceled || !this.rejectOnCancel) {
-				callback(value);
-				this.state = finalState;
-			}
-		};
-		const onResolve = (value: T | PromiseLike<T>) => complete(resolveRef, value, PromiseState.resolved);
-		const onReject = (error: unknown) => complete(rejectRef, error, PromiseState.rejected);
-		const onCancel = (handler: () => void) => {
-			if (this.state === PromiseState.pending) {
+		super((resolve, reject) => {
+			resolveFn = resolve;
+			rejectFn = reject;
+		});
+
+		this.rejectOnCancel = rejectOnCancel;
+		this.rejectFn = rejectFn;
+
+		const onCancel = (handler: () => void): void => {
+			if (this.state === PromiseState.Pending) {
 				this.cancelHandlers.push(handler);
 			}
 		};
 
+		const wrappedResolve = (value: T | PromiseLike<T>): void => {
+			if (this.state === PromiseState.Pending || !this.rejectOnCancel) {
+				resolveFn(value);
+				this.state = PromiseState.Resolved;
+			}
+		};
+
+		const wrappedReject = (reason?: unknown): void => {
+			if (this.state === PromiseState.Pending || !this.rejectOnCancel) {
+				rejectFn(reason);
+				this.state = PromiseState.Rejected;
+			}
+		};
+
 		try {
-			executor(onResolve, onReject, onCancel);
+			executor(wrappedResolve, wrappedReject, onCancel);
 		} catch (error) {
-			onReject(error);
+			wrappedReject(error);
 		}
 	}
 
 	cancel(reason?: string): void {
-		if (this.state !== PromiseState.pending) { return; }
-		this.state = PromiseState.canceled;
-		this.cancelHandlers.forEach(handler => {
+		if (this.state !== PromiseState.Pending) {
+			return;
+		}
+
+		this.state = PromiseState.Canceled;
+
+		// Execute all cancellation handlers
+		for (const handler of this.cancelHandlers) {
 			try {
 				handler();
-			} catch { /* empty */ }
-		});
+			} catch {
+				// Ignore errors in cancellation handlers
+			}
+		}
+
+		// Clear handlers to prevent memory leaks
+		this.cancelHandlers = [];
+
 		if (this.rejectOnCancel) {
-			this.reject(new CancelError(reason));
+			this.rejectFn(new CancelError(reason));
 		}
 	}
 }
