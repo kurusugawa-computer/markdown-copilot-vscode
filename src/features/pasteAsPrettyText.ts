@@ -17,9 +17,7 @@ export async function pasteAsPrettyText() {
     const languageId = document.languageId;
 
     if (!userRange.isEmpty) {
-        await textEditor.edit(editBuilder => {
-            editBuilder.delete(userRange);
-        });
+        await textEditor.edit(editBuilder => editBuilder.delete(userRange));
     }
 
     return new EditCursor(textEditor, userStart).withProgress(

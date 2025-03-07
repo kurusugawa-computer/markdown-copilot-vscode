@@ -44,8 +44,9 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 			selectedUserMessage = selectedUserMessage.replace(userStartLineMatchesUser[0], "");
 		} else {
 			// Insert `**User:** ` at the start of the user selection
-			await cursor.edit(editBuilder => {
-				editBuilder.insert(
+			await cursor.edit(workspaceEdit => {
+				workspaceEdit.insert(
+					document.uri,
 					document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
 					"**User:** "
 				);

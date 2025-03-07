@@ -76,25 +76,27 @@ export class EditCursor {
         this.position = contentChanges.reduce(toUpdatedPosition, this.position);
     }
 
-    async edit(editCallback: (editBuilder: vscode.TextEditorEdit) => void) {
+    async edit(editCallback: (workspaceEdit: vscode.WorkspaceEdit) => void) {
         return EditCursor.editLock.runExclusive(async () => {
-            await this.textEditor.edit(editCallback);
+            const edit = new vscode.WorkspaceEdit();
+            editCallback(edit);
+            await vscode.workspace.applyEdit(edit);
         });
     }
 
     async insertText(text: string, lineSeparator: string): Promise<vscode.Position> {
-        await this.edit(editBuilder => {
-            editBuilder.insert(this.position, lineSeparator === LF ? text : replaceLineSeparatorsWith(text, lineSeparator));
+        await this.edit(workspaceEdit => {
+            workspaceEdit.insert(this.document.uri, this.position, lineSeparator === LF ? text : replaceLineSeparatorsWith(text, lineSeparator));
         });
         this.textEditor.setDecorations(this.cursorIndicator, [new vscode.Range(this.position, this.position)]);
         return this.position;
     }
 
     async replaceLineText(text: string, line: number): Promise<vscode.Position> {
-        await this.edit(editBuilder => {
+        await this.edit(workspaceEdit => {
             const range = this.document.lineAt(line).range;
             this.position = range.end;
-            editBuilder.replace(range, text);
+            workspaceEdit.replace(this.document.uri, range, text);
         });
         return this.position;
     }
