@@ -6,6 +6,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [0.9.0]
+
+### Added
+- Add tool calling feature
+  - Add Signature parser
+  - Add logging functionality
+- Add mocha and ts-node dependencies
+
+### Changed
+- Support editor switching for long-running tasks
+- Update dependent packages
+
 ## [0.8.0] - 2025-02-25
 
 ### Added
@@ -29,11 +41,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - Remove dependency on node:fs module
 
 ## [0.7.0] - 2025-01-17
-### Add
+### Added
 - Change support non-stream API calls
 
 ## [0.6.0] - 2024-12-16
-### Add
+### Added
 - Add `Continue in multimodal context` command
 
 ## [0.5.1] - 2024-12-12
@@ -41,14 +53,14 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Resolve image URI as relative to document
 
 ## [0.5.0] - 2024-12-11
-### Add
+### Added
 - Add `Paste as Markdown` command
 - Add support image attachments
 - Add setting items
   - `Markdown > Copilot > Instructions: Paste As Markdown Message`
 
 ## [0.4.0] - 2024-12-01
-### Add
+### Added
 - Add "Example: Using the `o1-preview` model" section to READMEs
 - Add `List File Path Diff` command
 - Add `Apply File Path Diff` command
@@ -56,12 +68,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - `gpt-4o-2024-11-20`
 
 ## [0.3.1] - 2024-06-03
-### Add
+### Added
 - New OpenAI models can be selected in the Settings
   - `gpt-4o-2024-08-06`
 
 ## [0.3.0] - 2024-07-26
-### Add
+### Added
 - New OpenAI models can be selected in the Settings
   - `gpt-4o-mini`
   - `gpt-4o-mini-2024-07-18`
@@ -83,7 +95,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - `gpt-3.5-turbo-16k-0613`
 
 ## [0.2.0] - 2024-06-04
-### Add
+### Added
 - Support for Azure OpenAI
 
 ### Changed
@@ -181,7 +193,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-[unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.5.1...v0.6.0
