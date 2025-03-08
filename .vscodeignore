@@ -1,5 +1,6 @@
 # Development tools, intermediate build results, and temporary files
 .vscode-test/**
+.vscode-test-web/**
 out/**
 tools/**
 **/*.map
