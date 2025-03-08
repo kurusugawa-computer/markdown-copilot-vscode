@@ -4,6 +4,7 @@ import { continueEditing, titleActiveContext } from './features/markdownEditing'
 import { nameAndSaveAs } from './features/nameAndSave';
 import { pasteAsPrettyText } from './features/pasteAsPrettyText';
 import { adjustStartToLineHead, partialEndsWith, toOverflowAdjustedRange } from './utils';
+import * as config from './utils/configuration';
 import { ContextDecorator, ContextOutline } from './utils/context';
 import { EditCursor } from './utils/editCursor';
 import { indentQuote, outdentQuote } from './utils/indention';
@@ -14,6 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(logging.initialize());
 
 	l10n.initialize(context.extensionUri);
+	config.initialize();
 
 	const outline = new ContextOutline();
 	const contextDecorator = new ContextDecorator(outline, vscode.window.activeTextEditor);
@@ -105,7 +107,10 @@ export function activate(context: vscode.ExtensionContext) {
 	));
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(
-		event => contextDecorator.onDidChangeConfiguration(event)
+		event => {
+			config.onDidChangeConfiguration(event);
+			contextDecorator.onDidChangeConfiguration(event);
+		}
 	));
 
 	context.subscriptions.push(vscode.languages.registerCodeActionsProvider('markdown', {
@@ -256,5 +261,3 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 	EditCursor.onDeactivate();
 }
-
-

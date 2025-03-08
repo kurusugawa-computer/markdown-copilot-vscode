@@ -5,21 +5,21 @@ import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
 import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
+import * as config from './configuration';
 import { deepMergeJsons } from './json';
 import { executeToolFunction, ToolContext, ToolDefinitions, toolTextToTools } from './llmTools';
 import { logger } from './logging';
 
 function buildChatParams(
-	configuration: vscode.WorkspaceConfiguration,
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams,
 	stream: boolean,
 ): OpenAI.ChatCompletionCreateParams {
 	// eslint-disable-next-line prefer-object-spread
 	return Object.assign({
-		model: configuration.get<string>("markdown.copilot.openAI.model")!,
+		model: config.get().optionsModel,
 		messages: chatMessages,
-		temperature: configuration.get<number>("markdown.copilot.options.temperature")!,
+		temperature: config.get().optionsTemperature,
 		stream,
 	}, override);
 }
@@ -28,16 +28,14 @@ async function createChatCompletion(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams
 ): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
-	const configuration = vscode.workspace.getConfiguration();
-	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
-	return openai.chat.completions.create(buildChatParams(configuration, chatMessages, override, true));
+	const openai: OpenAI | AzureOpenAI = await createOpenAIClient();
+	return openai.chat.completions.create(buildChatParams(chatMessages, override, true));
 }
 
 export async function executeTask(chatMessages: ChatMessage[], override: OpenAI.ChatCompletionCreateParams): Promise<string> {
-	const configuration = vscode.workspace.getConfiguration();
-	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(configuration);
+	const openai: OpenAI | AzureOpenAI = await createOpenAIClient();
 	const completion = await openai.chat.completions.create(
-		buildChatParams(configuration, chatMessages, override, false) as OpenAI.ChatCompletionCreateParamsNonStreaming
+		buildChatParams(chatMessages, override, false) as OpenAI.ChatCompletionCreateParamsNonStreaming
 	);
 	return completion.choices[0].message.content!;
 }
@@ -354,68 +352,66 @@ export class ChatMessageBuilder {
 	}
 }
 
-export async function createOpenAIClient(configuration: vscode.WorkspaceConfiguration) {
-	const backendType = configuration.get<"openai"|"azure"|"openrouter"|"ollama">("markdown.copilot.backendType") || "openai";
-	let apiKey = configuration.get<string>("markdown.copilot.openAI.apiKey");
-	
-	switch(backendType) {
-		case "ollama":
-			const ollamaBaseUrl = configuration.get<string>("markdown.copilot.openAI.ollamaBaseUrl");
-			if (!ollamaBaseUrl) {
-				throw new Error("Ollama base URL required in settings");
+async function createOpenAIClient() {
+	const configuration = config.get();
+	const backendProtocol = configuration.backendProtocol;
+	const backendBaseUrl = configuration.backendBaseUrl;
+	let apiKey = configuration.backendApiKey;
+
+	switch (backendProtocol) {
+		case "OpenAI":
+			if (!apiKey) {
+				apiKey = await vscode.window.showInputBox({
+					placeHolder: 'Enter your OpenAI API key',
+					validateInput: value => value?.length > 6 ? null : "Invalid API key"
+				});
+				if (!apiKey) {
+					throw new Error(l10n.t("config.backend.apiKey.error.openai"));
+				}
+				configuration.backendApiKey = apiKey;
 			}
+			return new OpenAI({ apiKey });
+
+		case "Azure":
+			try {
+				const url = new URL(backendBaseUrl!);
+				return new AzureOpenAI({
+					endpoint: url.origin,
+					deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
+					apiKey,
+					apiVersion: url.searchParams.get("api-version")!,
+				});
+			} catch {
+				throw new Error(l10n.t("config.backend.baseUrl.error.azure", backendBaseUrl || ""));
+			}
+
+		case "Ollama":
 			return new OpenAI({
-				apiKey: configuration.get<string>("markdown.copilot.openAI.ollamaApiKey") || 'ollama',
-				baseURL: ollamaBaseUrl
+				apiKey: apiKey || "ollama",
+				baseURL: backendBaseUrl || "http://localhost:11434/v1",
 			});
 
-		case "openrouter":
-			const openRouterApiKey = configuration.get<string>("markdown.copilot.openAI.openRouterApiKey");
-			const openRouterBaseUrl = configuration.get<string>("markdown.copilot.openAI.openRouterBaseUrl");
-			if (!openRouterApiKey || !openRouterBaseUrl) {
-				throw new Error("OpenRouter API key and base URL required in settings");
+		case "OpenRouter":
+			if (!apiKey) {
+				apiKey = await vscode.window.showInputBox({
+					placeHolder: 'Enter your OpenRouter API key',
+					validateInput: value => value?.length > 6 ? null : "Invalid API key"
+				});
+				if (!apiKey) {
+					throw new Error(l10n.t("config.backend.baseUrl.error.openRouter"));
+				}
+				configuration.backendApiKey = apiKey;
 			}
 			return new OpenAI({
-				apiKey: openRouterApiKey,
-				baseURL: openRouterBaseUrl,
+				apiKey,
+				baseURL: backendBaseUrl || "https://openrouter.ai/api/v1",
 				defaultHeaders: {
 					'HTTP-Referer': 'https://github.com/kurusugawa-computer/markdown-copilot-vscode',
 					'X-Title': 'Markdown Copilot'
 				}
 			});
 
-		case "azure":
-			const baseUrl = configuration.get<string>("markdown.copilot.openAI.azureBaseUrl");
-			if (!baseUrl) {
-				throw new Error("Azure base URL required in settings");
-			}
-			try {
-				const url = new URL(baseUrl);
-				return new AzureOpenAI({
-					endpoint: url.origin,
-					deployment: decodeURI(url.pathname.match("/openai/deployments/([^/]+)/completions")![1]),
-					apiKey: apiKey,
-					apiVersion: url.searchParams.get("api-version")!,
-				});
-			} catch {
-				throw new TypeError(l10n.t(
-					"config.openAI.azureBaseUrl.error",
-					baseUrl,
-					l10n.t("config.openAI.azureBaseUrl.description")
-				));
-			}
-
-		default: // openai
-			if (!apiKey) {
-				apiKey = await vscode.window.showInputBox({ 
-					placeHolder: 'Enter your OpenAI API key',
-					validateInput: value => value?.length > 6 ? null : "Invalid API key"
-				});
-				if (!apiKey) {
-					throw new Error(`401 Missing OpenAI API key`);
-				}
-				configuration.update("markdown.copilot.openAI.apiKey", apiKey);
-			}
-			return new OpenAI({ apiKey });
+		default:
+			throw new Error(`Invalid backend protocol: ${backendProtocol}`);
 	}
 }

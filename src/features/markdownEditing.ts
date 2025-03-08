@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { countChar, normalizeLineSeparators, toEolString, toOverflowAdjustedRange } from '../utils';
+import * as config from '../utils/configuration';
 import { ContextOutline } from '../utils/context';
 import { EditCursor } from '../utils/editCursor';
 import { countQuoteIndent, getQuoteIndent, outdentQuote } from '../utils/indention';
@@ -58,9 +59,8 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 
 		const chatMessageBuilder = new ChatMessageBuilder(document.uri, supportsMultimodal);
 
-		const configuration = vscode.workspace.getConfiguration();
-		const systemMessage = configuration.get<string>("markdown.copilot.instructions.systemMessage");
-		if (systemMessage !== undefined && systemMessage.trim().length !== 0) {
+		const systemMessage = config.get().instructionsSystemMessage;
+		if (systemMessage) {
 			await chatMessageBuilder.addChatMessage(ChatRoleFlags.System, systemMessage);
 		}
 
@@ -101,9 +101,8 @@ export async function titleActiveContext(outline: ContextOutline): Promise<void>
 
 	if (activeContextText.trim().length === 0) { return; }
 
-	const configuration = vscode.workspace.getConfiguration();
-	const titleMessage = configuration.get<string>("markdown.copilot.instructions.titleMessage");
-	if (titleMessage === undefined || titleMessage.trim().length === 0) { return; }
+	const titleMessage = config.get().instructionsTitleMessage;
+	if (!titleMessage) { return; }
 
 	const editCursor = new EditCursor(textEditor, activeLineRangesStart);
 	await editCursor.withProgress("Markdown Copilot: Title the context", async (cursor, token) => {

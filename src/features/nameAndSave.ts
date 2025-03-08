@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import path from 'path';
 import * as vscode from 'vscode';
 import { resolveRootUri } from '../utils';
+import * as config from '../utils/configuration';
 import { ChatMessage, ChatRole, executeTask } from '../utils/llm';
 
 export async function nameAndSaveAs() {
@@ -10,9 +11,8 @@ export async function nameAndSaveAs() {
 
 	const document = textEditor.document;
 
-	const configuration = vscode.workspace.getConfiguration();
-	const nameMessage = configuration.get<string>("markdown.copilot.instructions.nameMessage");
-	if (nameMessage === undefined || nameMessage.trim().length === 0) {
+	const nameMessage = config.get().instructionsNameMessage;
+	if (!nameMessage) {
 		return;
 	}
 
@@ -20,7 +20,7 @@ export async function nameAndSaveAs() {
 	const rootUri = resolveRootUri(document.uri);
 
 	const namePathFormat = document.uri.scheme === 'untitled'
-		? configuration.get<string>("markdown.copilot.instructions.namePathFormat")
+		? config.get().instructionsNamePathFormat
 		: path.relative(rootUri.path, vscode.Uri.joinPath(document.uri, '..', `\${filename}${path.extname(document.fileName)}`).path);
 
 	if (namePathFormat === undefined || namePathFormat.trim().length === 0) {

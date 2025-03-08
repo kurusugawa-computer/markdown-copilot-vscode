@@ -9,7 +9,7 @@ export default tseslint.config(
         files: ["**/*.{ts,tsx,cts,mts,js,cjs,mjs}"],
     },
     {
-        ignores: ["**/.vscode-test/**", "**/node_modules/**", "**/out", "**/dist", "**/*.d.ts"],
+        ignores: ["**/.vscode-test/**", "**/.vscode-test-web/**", "**/node_modules/**", "**/out", "**/dist", "**/*.d.ts"],
     },
     eslint.configs.recommended,
     ...tseslint.configs.recommended,

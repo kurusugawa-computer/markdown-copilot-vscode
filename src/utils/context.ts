@@ -1,6 +1,7 @@
 import { debounce } from "ts-debounce";
 import * as vscode from 'vscode';
 import { isSelectionOverflow, resolveFragmentUri, splitLines, toEolString } from '.';
+import * as config from "./configuration";
 import { countQuoteIndent, outdentQuote } from './indention';
 
 interface LineRange {
@@ -191,7 +192,7 @@ export class ContextDecorator {
 		this._outline = outline;
 		this._activeTextEditor = activeTextEditor;
 		this._previousLine = -1;
-		this._inactiveDecorationType = ContextDecorator.toInactiveDecorationType(vscode.workspace.getConfiguration());
+		this._inactiveDecorationType = ContextDecorator.newInactiveDecorationType();
 	}
 
 	private updateDecorations(textEditor: vscode.TextEditor) {
@@ -204,10 +205,9 @@ export class ContextDecorator {
 
 	private readonly debouncedUpdateDecorations = debounce((activeTextEditor) => this.updateDecorations(activeTextEditor), 100);
 
-	private static toInactiveDecorationType(configuration: vscode.WorkspaceConfiguration) {
-		const inactiveContextOpacity = configuration.get<number>("markdown.copilot.decorations.inactiveContextOpacity");
+	private static newInactiveDecorationType() {
 		return vscode.window.createTextEditorDecorationType({
-			opacity: `${Math.round((inactiveContextOpacity || 0.5) * 100)}%`,
+			opacity: `${Math.round(config.get().decorationsInactiveContextOpacity * 100)}%`,
 		});
 	}
 
@@ -215,7 +215,7 @@ export class ContextDecorator {
 
 	onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
 		if (!event.affectsConfiguration("markdown.copilot.decorations.inactiveContextOpacity")) { return; }
-		this._inactiveDecorationType = ContextDecorator.toInactiveDecorationType(vscode.workspace.getConfiguration());
+		this._inactiveDecorationType = ContextDecorator.newInactiveDecorationType();
 	}
 
 	onDidChangeActiveTextEditor(textEditor?: vscode.TextEditor) {

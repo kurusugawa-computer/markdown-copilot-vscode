@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { toOverflowAdjustedRange } from '../utils';
+import * as config from '../utils/configuration';
 import { EditCursor } from '../utils/editCursor';
 import { ChatRole } from '../utils/llm';
 
@@ -23,15 +24,14 @@ export async function pasteAsPrettyText() {
     return new EditCursor(textEditor, userStart).withProgress(
         "Markdown Copilot: Pasting clipboard content as Pretty text",
         async (editCursor, token) => {
-            const configuration = vscode.workspace.getConfiguration();
-            const pasteMessage = configuration.get<string>("markdown.copilot.instructions.pasteAsPrettyTextMessage");
-            if (pasteMessage === undefined || pasteMessage.trim().length === 0) {
+            const pasteAsPrettyTextMessage = config.get().instructionsPasteAsPrettyTextMessage;
+            if (!pasteAsPrettyTextMessage) {
                 return;
             }
 
             const completionPromise = editCursor.insertCompletion([
                 // eslint-disable-next-line no-template-curly-in-string
-                { role: ChatRole.System, content: pasteMessage.replaceAll("${languageId}", languageId) },
+                { role: ChatRole.System, content: pasteAsPrettyTextMessage.replaceAll("${languageId}", languageId) },
                 { role: ChatRole.User, content: clipboardContent },
             ], editCursor.getLineEolWithIndent());
             token.onCancellationRequested(() => completionPromise.cancel());

@@ -104,6 +104,22 @@
     "configuration": {
       "title": "Markdown Copilot",
       "properties": {
+        "markdown.copilot.backend.apiKey": {
+          "type": "string", 
+          "default": "",
+          "markdownDescription": "%config.backend.apiKey.description%"
+        },
+        "markdown.copilot.backend.baseUrl": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "%config.backend.baseUrl.description%"
+        },
+        "markdown.copilot.backend.protocol": {
+          "type": "string",
+          "enum": ["OpenAI", "Azure", "Ollama", "OpenRouter"],
+          "default": "OpenAI",
+          "markdownDescription": "%config.backend.protocol.description%"
+        },
         "markdown.copilot.decorations.inactiveContextOpacity": {
           "type": "number",
           "default": 0.5,
@@ -140,46 +156,36 @@
           "editPresentation": "multilineText",
           "markdownDescription": "%config.instructions.titleMessage.description%"
         },
-        "markdown.copilot.backendType": {
+        "markdown.copilot.options.model": {
           "type": "string",
-          "enum": ["openai", "azure", "openrouter", "ollama"],
-          "default": "openai",
-          "markdownDescription": "Select which AI backend to use"
-        },
-        "markdown.copilot.openAI.apiKey": {
-          "type": "string", 
-          "default": "",
-          "markdownDescription": "%config.openAI.apiKey.description%"
-        },
-        "markdown.copilot.openAI.azureBaseUrl": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "%config.openAI.azureBaseUrl.description%"
-        },
-        "markdown.copilot.openAI.openRouterBaseUrl": {
-          "type": "string",
-          "default": "https://openrouter.ai/api/v1",
-          "markdownDescription": "OpenRouter API base URL"
-        },
-        "markdown.copilot.openAI.openRouterApiKey": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "OpenRouter API key (https://openrouter.ai/keys)"
-        },
-        "markdown.copilot.openAI.ollamaBaseUrl": {
-          "type": "string",
-          "default": "http://localhost:11434/v1",
-          "markdownDescription": "Ollama API base URL (default: http://localhost:11434/v1)"
-        },
-        "markdown.copilot.openAI.ollamaApiKey": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "Optional API key for Ollama (typically not needed for local instances)"
-        },
-        "markdown.copilot.openAI.model": {
-          "type": "string", 
+          "enum": [
+            "gpt-4o",
+            "gpt-4o-2024-11-20",
+            "gpt-4o-2024-08-06",
+            "gpt-4o-2024-05-13",
+            "chatgpt-4o-latest",
+            "gpt-4o-mini",
+            "gpt-4o-mini-2024-07-18",
+            "gpt-4-turbo",
+            "gpt-4-turbo-2024-04-09",
+            "gpt-4-turbo-preview",
+            "gpt-4-0125-preview",
+            "gpt-4-1106-preview",
+            "gpt-4",
+            "gpt-4-0613",
+            "gpt-3.5-turbo",
+            "gpt-3.5-turbo-0125",
+            "gpt-3.5-turbo-1106",
+            "gpt-3.5-turbo-0613",
+            "→ Model Free Text"
+          ],
           "default": "gpt-4o",
-          "markdownDescription": "Model name to use (varies by backend)"
+          "markdownDescription": "%config.options.model.description%"
+        },
+        "markdown.copilot.options.modelFreeText": {
+          "type": "string", 
+          "default": "",
+          "markdownDescription": "%config.options.modelFreeText.description%"
         },
         "markdown.copilot.options.temperature": {
           "type": "number",
