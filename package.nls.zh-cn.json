@@ -38,7 +38,7 @@
     "config.backend.baseUrl.description": "可以指定后端 base URL, 或如果使用默认设置可将其留空。\n- **Azure** (格式): `https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/completions?api-version={api-version}`, 更多详情请参阅 [Azure OpenAI服务REST API参考](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/reference#completions)\n- **Ollama** (默认): `http://localhost:11434/v1`, 详情请参阅 [OpenAI兼容性](https://ollama.com/blog/openai-compatibility)\n- **OpenRouter** (默认): `https://openrouter.ai/api/v1`, 详情请参阅 [OpenRouter 快速入门指南](https://openrouter.ai/docs/quickstart)",
     "config.backend.baseUrl.error.azure": "解析后端 base URL 时发生错误: `{0}`\n可指定 Azure Base URL, URL 格式为 `https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/completions?api-version={api-version}`。更多详情请参阅 [Azure OpenAI服务REST API参考](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/reference#completions)。",
     "config.backend.protocol.description": "可以指定后端协议。支持 `OpenAI`、`Azure`、`Ollama`、`OpenRouter`。",
-    "config.options.model.description": "可指定[Models](https://platform.openai.com/docs/models)中列出的模型, 如果选择 `→ Model Free Text`, 将使用下一个配置。",
-    "config.options.modelFreeText.description": "可以自由文本形式指定模型名称, 不同后端可能有不同的命名规则。",
+    "config.options.model.description": "可指定[Models](https://platform.openai.com/docs/models)中列出的模型, 如果选择 `→ Model Name Text`, 将使用下一个配置。",
+    "config.options.modelNameText.description": "可以文本形式指定模型名称, 不同后端可能有不同的命名规则。",
     "config.options.temperature.description": "可指定一个介于`0.0`和`1.0`之间的值。`0.8`这样的较高值会使输出更加随机, 而`0.2`这样的较低值会使输出更加集中和确定。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)有助于确定该值。"
 }
