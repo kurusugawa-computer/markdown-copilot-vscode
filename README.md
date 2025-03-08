@@ -1,8 +1,8 @@
 [![en](https://img.shields.io/badge/English-blue.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.md) [![ja](https://img.shields.io/badge/日本語-red.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.ja.md) [![zh-cn](https://img.shields.io/badge/简体中文-green.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.zh-cn.md)
 # Markdown Copilot for Visual Studio Code
 
-[![Version](https://img.shields.io/vscode-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
-[![Downloads](https://img.shields.io/vscode-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kurusugawa-computer/markdown-copilot-vscode/release.yml?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/actions)
 [![GitHub stars](https://img.shields.io/github/stars/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square&label=github%20stars)](https://github.com/kurusugawa-computer/markdown-copilot-vscode)
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
@@ -24,8 +24,8 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 ***Note***: An OpenAI, Azure OpenAI, OpenRouter, or local Ollama instance is required to use this extension. For configuration:
 - [OpenAI API Key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)
 - [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart)
-- [OpenRouter API Keys](https://openrouter.ai/keys) (supports Claude, Gemini, Llama 3, and more)
-- Local Ollama instance (default: http://localhost:11434/v1)
+- [OpenRouter API Keys](https://openrouter.ai/keys): supports OpenAI, Claude, Gemini, Llama 3, and more.
+- [Local Ollama instance](https://ollama.com/): supports Llama 3.3, DeepSeek-R1, Phi-4, Mistral, Gemma 2, and other models, locally. 
 
 ## 🌟 Key Features
 
@@ -95,16 +95,11 @@ Introduce yourself.
 ```json copilot-options
 {"max_tokens":50,"model":"gpt-3.5-turbo"}
 ```
-
-**Ollama example:**
-```json copilot-options
-{"model":"llama2", "baseURL":"http://localhost:11434/v1"}
-```
 ~~~
 
 **Example:** Using the `o1-preview` model
 
-The `o1-preview` and `o1-mini` models do not support system messages, so we will use `**System(Override):**` to clear the system messages.
+The `o1-preview` model do not support system messages, so we will use `**System(Override):**` to clear the system messages.
 
 ~~~markdown
 **System(Override):**
@@ -114,6 +109,15 @@ Introduce yourself.
 
 ```json copilot-options
 {"model":"o1-preview","temperature":1}
+```
+~~~
+
+**Example:** Using local Ollama with `llama2` model
+~~~markdown
+Introduce yourself.
+
+```json copilot-options
+{"model":"llama2","baseURL":"http://localhost:11434/v1"}
 ```
 ~~~
 
@@ -209,7 +213,7 @@ Combine Markdown Copilot with these extensions for an even more powerful Markdow
   Supercharge your Snippets in VS Code — Manage your code snippets without quitting your editor.
 - **[Markdown Preview Mermaid Support]**:
   Adds Mermaid diagram and flowchart support to VS Code's built-in markdown preview.
-- **[Markdown Preview Enhanced]ed)**:
+- **[Markdown Preview Enhanced]**:
   Markdown Preview Enhanced is a SUPER POWERFUL markdown extension for Visual Studio Code. The goal of this project is to bring you a wonderful markdown writing experience.
 - **[Markdown+Math]**:
   Enhance your Markdown with LaTeX Math ... including macros and more.

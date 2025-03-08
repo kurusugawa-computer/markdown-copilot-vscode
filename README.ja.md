@@ -1,8 +1,8 @@
 [![en](https://img.shields.io/badge/English-blue.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.md) [![ja](https://img.shields.io/badge/日本語-red.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.ja.md) [![zh-cn](https://img.shields.io/badge/简体中文-green.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.zh-cn.md)
 # Markdown Copilot for Visual Studio Code
 
-[![Version](https://img.shields.io/vscode-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
-[![Downloads](https://img.shields.io/vscode-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kurusugawa-computer/markdown-copilot-vscode/release.yml?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/actions)
 [![GitHub stars](https://img.shields.io/github/stars/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square&label=github%20stars)](https://github.com/kurusugawa-computer/markdown-copilot-vscode)
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
@@ -21,7 +21,11 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 6. 会話にタイトルをつける
 7. クリップボードの内容をファイルタイプに基づいて賢く貼り付ける
 
-***注***: この拡張機能を使用するには、OpenAIまたはAzure OpenAIのAPIキーが必要です。詳細については、[OpenAI公式FAQ](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)または[Azure OpenAIクイックスタート](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/quickstart)を参照してください。
+***注意***: この拡張機能を使用するには、OpenAI, Azure OpenAI, OpenRouterまたはローカルのOllamaインスタンスが必要です。設定方法：
+- [OpenAI APIキー](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)
+- [Azure OpenAI クイックスタート](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart)
+- [OpenRouter APIキー](https://openrouter.ai/keys): OpenAI, Claude, Gemini, Llama 3などをサポートしています。
+- [ローカルOllamaインスタンス](https://ollama.com/): Llama 3.3, DeepSeek-R1, Phi-4, Mistral, Gemma 2などのモデルをローカルでサポートしています。
 
 ## 🌟 主な機能
 
@@ -95,7 +99,7 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 
 **例:** `o1-preview` モデルを利用する
 
-`o1-preview` と `o1-mini` モデルはシステムメッセージをサポートしていないので `**System(Override):**` を使ってシステムメッセージを空にします。
+`o1-preview` モデルはシステムメッセージをサポートしていないので `**System(Override):**` を使ってシステムメッセージを空にします。
 
 ~~~markdown
 **System(Override):**
@@ -107,6 +111,17 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 {"model":"o1-preview","temperature":1}
 ```
 ~~~
+
+**例:** ローカル Ollama の `llama2` モデルを使用する
+~~~markdown
+Introduce yourself.
+
+```json copilot-options
+{"model":"llama2","baseURL":"http://localhost:11434/v1"}
+```
+~~~
+
+
 
 他の設定オプションについては、[OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create)を参照してください。
 

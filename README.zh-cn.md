@@ -1,8 +1,8 @@
 [![en](https://img.shields.io/badge/English-blue.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.md) [![ja](https://img.shields.io/badge/日本語-red.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.ja.md) [![zh-cn](https://img.shields.io/badge/简体中文-green.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/blob/main/README.zh-cn.md)
 # Markdown Copilot for Visual Studio Code
 
-[![Version](https://img.shields.io/vscode-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
-[![Downloads](https://img.shields.io/vscode-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/kurusugawa-computer.markdown-copilot.svg?style=flat-square&label=vscode%20marketplace)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/kurusugawa-computer.markdown-copilot.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=kurusugawa-computer.markdown-copilot)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kurusugawa-computer/markdown-copilot-vscode/release.yml?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/actions)
 [![GitHub stars](https://img.shields.io/github/stars/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square&label=github%20stars)](https://github.com/kurusugawa-computer/markdown-copilot-vscode)
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
@@ -21,7 +21,11 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 6. 标题对话
 7. 根据文件类型智能粘贴剪贴板内容
 
-***注意***: 使用此扩展需要 OpenAI 或 Azure OpenAI API 密钥。更多信息，请参考 [OpenAI 官方常见问题](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)或 [Azure OpenAI Quickstart](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart)。
+***注意***：使用此扩展需要配置 OpenAI, Azure OpenAI, OpenRouter 或本地 Ollama 实例。配置方法如下：  
+- [OpenAI API Key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)  
+- [Azure OpenAI 快速入门](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart)  
+- [OpenRouter API Keys](https://openrouter.ai/keys)：支持 OpenAI, Claude, Gemini, Llama 3 等  
+- [本地 Ollama 实例](https://ollama.com/)：可在本地使用 Llama 3.3, DeepSeek-R1, Phi-4, Mistral, Gemma 2 等模型
 
 ## 🌟 主要特性
 
@@ -96,7 +100,7 @@ Markdown Copilot根据上下文回答选文。
 
 **示例：** 使用 `o1-preview` 模型
 
-`o1-preview` 和 `o1-mini` 模型不支持系统消息，因此我们将使用 `**System(Override):**` 清除系统消息。
+`o1-preview` 模型不支持系统消息，因此我们将使用 `**System(Override):**` 清除系统消息。
 
 ~~~markdown
 **System(Override):**
@@ -108,6 +112,17 @@ Markdown Copilot根据上下文回答选文。
 {"model":"o1-preview","temperature":1}
 ```
 ~~~
+
+**示例：** 使用本地 Ollama 的 `llama2` 模型
+
+~~~markdown
+自我介绍。
+
+```json copilot-options
+{"model":"llama2","baseURL":"http://localhost:11434/v1"}
+```
+~~~
+
 
 
 更多配置选项，请参考 [OpenAI API: 创建聊天完成](https://platform.openai.com/docs/api-reference/chat/create)。
@@ -149,7 +164,7 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
 
-### ### 📋⤵ 粘贴为美化文本
+### 📋⤵ 粘贴为美化文本
 
 Markdown Copilot 允许您以智能方式将剪贴板内容粘贴到文档中，并根据文件类型进行适配。  
 此功能确保粘贴的内容能够无缝集成到您的编辑文件中，避免不必要的格式问题。
@@ -214,7 +229,7 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
   为 VS 代码中的代码片段增效 - 无需退出编辑器即可管理代码片段。
 - **[Markdown Preview Mermaid Support]**:
   为 VS Code 内置的 markdown 预览添加 Mermaid 图表和流程图支持。
-- **[Markdown Preview Enhanced]ed)**:
+- **[Markdown Preview Enhanced]**:
   Markdown Preview Enhanced 是一款为 Visual Studio Code 编辑器编写的超级强大的 Markdown 插件。 这款插件意在让你拥有飘逸的 Markdown 写作体验。
 - **[Markdown+Math]**:
   使用 LaTeX 数学增强您的 Markdown ... 包括宏等。
