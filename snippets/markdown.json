@@ -1,0 +1,91 @@
+{
+	"copilot-options": {
+		"prefix": "```json copilot-options",
+		"body": [
+			"```json copilot-options",
+			"{\"model\":\"${1:gpt-4o}\",\"response_format\":{\"type\":\"${2:text}\",\"temperature\":${3:0.01},\"max_tokens\":${4:4096}}}",
+			"```",
+			"$0"
+		],
+		"description": "Insert overriding API options block"
+	},
+	"copilot-options (o3-mini)": {
+		"prefix": "```json copilot-options",
+		"body": [
+			"```json copilot-options",
+			"{\"model\":\"${1:o3-mini}\",\"temperature\":1}",
+			"```",
+			"$0"
+		],
+		"description": "Insert overriding API options block"
+	},
+	"copilot-tools": {
+		"prefix": "```json copilot-tools",
+		"body": [
+			"```json copilot-tools",
+			"[\"${1:${2:@file}\",\"${3:@web}\",\"${4:@eval}}\"]",
+			"```",
+			"$0"
+		],
+		"description": "Insert tools for models block"
+	},
+	"copilot-import": {
+		"prefix": "@import",
+		"body": [
+			"@import \"${1:$RELATIVE_FILEPATH}\"",
+			"$0"
+		],
+		"description": "Import file to current context"
+	},
+	"copilot-copilot": {
+		"prefix": "**Copilot:** ",
+		"body": [
+			"**Copilot:** $0"
+		],
+		"description": "Insert copilot message"
+	},
+	"copilot-system": {
+		"prefix": "**System:** ",
+		"body": [
+			"**System:** $0"
+		],
+		"description": "Insert system message"
+	},
+	"copilot-system-override": {
+		"prefix": "**System(Override):** ",
+		"body": [
+			"**System(Override):** $0"
+		],
+		"description": "Insert overriding system message"
+	},
+	"copilot-user": {
+		"prefix": "**User:** ",
+		"body": [
+			"**User:** $0"
+		],
+		"description": "Insert user message"
+	},
+	"copilot-context": {
+		"prefix": "# Copilot Context: ",
+		"body": [
+			"# Copilot Context: $0"
+		],
+		"description": "Insert context guard header"
+	},
+	"copilot-tool-markdown-file": {
+		"prefix": "```ts copilot-tool-definition",
+		"body": [
+			"```ts copilot-tool-definition",
+			"/**",
+			" * ${1:Greets the user for a given count.}",
+			" * @param {string} ${2:name The user name.}",
+			" * ${3:@param {number\\} count The number of times to greet.}",
+			" */",
+			"```",
+			"",
+			"${4:Greet `name` for `count` times.}"
+		],
+		"description": "Tool Definition",
+		"isFileTemplate": true
+	}
+}
