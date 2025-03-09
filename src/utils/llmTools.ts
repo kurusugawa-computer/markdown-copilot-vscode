@@ -65,7 +65,7 @@ class ToolContent {
 		// and replace spaces with hyphens
 		const safeFunctionName = toolDocumentUri.path.replace(/[/\\]/g, "_").replace(/[ .]/g, "-");
 		if (!/^[a-zA-Z0-9_-]+$/.test(safeFunctionName)) {
-			throw new Error(`[copilot-tool-definition] Invalid function name derived from path: ${toolDocumentUri.path}. Only alphanumeric characters, underscores, and hyphens are allowed.`);
+			throw new Error(`[copilot-tool-definition] Invalid function name derived from path: ${toolDocumentUri.path}. Only \`[a-zA-Z0-9_-]\` characters are allowed.`);
 		}
 		return safeFunctionName;
 	}
@@ -121,12 +121,13 @@ export class ToolDefinition {
 		);
 
 		const joinedText = chunkTexts.join("");
+		logger.trace("[execute] response:", joinedText);
 
 		try {
 			const resultJson: { final_answer: string } = JSON.parse(joinedText);
 			return resultJson.final_answer;
 		} catch {
-			throw new Error(`[copilot-tools] ${this.toolDocumentUri} returns unexpected response. Expected JSON object with 'final_answer' property.`);
+			throw new Error(`[execute] ${this.toolDocumentUri} returns unexpected response. Expected JSON object with 'final_answer' property.`);
 		}
 	}
 }
@@ -142,7 +143,7 @@ export async function toolTextToTools(toolContext: ToolContext, toolText: string
 		const builtinToolsKey = toolText.slice(1);
 		const builtinTools = BUILTIN_TOOLS[builtinToolsKey];
 		if (!builtinTools) {
-			throw new Error(`[copilot-tools] Undefined builtin tool: ${builtinToolsKey}. Available builtin tools: ${Object.keys(BUILTIN_TOOLS).join(", ")}`);
+			throw new Error(`[tool-text-to-tools] Undefined builtin tool: ${builtinToolsKey}. Available builtin tools: ${Object.keys(BUILTIN_TOOLS).join(", ")}`);
 		}
 		return builtinTools;
 	}
@@ -154,7 +155,7 @@ export async function toolTextToTools(toolContext: ToolContext, toolText: string
 
 	const storedToolDefinition = toolDefinitions.get(toolContent.toolName);
 	if (storedToolDefinition !== undefined) {
-		logger.info(`[copilot-tools] ${toolContent.toolName} already defined: ${storedToolDefinition.toolDocumentUri}. Overwriting with ${toolDocumentUri}`);
+		logger.info(`[tool-text-to-tools] ${toolContent.toolName} already defined: ${storedToolDefinition.toolDocumentUri}. Overwriting with ${toolDocumentUri}`);
 	}
 
 	toolDefinitions.set(toolContent.toolName, toolDefinition);
@@ -188,7 +189,7 @@ export async function executeToolFunction(
 		default: {
 			const toolDefinition = toolContext.toolDefinitions.get(toolCallFunction.name);
 			if (!toolDefinition) {
-				throw new Error(`[copilot-tools] Undefined tool function: ${toolCallFunction.name}`);
+				throw new Error(`[execute] Undefined tool function: ${toolCallFunction.name}`);
 			}
 			return toolDefinition.execute(toolContext, args);
 		}
@@ -279,7 +280,7 @@ async function fsSearchTree(directoryUri: vscode.Uri, regexPattern: string, maxD
 				}
 			}
 		} catch (error) {
-			logger.warn(`Error reading directory ${dir.path}:`, error);
+			logger.warn(`[@file] Error reading directory: ${dir.path}`, error);
 		}
 	}
 
