@@ -6,6 +6,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+- Add multiple backend support
+  - Add backend selection and name-text model input for AI providers
+  - Add Ollama backend support with configuration examples
+  - Add OpenRouter backend support with model selection
+
+### Changed
+- Migrate snippets to VSCode features
+- Update READMEs for multiple backends
+- Update localization files
+- Refactor error messages
+
 ## [0.9.0]
 
 ### Added
