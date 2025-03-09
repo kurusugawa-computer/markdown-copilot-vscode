@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
