@@ -15,11 +15,12 @@ function buildChatParams(
 	override: OpenAI.ChatCompletionCreateParams,
 	stream: boolean,
 ): OpenAI.ChatCompletionCreateParams {
+	const configuration = config.get();
 	// eslint-disable-next-line prefer-object-spread
 	return Object.assign({
-		model: config.get().optionsModel,
+		model: configuration.optionsModelResolved,
 		messages: chatMessages,
-		temperature: config.get().optionsTemperature,
+		temperature: configuration.optionsTemperature,
 		stream,
 	}, override);
 }

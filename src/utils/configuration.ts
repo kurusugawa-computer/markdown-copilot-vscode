@@ -79,11 +79,19 @@ export class Configuration {
     }
 
     get backendBaseUrl(): string | undefined {
-        return this.workspaceConfiguration.get<string>("markdown.copilot.backend.baseUrl") || undefined;
+        const baseUrl = this.workspaceConfiguration.get<string>("markdown.copilot.backend.baseUrl");
+        if (baseUrl === undefined || baseUrl.trim().length === 0) {
+            return undefined;
+        }
+        return baseUrl;
     }
 
     get backendApiKey(): string | undefined {
-        return this.workspaceConfiguration.get<string>("markdown.copilot.backend.apiKey") || undefined;
+        const apiKey = this.workspaceConfiguration.get<string>("markdown.copilot.backend.apiKey");
+        if (apiKey === undefined || apiKey.trim().length === 0) {
+            return undefined;
+        }
+        return apiKey;
     }
 
     set backendApiKey(value: string) {
@@ -135,10 +143,27 @@ export class Configuration {
     }
 
     get optionsModel(): string | undefined {
-        return this.workspaceConfiguration.get<string>("markdown.copilot.options.model");
+        const model = this.workspaceConfiguration.get<string>("markdown.copilot.options.model");
+        if (model === undefined || model.trim().length === 0) {
+            return undefined;
+        }
+        return model;
     }
 
-    get optionsTemperature(): number | undefined {
-        return this.workspaceConfiguration.get<number>("markdown.copilot.options.temperature");
+    get optionsModelNameText(): string | undefined {
+        const modelNameText = this.workspaceConfiguration.get<string>("markdown.copilot.options.modelNameText");
+        if (modelNameText === undefined || modelNameText.trim().length === 0) {
+            return undefined;
+        }
+        return modelNameText;
+    }
+
+    get optionsModelResolved(): string | undefined {
+        const model = this.optionsModel;
+        return model === "→ Model Name Text" ? this.optionsModelNameText : model;
+    }
+
+    get optionsTemperature(): number {
+        return this.workspaceConfiguration.get<number>("markdown.copilot.options.temperature")!;
     }
 }
