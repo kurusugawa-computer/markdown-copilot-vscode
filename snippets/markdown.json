@@ -19,6 +19,16 @@
 		],
 		"description": "Insert overriding API options block"
 	},
+	"copilot-tool-parameters": {
+		"prefix": "```json copilot-tool-parameters",
+		"body": [
+			"```json copilot-tool-parameters",
+			"{${1:\"name\":\"anonymous\",\"count\":1}}",
+			"```",
+			"$0"
+		],
+		"description": "Insert overriding API parameters block"
+	},
 	"copilot-tools": {
 		"prefix": "```json copilot-tools",
 		"body": [
