@@ -34,5 +34,5 @@
     "config.backend.protocol.description": "バックエンドプロトコルを指定できます。`OpenAI`、`Azure`、`Ollama`、`OpenRouter`がサポートされています。",
     "config.options.model.description": "[Models](https://platform.openai.com/docs/models)にリストされているモデルを指定できます。`→ Model Name Text`を選択した場合、次の設定が使用されます。",
     "config.options.modelNameText.description": "バックエンドによって異なるモデル名をテキストとして指定できます。",
-    "config.options.temperature.description": "`0.0`から`1.0`の間で値を指定できます。`0.8`のような高い値を設定すると出力はよりランダムになり、`0.2`のような低い値を設定すると出力はより集中して決定的になります。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)が値の決定に役立ちます。"
+    "config.options.temperature.description": "`0.0`から`1.0`までの値、または空を指定できます。空の場合、この設定は省略されます。`0.8`のような高い値を設定すると出力はよりランダムになり、`0.2`のような低い値を設定すると出力はより集中して決定的になります。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)が値の決定に役立ちます。"
 }

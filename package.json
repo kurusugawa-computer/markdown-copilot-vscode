@@ -161,11 +161,13 @@
           "type": "string",
           "enum": [
             "gpt-4o",
+            "gpt-4o-search-preview",
             "gpt-4o-2024-11-20",
             "gpt-4o-2024-08-06",
             "gpt-4o-2024-05-13",
             "chatgpt-4o-latest",
             "gpt-4o-mini",
+            "gpt-4o-mini-search-preview",
             "gpt-4o-mini-2024-07-18",
             "gpt-4-turbo",
             "gpt-4-turbo-2024-04-09",
@@ -189,7 +191,7 @@
           "markdownDescription": "%config.options.modelNameText.description%"
         },
         "markdown.copilot.options.temperature": {
-          "type": "number",
+          "type": ["number", "null"],
           "default": 0.1,
           "minimum": 0,
           "maximum": 1,
@@ -247,7 +249,7 @@
     "@vscode/test-electron": "^2.4.1",
     "@vscode/test-web": "^0.0.67",
     "@vscode/vsce": "^3.2.2",
-    "eslint": "^9.21.0",
+    "eslint": "^9.22.0",
     "mocha": "^11.1.0",
     "path-browserify": "^1.0.1",
     "ts-loader": "^9.5.2",
@@ -264,7 +266,7 @@
     "async-mutex": "^0.5.0",
     "chardet": "^2.1.0",
     "mime-types": "^2.1.35",
-    "openai": "^4.86.2",
+    "openai": "^4.87.3",
     "ts-debounce": "^4.0.0"
   }
 }

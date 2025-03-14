@@ -26,13 +26,13 @@
     "config.instructions.pasteAsPrettyTextMessage.description": "自定义Copilot的行为, 允许更改其从剪贴板粘贴指令。",
     "config.instructions.systemMessage.description": "自定义Copilot的行为, 允许更改其粘贴剪贴板指令。",
     "config.instructions.titleMessage.description": "自定义Copilot的行为, 允许更改其对活动上下文的标题指令。",
-    "config.backend.apiKey.description": "您的 API 密钥用于访问 AI 服务。可从 [OpenAI Platform](https://platform.openai.com/api-keys)、[Azure OpenAI](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart) 或其他受支持的服务中获取。",
+    "config.backend.apiKey.description": "您的 API 密钥用于访问 AI 服务。可从 [OpenAI Platform](https://platform.openai.com/api-keys), [Azure OpenAI](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/quickstart) 或其他受支持的服务中获取。",
     "config.backend.apiKey.error.openai": "提供了无效的 API 密钥。可从 [OpenAI Platform](https://platform.openai.com/api-keys) 获取。",
     "config.backend.apiKey.error.openRouter": "提供了无效的 API 密钥。可从 [Provisioning API Keys](https://openrouter.ai/docs/features/provisioning-api-keys) 获取。",
     "config.backend.baseUrl.description": "可以指定后端 base URL, 或如果使用默认设置可将其留空。\n- **Azure** (格式): `https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/completions?api-version={api-version}`, 更多详情请参阅 [Azure OpenAI服务REST API参考](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/reference#completions)\n- **Ollama** (默认): `http://localhost:11434/v1`, 详情请参阅 [OpenAI兼容性](https://ollama.com/blog/openai-compatibility)\n- **OpenRouter** (默认): `https://openrouter.ai/api/v1`, 详情请参阅 [OpenRouter 快速入门指南](https://openrouter.ai/docs/quickstart)",
     "config.backend.baseUrl.error.azure": "解析后端 base URL 时发生错误: `{0}`\n可指定 Azure Base URL, URL 格式为 `https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/completions?api-version={api-version}`。更多详情请参阅 [Azure OpenAI服务REST API参考](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/reference#completions)。",
-    "config.backend.protocol.description": "可以指定后端协议。支持 `OpenAI`、`Azure`、`Ollama`、`OpenRouter`。",
+    "config.backend.protocol.description": "可以指定后端协议。支持 `OpenAI`, `Azure`, `Ollama`, `OpenRouter`。",
     "config.options.model.description": "可指定[Models](https://platform.openai.com/docs/models)中列出的模型, 如果选择 `→ Model Name Text`, 将使用下一个配置。",
     "config.options.modelNameText.description": "可以文本形式指定模型名称, 不同后端可能有不同的命名规则。",
-    "config.options.temperature.description": "可指定一个介于`0.0`和`1.0`之间的值。`0.8`这样的较高值会使输出更加随机, 而`0.2`这样的较低值会使输出更加集中和确定。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)有助于确定该值。"
+    "config.options.temperature.description": "可指定一个介于`0.0`和`1.0`之间的值或留空。如果留空, 则会省略该设置。`0.8`这样的较高值会使输出更加随机, 而`0.2`这样的较低值会使输出更加集中和确定。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter) 可帮助确定该值。"
 }

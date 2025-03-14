@@ -17,12 +17,18 @@ function buildChatParams(
 ): OpenAI.ChatCompletionCreateParams {
 	const configuration = config.get();
 	// eslint-disable-next-line prefer-object-spread
-	return Object.assign({
+	const chatParams = Object.assign({
 		model: configuration.optionsModelResolved,
 		messages: chatMessages,
 		temperature: configuration.optionsTemperature,
 		stream,
 	}, override);
+
+	if (chatParams.temperature === null) {
+		chatParams.temperature = undefined as unknown as number;
+	}
+
+	return chatParams;
 }
 
 async function createChatCompletion(

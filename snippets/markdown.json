@@ -9,6 +9,16 @@
 		],
 		"description": "Insert overriding API options block"
 	},
+	"copilot-options (search)": {
+		"prefix": "```json copilot-options",
+		"body": [
+			"```json copilot-options",
+			"{\"model\":\"gpt-4o-search-preview\",\"web_search_options\":{\"search_context_size\":\"low\"},\"temperature\":null}",
+			"```",
+			"$0"
+		],
+		"description": "Insert overriding API options block"
+	},
 	"copilot-options (o3-mini)": {
 		"prefix": "```json copilot-options",
 		"body": [
