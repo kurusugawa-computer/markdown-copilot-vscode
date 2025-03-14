@@ -6,11 +6,21 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### ToDo
+- [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
+- [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
+
+## [0.10.0] - 2025-03-14
+
 ### Added
 - Add multiple backend support
   - Add backend selection and name-text model input for AI providers
   - Add Ollama backend support with configuration examples
   - Add OpenRouter backend support with model selection
+- Add support for Search (Preview) models
+- New OpenAI models can be selected in the Settings
+  - `gpt-4o-search-preview`
+  - `gpt-4o-mini-search-preview`
 
 ### Changed
 - Migrate snippets to VSCode features
@@ -205,7 +215,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.6.0...v0.7.0
