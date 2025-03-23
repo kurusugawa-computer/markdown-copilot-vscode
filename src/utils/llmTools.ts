@@ -1,14 +1,11 @@
 import chardet from 'chardet';
 import { OpenAI } from 'openai';
+import path from 'path';
 import * as vscode from 'vscode';
-import { resolveFragmentUri, splitLines } from ".";
+import { resolveFragmentUri, resolveRootUri, splitLines } from ".";
 import { ChatMessageBuilder, executeChatCompletionWithTools } from './llm';
 import { logger } from './logging';
 import { parseFunctionSignature } from './signatureParser';
-
-// ```json copilot-tool-definition
-// https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools
-// ```json copilot-tool-parameters
 
 class ToolContent {
 	toolName: string;
@@ -66,6 +63,11 @@ class ToolContent {
 		const safeFunctionName = toolDocumentUri.path.replace(/[/\\]/g, "_").replace(/[ .]/g, "-");
 		if (!/^[a-zA-Z0-9_-]+$/.test(safeFunctionName)) {
 			throw new Error(`[copilot-tool-definition] Invalid function name derived from path: ${toolDocumentUri.path}. Only \`[a-zA-Z0-9_-]\` characters are allowed.`);
+		}
+
+		// return last 64 characters to avoid too long function names
+		if (safeFunctionName.length > 64) {
+			return safeFunctionName.slice(-64);
 		}
 		return safeFunctionName;
 	}
@@ -127,7 +129,7 @@ export class ToolDefinition {
 			const resultJson: { final_answer: string } = JSON.parse(joinedText);
 			return resultJson.final_answer;
 		} catch {
-			throw new Error(`[execute] ${this.toolDocumentUri} returns unexpected response. Expected JSON object with 'final_answer' property.`);
+			throw new Error(`[execute] ${this.toolDocumentUri} returns unexpected response. Expected JSON object with 'final_answer' property.\n\`\`\`\n${joinedText}\n\`\`\``);
 		}
 	}
 }
@@ -177,13 +179,19 @@ export async function executeToolFunction(
 			return fsReadFile(resolveFragmentUri(toolContext.documentUri, args.path));
 		case "fs_read_dir":
 			return fsReadDir(resolveFragmentUri(toolContext.documentUri, args.path));
-		case "fs_search_tree": {
-			const results = await fsSearchTree(
-				resolveFragmentUri(toolContext.documentUri, args.path),
-				args.pattern,
-				args.max_depth || 10,
-				args.ignore_dotfiles,
+		case "fs_find_files": {
+			const isUntitledDocument = toolContext.documentUri.scheme === 'untitled';
+			const results = await fsFindFiles(
+				isUntitledDocument
+					? resolveRootUri()
+					: vscode.Uri.joinPath(toolContext.documentUri, ".."),
+				args.include,
+				args.exclude,
+				args.max_results,
 			);
+			if (isUntitledDocument) {
+				return JSON.stringify(results.map(result => path.join('/', result)));
+			}
 			return JSON.stringify(results);
 		}
 		default: {
@@ -241,51 +249,10 @@ async function fsReadDir(directoryUri: vscode.Uri) {
 	return JSON.stringify(Object.fromEntries(entriesWithStats));
 }
 
-/**
- * Recursively searches files in a directory tree that match a regex pattern.
- * @param directoryUri The URI of the directory to search in. This directory will be recursively searched.
- * @param regexPattern The regular expression pattern to match file paths (relative to the `directoryUri`) against. Uses JS regex syntax.
- * @param maxDepth Maximum directory depth to search (default: 10).
- * @param ignoreDotfiles Whether to ignore files and directories that start with a dot (default: true).
- * @returns An array of objects with the path (relative to the `directoryUri`) of the files that match the regex pattern.
- */
-async function fsSearchTree(directoryUri: vscode.Uri, regexPattern: string, maxDepth: number = 10, ignoreDotfiles: boolean = true): Promise<{ path: string }[]> {
-	const regex = new RegExp(regexPattern);
-	const results: { path: string }[] = [];
-
-	async function searchDirectory(dir: vscode.Uri, currentDepth: number): Promise<void> {
-		if (currentDepth > maxDepth) {
-			return;
-		}
-
-		try {
-			const entries = await vscode.workspace.fs.readDirectory(dir);
-
-			for (const [name, type] of entries) {
-				// Skip dotfiles if ignoring them
-				if (ignoreDotfiles && name.startsWith('.')) {
-					continue;
-				}
-
-				const entryUri = vscode.Uri.joinPath(dir, name);
-				// Get path relative to the search root directory
-				const relativePath = entryUri.path.slice(directoryUri.path.length + (directoryUri.path.endsWith('/') ? 0 : 1));
-
-				if (type === vscode.FileType.File) {
-					if (regex.test(relativePath)) {
-						results.push({ path: relativePath });
-					}
-				} else if (type === vscode.FileType.Directory) {
-					await searchDirectory(entryUri, currentDepth + 1);
-				}
-			}
-		} catch (error) {
-			logger.warn(`[@file] Error reading directory: ${dir.path}`, error);
-		}
-	}
-
-	await searchDirectory(directoryUri, 0);
-	return results;
+async function fsFindFiles(directoryUri: vscode.Uri, include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number) {
+	const directoryPath = directoryUri.fsPath;
+	const result = await vscode.workspace.findFiles(include, exclude, maxResults);
+	return result.map(uri => path.relative(directoryPath, uri.fsPath));
 }
 
 async function evaluateJavaScriptCode(code: string) {
@@ -359,31 +326,25 @@ const BUILTIN_TOOLS: { [key: string]: OpenAI.ChatCompletionTool[] } = {
 		{
 			type: "function",
 			function: {
-				name: "fs_search_tree",
-				description: "Finds files that match a regex pattern in a directory tree",
+				name: "fs_find_files",
+				description: "Search for files in the workspace by matching against a glob pattern. The result does not contain directories. Glob patterns support wildcards (e.g., `*`, `?`, `**`) for matching file paths. For example, `**/*.{ts,js}` matches all .ts and .js files recursively.",
 				parameters: {
 					type: "object",
 					properties: {
-						path: {
+						include: {
 							type: "string",
-							description: "Root directory to search from"
+							description: "Specifies a glob pattern for files to include. Use a relative pattern to restrict the search to a particular folder."
 						},
-						pattern: {
+						exclude: {
 							type: "string",
-							description: "Regex pattern to match against relative file paths"
+							description: "Specifies a glob pattern for files or folders to exclude. When undefined, defaults are used. When null, no excludes apply."
 						},
-						max_depth: {
+						max_results: {
 							type: "integer",
-							description: "Maximum directory depth to search",
-							default: 10
-						},
-						ignore_dotfiles: {
-							type: "boolean",
-							description: "Whether to ignore files and directories starting with a dot",
-							default: true
+							description: "Optional maximum number of files to return."
 						}
 					},
-					required: ["path", "pattern"],
+					required: ["include"],
 					additionalProperties: false
 				}
 			}
@@ -419,7 +380,7 @@ const BUILTIN_TOOLS: { [key: string]: OpenAI.ChatCompletionTool[] } = {
 			}
 		}
 	],
-	"eval": [
+	"eval!": [
 		{
 			type: "function",
 			function: {

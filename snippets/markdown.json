@@ -43,7 +43,7 @@
 		"prefix": "```json copilot-tools",
 		"body": [
 			"```json copilot-tools",
-			"[\"${1:${2:@file}\",\"${3:@web}\",\"${4:@eval}}\"]",
+			"[\"${1:${2:@file}\",\"${3:@web}\",\"${4:@eval!}}\"]",
 			"```",
 			"$0"
 		],
