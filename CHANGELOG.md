@@ -10,9 +10,13 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
+### Added
 - New OpenAI models can be selected in the Settings
   - `gpt-4.5-preview`
   - `gpt-4.5-preview-2025-02-27`
+
+### Changed
+- Update dependent packages
 
 ## [0.10.0] - 2025-03-14
 
