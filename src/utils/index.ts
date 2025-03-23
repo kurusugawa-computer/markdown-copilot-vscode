@@ -119,9 +119,10 @@ export function resolveFragmentUri(documentUri: vscode.Uri, fragmentUriText: str
  */
 export function resolveRootUri(uri = vscode.window.activeTextEditor?.document.uri): vscode.Uri {
 	const folders = vscode.workspace.workspaceFolders;
+	const fallbackUri = folders?.[0]?.uri ?? vscode.Uri.file('/');
 	if (uri) {
 		const folder = vscode.workspace.getWorkspaceFolder(uri);
-		return folder?.uri ?? (folders?.[0]?.uri ?? vscode.Uri.file('/'));
+		return folder?.uri ?? fallbackUri;
 	}
-	return folders?.[0]?.uri ?? vscode.Uri.file('/');
+	return fallbackUri;
 }
