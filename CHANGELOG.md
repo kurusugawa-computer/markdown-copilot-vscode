@@ -10,6 +10,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
+## [0.10.1] - 2025-03-24
+
 ### Added
 - New OpenAI models can be selected in the Settings
   - `gpt-4.5-preview`
@@ -223,7 +225,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.7.0...v0.8.0
