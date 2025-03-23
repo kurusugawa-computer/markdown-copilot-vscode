@@ -130,7 +130,7 @@ async function executeToolCalls(
 ): Promise<OpenAI.ChatCompletionToolMessageParam[]> {
 	return Promise.all(toolCalls.map(async toolCall => {
 		logger.info(`[tool] invoke ${toolCall.function.name}:`, toolCall.function.arguments);
-		const content = await onToolCallFunction(toolCall.function);
+		const content = await onToolCallFunction(toolCall.function).catch(e => e instanceof Error ? e.message : String(e));
 		logger.debug(`[tool] finish ${toolCall.function.name}:`, content);
 		return {
 			role: ChatRole.Tool,
