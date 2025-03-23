@@ -155,7 +155,7 @@ export class EditCursor {
                 await task(this, token);
             });
         } catch (e) {
-            const errorMessage = (e instanceof Error ? e.message.replace(/^\d+ /, "") : String(e));
+            const errorMessage = e instanceof Error ? e.message.replace(/^\d+ /, "") : String(e);
             vscode.window.showErrorMessage(errorMessage);
             await this.insertText(errorMessage, this.getLineEolWithIndent());
         } finally {
