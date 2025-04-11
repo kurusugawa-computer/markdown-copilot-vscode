@@ -6,8 +6,15 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+- Update dependent packages
+
 ### ToDo
 - [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
+  - Azure URIs:
+    - Completion: `https://YOUR_RESOURCE_NAME.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT_NAME/chat/completions?api-version=2024-06-01`
+    - Responses:  `https://YOUR-RESOURCE-NAME.openai.azure.com/openai/responses?api-version=2025-03-01-preview`
+
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
 ## [0.10.1] - 2025-03-24

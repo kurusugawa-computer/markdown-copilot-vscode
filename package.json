@@ -106,7 +106,7 @@
       "title": "Markdown Copilot",
       "properties": {
         "markdown.copilot.backend.apiKey": {
-          "type": "string", 
+          "type": "string",
           "default": "",
           "markdownDescription": "%config.backend.apiKey.description%"
         },
@@ -188,7 +188,7 @@
           "markdownDescription": "%config.options.model.description%"
         },
         "markdown.copilot.options.modelNameText": {
-          "type": "string", 
+          "type": "string",
           "default": "",
           "markdownDescription": "%config.options.modelNameText.description%"
         },
@@ -216,7 +216,10 @@
       }
     ],
     "snippets": [
-      { "language": "markdown", "path": "./snippets/markdown.json" }
+      {
+        "language": "markdown",
+        "path": "./snippets/markdown.json"
+      }
     ]
   },
   "capabilities": {
@@ -242,33 +245,37 @@
     "vsce:publish-pre-release": "vsce publish --pre-release"
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.91.0",
-    "@typescript-eslint/eslint-plugin": "^8.27.0",
-    "@typescript-eslint/parser": "^8.27.0",
+    "@typescript-eslint/eslint-plugin": "^8.29.1",
+    "@typescript-eslint/parser": "^8.29.1",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "@vscode/test-web": "^0.0.67",
-    "@vscode/vsce": "^3.3.0",
-    "eslint": "^9.23.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-web": "^0.0.68",
+    "@vscode/vsce": "^3.3.2",
+    "eslint": "^9.24.0",
     "mocha": "^11.1.0",
+    "npm-check-updates": "^17.1.18",
     "path-browserify": "^1.0.1",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2",
-    "typescript-eslint": "^8.27.0",
-    "webpack": "^5.98.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.29.1",
+    "webpack": "^5.99.5",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
     "@types/mime-types": "^2.1.4",
     "@vscode/l10n": "^0.0.18",
     "async-mutex": "^0.5.0",
     "chardet": "^2.1.0",
-    "mime-types": "^2.1.35",
-    "openai": "^4.89.0",
-    "ts-debounce": "^4.0.0"
+    "mime-types": "^3.0.1",
+    "openai": "^4.93.0",
+    "ts-debounce": "^4.0.0",
+    "zod": "^3.24.2"
   }
 }
