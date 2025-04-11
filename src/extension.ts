@@ -3,7 +3,7 @@ import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
 import { continueEditing, titleActiveContext } from './features/markdownEditing';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { pasteAsPrettyText } from './features/pasteAsPrettyText';
-import { adjustStartToLineHead, partialEndsWith, toOverflowAdjustedRange } from './utils';
+import { adjustStartToLineHead, toOverflowAdjustedRange } from './utils';
 import * as config from './utils/configuration';
 import { ContextDecorator, ContextOutline } from './utils/context';
 import { EditCursor } from './utils/editCursor';
