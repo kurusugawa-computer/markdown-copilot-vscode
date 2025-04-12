@@ -6,6 +6,7 @@ import { resolveFragmentUri, resolveRootUri, splitLines } from ".";
 import { ChatMessageBuilder, executeChatCompletionWithTools } from './llm';
 import { logger } from './logging';
 import { parseFunctionSignature } from './signatureParser';
+import { invokeCopilotTool, isCopilotToolAvailable, listCopilotTools } from './vscodeLlmTools';
 
 class ToolContent {
 	toolName: string;
@@ -96,42 +97,6 @@ export class ToolDefinition {
 	static async create(toolDocumentUri: vscode.Uri): Promise<ToolDefinition> {
 		return new ToolDefinition(toolDocumentUri, await ToolContent.create(toolDocumentUri));
 	}
-
-	async execute(parentToolContext: ToolContext, args: { [key: string]: string | number | boolean | null }): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
-		const toolContent = await this.toolContent;
-		const documentUri = parentToolContext.documentUri;
-		args.current_document_uri = `${documentUri}`;
-		args.current_date_time = new Date().toISOString();
-
-		const toolParameterInjectionText = "```json copilot-tool-parameters\n" + JSON.stringify(args) + "\n```\n" + toolContent.toolDocumentText;
-		const chatMessageBuilder = new ChatMessageBuilder(this.toolDocumentUri, false);
-		await chatMessageBuilder.addLines(splitLines(toolParameterInjectionText));
-
-		const { chatMessages, copilotOptions, toolContext } = chatMessageBuilder.build();
-
-		copilotOptions.stream = false;
-		if (copilotOptions.response_format === undefined) {
-			copilotOptions.response_format = DEFAULT_RESPONSE_FORMAT;
-		}
-
-		const chunkTexts: string[] = []
-		await executeChatCompletionWithTools(
-			chatMessages,
-			copilotOptions,
-			toolContext,
-			async chunkText => { chunkTexts.push(chunkText) },
-		);
-
-		const joinedText = chunkTexts.join("");
-		logger.trace("[execute] response:", joinedText);
-
-		try {
-			const resultJson: { final_answer: string } = JSON.parse(joinedText);
-			return resultJson.final_answer;
-		} catch {
-			throw new Error(`[execute] ${this.toolDocumentUri} returns unexpected response. Expected JSON object with 'final_answer' property.\n\`\`\`\n${joinedText}\n\`\`\``);
-		}
-	}
 }
 
 export type ToolDefinitions = Map<string, ToolDefinition>;
@@ -141,6 +106,10 @@ export interface ToolContext {
 }
 
 export async function toolTextToTools(toolContext: ToolContext, toolText: string): Promise<OpenAI.ChatCompletionTool[]> {
+	if (toolText === "@copilot") {
+		return listCopilotTools();
+	}
+
 	if (toolText.startsWith('@')) {
 		const builtinToolsKey = toolText.slice(1);
 		const builtinTools = BUILTIN_TOOLS[builtinToolsKey];
@@ -165,7 +134,7 @@ export async function toolTextToTools(toolContext: ToolContext, toolText: string
 	return [toolContent.chatCompletionTool];
 }
 
-export async function executeToolFunction(
+export async function invokeToolFunction(
 	toolContext: ToolContext,
 	toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function
 ): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
@@ -173,10 +142,10 @@ export async function executeToolFunction(
 	switch (toolCallFunction.name) {
 		case "eval_js":
 			return evaluateJavaScriptCode(args.code);
-		case "web_fetch":
-			return webFetch(args.url, args.method, args.request_body);
+		case "web_request":
+			return webRequest(args.url, args.method, args.request_body);
 		case "fs_read_file":
-			return fsReadFile(resolveFragmentUri(toolContext.documentUri, args.path));
+			return fsReadFile(resolveFragmentUri(toolContext.documentUri, args.path), args.startLineNumberBaseZero, args.endLineNumberBaseZero);
 		case "fs_read_dir":
 			return fsReadDir(resolveFragmentUri(toolContext.documentUri, args.path));
 		case "fs_find_files": {
@@ -195,28 +164,39 @@ export async function executeToolFunction(
 			return JSON.stringify(results);
 		}
 		default: {
-			const toolDefinition = toolContext.toolDefinitions.get(toolCallFunction.name);
-			if (!toolDefinition) {
-				throw new Error(`[execute] Undefined tool function: ${toolCallFunction.name}`);
+			if (isCopilotToolAvailable(toolCallFunction)) {
+				return invokeCopilotTool(toolCallFunction, args);
 			}
-			return toolDefinition.execute(toolContext, args);
+			const toolDefinition = toolContext.toolDefinitions.get(toolCallFunction.name);
+			if (toolDefinition) {
+				return executeToolDefinition(toolContext, toolDefinition, args);
+			}
 		}
 	}
+	throw new Error(`[invoke] Undefined tool function: ${toolCallFunction.name}`);
 }
 
-async function webFetch(url: string, method: string, body: string | null) {
+async function webRequest(url: string, method: string, body: string | null) {
 	const response = await fetch(url, { method, body });
 	const buffer = await response.arrayBuffer();
-	const encoding = chardet.detect(new Uint8Array(buffer));
-	if (encoding === null) { return ''; }
+	const encoding = chardet.detect(new Uint8Array(buffer)) || 'utf-8';
 	return new TextDecoder(encoding).decode(buffer);
 }
 
-async function fsReadFile(fileUri: vscode.Uri) {
+async function fsReadFile(fileUri: vscode.Uri, startLineNumberBaseZero: number = 0, endLineNumberBaseZero: number = -1): Promise<string> {
 	const buffer = await vscode.workspace.fs.readFile(fileUri);
-	const encoding = chardet.detect(buffer);
-	if (encoding === null) { return ''; }
-	return new TextDecoder(encoding).decode(buffer);
+	const encoding = chardet.detect(buffer) || 'utf-8';
+
+	const fileContent = new TextDecoder(encoding).decode(buffer);
+	if (startLineNumberBaseZero === 0 && endLineNumberBaseZero === -1) {
+		return fileContent;
+	}
+
+	const lines = splitLines(fileContent);
+	if (endLineNumberBaseZero < 0) {
+		return lines.slice(startLineNumberBaseZero).join('\n');
+	}
+	return lines.slice(startLineNumberBaseZero, endLineNumberBaseZero + 1).join('\n');
 }
 
 enum FileTypeString {
@@ -260,6 +240,47 @@ async function evaluateJavaScriptCode(code: string) {
 	return String(eval(code));
 }
 
+async function executeToolDefinition(
+	parentToolContext: ToolContext,
+	toolDefinition: ToolDefinition,
+	args: { [key: string]: string | number | boolean | null },
+): Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
+	const toolContent = await toolDefinition.toolContent;
+	const documentUri = parentToolContext.documentUri;
+	args.current_document_uri = `${documentUri}`;
+	args.current_date_time = new Date().toISOString();
+
+	const toolParameterInjectionText = "```json copilot-tool-parameters\n" + JSON.stringify(args) + "\n```\n" + toolContent.toolDocumentText;
+	const chatMessageBuilder = new ChatMessageBuilder(toolDefinition.toolDocumentUri, false);
+	await chatMessageBuilder.addLines(splitLines(toolParameterInjectionText));
+
+	const { chatMessages, copilotOptions, toolContext } = chatMessageBuilder.build();
+
+	copilotOptions.stream = false;
+	if (copilotOptions.response_format === undefined) {
+		copilotOptions.response_format = DEFAULT_RESPONSE_FORMAT;
+	}
+
+	const chunkTexts: string[] = []
+	await executeChatCompletionWithTools(
+		chatMessages,
+		copilotOptions,
+		toolContext,
+		async chunkText => { chunkTexts.push(chunkText) },
+	);
+
+	const joinedText = chunkTexts.join("");
+	logger.debug("[execute] response:", joinedText);
+
+	try {
+		const resultJson: { final_answer: string } = JSON.parse(joinedText);
+		return resultJson.final_answer;
+	} catch {
+		throw new Error(`[execute] ${toolDefinition.toolDocumentUri} returns unexpected response. Expected JSON object with 'final_answer' property.\n\`\`\`\n${joinedText}\n\`\`\``);
+	}
+}
+
+
 const DEFAULT_RESPONSE_FORMAT: OpenAI.ResponseFormatJSONSchema = {
 	type: "json_schema",
 	json_schema: {
@@ -298,9 +319,17 @@ const BUILTIN_TOOLS: { [key: string]: OpenAI.ChatCompletionTool[] } = {
 						path: {
 							type: "string",
 							description: "Path to the file, relative to the current document or absolute"
-						}
+						},
+						startLineNumberBaseZero: {
+							type: "number",
+							description: "The line number to start reading from, 0-based."
+						},
+						endLineNumberBaseZero: {
+							type: "number",
+							description: "The inclusive line number to end reading at, 0-based."
+						},
 					},
-					required: ["path"],
+					required: ["path", "startLineNumberBaseZero"],
 					additionalProperties: false
 				}
 			}
@@ -354,14 +383,14 @@ const BUILTIN_TOOLS: { [key: string]: OpenAI.ChatCompletionTool[] } = {
 		{
 			type: "function",
 			function: {
-				name: "web_fetch",
-				description: "Fetches content from a web URL and returns it as text",
+				name: "web_request",
+				description: "Performs an HTTP request to a specified URL. This tool is useful for making API calls or fetching data from web.",
 				parameters: {
 					type: "object",
 					properties: {
 						url: {
 							type: "string",
-							description: "URL to fetch content from"
+							description: "URL to request"
 						},
 						method: {
 							type: "string",

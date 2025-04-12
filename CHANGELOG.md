@@ -6,6 +6,21 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+- Add `@copilot` preset tools
+  - `copilot_semanticSearch`
+  - `copilot_searchWorkspaceSymbols`
+  - `copilot_listCodeUsages`
+  - `copilot_findFiles`
+  - `copilot_findTextInFiles`
+  - `copilot_readFile`
+  - `copilot_listDirectory`
+  - `copilot_readProjectStructure`
+  - `copilot_getChangedFiles`
+  - `copilot_getTerminalSelection`
+  - `copilot_getTerminalLastCommand`
+  - `copilot_fetchWebPage`
+
 ### Changed
 - Update dependent packages
 

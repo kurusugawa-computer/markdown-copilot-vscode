@@ -7,7 +7,7 @@ import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 import * as config from './configuration';
 import { deepMergeJsons } from './json';
-import { executeToolFunction, ToolContext, ToolDefinitions, toolTextToTools } from './llmTools';
+import { invokeToolFunction, ToolContext, ToolDefinitions, toolTextToTools } from './llmTools';
 import { logger } from './logging';
 
 interface OpenAIClientCreateParams {
@@ -128,7 +128,7 @@ export async function executeChatCompletionWithTools(
 		}
 		const toolResponses = await executeToolCalls(
 			toolCalls,
-			toolCallFunction => executeToolFunction(
+			toolCallFunction => invokeToolFunction(
 				toolContext,
 				toolCallFunction,
 			),
@@ -140,7 +140,7 @@ export async function executeChatCompletionWithTools(
 
 async function executeToolCalls(
 	toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[],
-	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>
+	onToolCallFunction: (toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function) => Promise<string | OpenAI.Chat.Completions.ChatCompletionContentPart[]>,
 ): Promise<OpenAI.ChatCompletionToolMessageParam[]> {
 	return Promise.all(toolCalls.map(async toolCall => {
 		logger.info(`[tool] invoke ${toolCall.function.name}:`, toolCall.function.arguments);
