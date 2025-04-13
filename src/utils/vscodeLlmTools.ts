@@ -1,38 +1,58 @@
-
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
 
-const availableCopilotToolNames = new Set([
-    "copilot_semanticSearch",
-    "copilot_searchWorkspaceSymbols",
-    "copilot_listCodeUsages",
-    "copilot_findFiles",
-    "copilot_findTextInFiles",
-    "copilot_readFile",
-    "copilot_listDirectory",
-    "copilot_readProjectStructure",
+const unavailableCopilotToolNames = new Set([
+    "copilot_searchCodebase",
+    "copilot_getVSCodeAPI",
+    "copilot_think",
+    "copilot_runInTerminal",
+    "copilot_getTerminalOutput",
+    "copilot_getErrors",
     "copilot_getChangedFiles",
+    "copilot_testFailure",
+    "copilot_runTests",
     "copilot_getTerminalSelection",
     "copilot_getTerminalLastCommand",
-    "copilot_fetchWebPage",
+    "copilot_createNewWorkspace",
+    "copilot_getProjectSetupInfo",
+    "copilot_installExtension",
+    "copilot_createNewJupyterNotebook",
+    "copilot_runVsCodeTask",
+    "copilot_insertEdit",
+    "copilot_findTestFiles",
+    "copilot_getSearchResults",
 ]);
 
-export function listCopilotTools(): OpenAI.ChatCompletionTool[] {
+export function listVscodeLanguageModelTools(toolNamePattern: string): OpenAI.ChatCompletionTool[] {
+    const toolNameMatcher = toolNamePattern === "^copilot"
+        ? new RegExp("^copilot")
+        : new RegExp(`^(?:[0-9a-f]+_${toolNamePattern.slice(1)}|${toolNamePattern})`);
+
     return vscode.lm.tools
-        .filter(tool => availableCopilotToolNames.has(tool.name))
+        .filter(tool => !unavailableCopilotToolNames.has(tool.name) && toolNameMatcher.test(tool.name))
         .map(vscodeLanguageModelToolInformationToOpenAIChatCompletionTool);
 }
 
-export function isCopilotToolAvailable(toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function): boolean {
-    return availableCopilotToolNames.has(toolCallFunction.name);
+export function isVscodeLanguageModelToolAvailable(toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function): boolean {
+    return vscode.lm.tools.some(tool => tool.name === toolCallFunction.name);
 }
 
-export async function invokeCopilotTool(toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function, args: unknown): Promise<OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
-    return vscodeLanguageModelToolResultToChatCompletionContentPart(await vscode.lm.invokeTool(
-        toolCallFunction.name,
-        { input: args } as vscode.LanguageModelToolInvocationOptions<object>,
-    ))
-};
+export async function invokeVscodeLanguageModelTool(toolCallFunction: OpenAI.Chat.Completions.ChatCompletionMessageToolCall.Function, args: unknown): Promise<OpenAI.Chat.Completions.ChatCompletionContentPart[]> {
+    try {
+        const toolResult = await vscode.lm.invokeTool(
+            toolCallFunction.name,
+            { input: args } as vscode.LanguageModelToolInvocationOptions<object>
+        );
+
+        return vscodeLanguageModelToolResultToChatCompletionContentPart(toolResult);
+    } catch (error) {
+        console.error(`Error invoking VS Code tool ${toolCallFunction?.name}:`, error);
+        return [{
+            type: 'text',
+            text: `Error: Failed to invoke tool ${toolCallFunction?.name}. ${error instanceof Error ? error.message : String(error)}`
+        } as OpenAI.Chat.Completions.ChatCompletionContentPart];
+    }
+}
 
 function vscodeLanguageModelToolInformationToOpenAIChatCompletionTool(tool: vscode.LanguageModelToolInformation): OpenAI.ChatCompletionTool {
     return {

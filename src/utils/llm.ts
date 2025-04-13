@@ -249,13 +249,17 @@ export class ChatMessageBuilder {
 				return "Correct the following JSON and answer in the language of the `" + l10n.getLocale() + "` locale:\n```\n" + jsonText + "\n```";
 			}
 
-			// Remove matched JSON block from the message
 			message = message.replace(matched, "");
 
-			if (type === "options") {
-				this.copilotOptions = deepMergeJsons(this.copilotOptions, parsed);
-			} else {
-				await this.processToolsJson(parsed);
+			switch (type) {
+				case "options":
+					this.copilotOptions = deepMergeJsons(this.copilotOptions, parsed);
+					break;
+				case "tools":
+					await this.processToolsJson(parsed);
+					break;
+				default:
+					throw new AssertionError();
 			}
 		}
 

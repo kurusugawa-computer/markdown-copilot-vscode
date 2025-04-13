@@ -20,6 +20,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - `copilot_getTerminalSelection`
   - `copilot_getTerminalLastCommand`
   - `copilot_fetchWebPage`
+- Add support for MCP server
+  - [Model Context Protocol server support](https://code.visualstudio.com/updates/v1_99#_model-context-protocol-server-support)
 
 ### Changed
 - Update dependent packages

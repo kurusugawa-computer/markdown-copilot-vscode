@@ -6,7 +6,7 @@ import { resolveFragmentUri, resolveRootUri, splitLines } from ".";
 import { ChatMessageBuilder, executeChatCompletionWithTools } from './llm';
 import { logger } from './logging';
 import { parseFunctionSignature } from './signatureParser';
-import { invokeCopilotTool, isCopilotToolAvailable, listCopilotTools } from './vscodeLlmTools';
+import { invokeVscodeLanguageModelTool, isVscodeLanguageModelToolAvailable, listVscodeLanguageModelTools } from './vscodeLlmTools';
 
 class ToolContent {
 	toolName: string;
@@ -106,10 +106,6 @@ export interface ToolContext {
 }
 
 export async function toolTextToTools(toolContext: ToolContext, toolText: string): Promise<OpenAI.ChatCompletionTool[]> {
-	if (toolText === "@copilot") {
-		return listCopilotTools();
-	}
-
 	if (toolText.startsWith('@')) {
 		const builtinToolsKey = toolText.slice(1);
 		const builtinTools = BUILTIN_TOOLS[builtinToolsKey];
@@ -117,6 +113,14 @@ export async function toolTextToTools(toolContext: ToolContext, toolText: string
 			throw new Error(`[tool-text-to-tools] Undefined builtin tool: ${builtinToolsKey}. Available builtin tools: ${Object.keys(BUILTIN_TOOLS).join(", ")}`);
 		}
 		return builtinTools;
+	}
+
+	if (toolText.startsWith('^')) {
+		const vscodeLanguageModelTools = listVscodeLanguageModelTools(toolText);
+		if (vscodeLanguageModelTools.length === 0) {
+			throw new Error(`[tool-text-to-tools] Undefined VSCode language model tool prefix: ${toolText}`);
+		}
+		return vscodeLanguageModelTools;
 	}
 
 	const { documentUri, toolDefinitions } = toolContext;
@@ -164,12 +168,12 @@ export async function invokeToolFunction(
 			return JSON.stringify(results);
 		}
 		default: {
-			if (isCopilotToolAvailable(toolCallFunction)) {
-				return invokeCopilotTool(toolCallFunction, args);
-			}
 			const toolDefinition = toolContext.toolDefinitions.get(toolCallFunction.name);
 			if (toolDefinition) {
 				return executeToolDefinition(toolContext, toolDefinition, args);
+			}
+			if (isVscodeLanguageModelToolAvailable(toolCallFunction)) {
+				return invokeVscodeLanguageModelTool(toolCallFunction, args);
 			}
 		}
 	}
