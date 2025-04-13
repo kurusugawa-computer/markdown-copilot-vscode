@@ -6,8 +6,19 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### ToDo
+- [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
+  - Azure URIs:
+    - Completion: `https://YOUR_RESOURCE_NAME.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT_NAME/chat/completions?api-version=2024-06-01`
+    - Responses:  `https://YOUR-RESOURCE-NAME.openai.azure.com/openai/responses?api-version=2025-03-01-preview`
+- [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
+
+## [0.12.0] - 2025-04-14
+
 ### Added
-- Add `@copilot` preset tools
+- Add support for MCP server
+  - [Model Context Protocol server support](https://code.visualstudio.com/updates/v1_99#_model-context-protocol-server-support)
+- Add `^copilot` preset tools
   - `copilot_semanticSearch`
   - `copilot_searchWorkspaceSymbols`
   - `copilot_listCodeUsages`
@@ -20,19 +31,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - `copilot_getTerminalSelection`
   - `copilot_getTerminalLastCommand`
   - `copilot_fetchWebPage`
-- Add support for MCP server
-  - [Model Context Protocol server support](https://code.visualstudio.com/updates/v1_99#_model-context-protocol-server-support)
 
 ### Changed
 - Update dependent packages
-
-### ToDo
-- [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
-  - Azure URIs:
-    - Completion: `https://YOUR_RESOURCE_NAME.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT_NAME/chat/completions?api-version=2024-06-01`
-    - Responses:  `https://YOUR-RESOURCE-NAME.openai.azure.com/openai/responses?api-version=2025-03-01-preview`
-
-- [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
 ## [0.10.1] - 2025-03-24
 
@@ -249,7 +250,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.1...v0.12.0
 [0.10.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.8.0...v0.9.0
