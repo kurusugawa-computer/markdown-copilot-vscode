@@ -13,13 +13,14 @@
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本的な使用方法" width="1024">
 
 Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換えることができ、次のような優れた機能を提供します:
-1. 会話履歴をMarkdownで保存する
-2. 複数の会話を同時並行で行う
-3. 会話を分岐させる
-4. 会話履歴を編集して会話を続ける
-5. 会話をもとにファイルに名前をつける
-6. 会話にタイトルをつける
-7. クリップボードの内容をファイルタイプに基づいて賢く貼り付ける
+1. Model Context Protocolサーバを利用する
+2. 会話履歴をMarkdownで保存する
+3. 複数の会話を同時並行で行う
+4. 会話を分岐させる
+5. 会話履歴を編集して会話を続ける
+6. 会話をもとにファイルに名前をつける
+7. 会話にタイトルをつける
+8. クリップボードの内容をファイルタイプに基づいて賢く貼り付ける
 
 ***注意***: この拡張機能を使用するには、OpenAI, Azure OpenAI, OpenRouterまたはローカルのOllamaインスタンスが必要です。設定方法：
 - [OpenAI APIキー](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)
@@ -29,17 +30,30 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 
 ## 🌟 主な機能
 
+### ⚡ Model Context Protocolサーバ利用
+
+Markdown Copilotはオーバーライドツールで[Model Context Protocol(MCP)サーバ](https://github.com/modelcontextprotocol/servers)と連携して機能を拡張できます。
+MCPサーバを介して外部ツールやデータソースにアクセスできるようにすることで、より強力で的確な会話を可能にします。
+
+オーバーライドツールを使用するには、希望する設定を含むJSONコードブロックを `json copilot-tools` として含め、このブロックとテキストを一緒に選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
+
+**例:** オーバーライドツールを使用して利用可能なツールを列挙する
+
+~~~markdown
+あなたが使えるツールを全て列挙して。
+
+```json copilot-tools
+["^copilot"]
+```
+~~~
+
+MCPサーバの追加方法については、[Use MCP servers in VSCode: Add an MCP server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server)を参照してください。
+
 ### 🔀 並行編集
 
 複数の自動編集を同時に実行し、ひとつの編集が完了するのを待たずに別の編集を開始できるため、作業速度が向上します。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="並行編集" width="1024">
-
-### 🎛 コンテキストコントロール
-
-引用インデントと構文カラーを使用して、会話のコンテキストを階層的に管理し、視覚的にコンテキストを強調表示します。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="コンテキストコントロール" width="1024">
 
 ### 📝 コンテキストに基づく編集
 
@@ -57,31 +71,7 @@ Markdown Copilotはコンテキストに基づいて選択したテキストに�
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="コンテキストに基づく編集のショートカット" width="442">
 
-#### ♯ Markdownにおけるコンテキスト表記
-
-アクティブなコンテキストは、カーソル行から引用インデントを遡って決定されます。
-`# Copilot Context`で始まる行でコンテキストガードを強制することができます。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="例: take care" width="512">
-
-`Then say "take care".`を選択して`💡 Markdown Copilot: 続ける` を使用すると、次の出力が得られます: `hello` → `good bye` → `take care`。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="例: take care" width="460">
-
-**より複雑な例:** コンテキストは`take care`行を跨いで継続します。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="例: see you again" width="512">
-
-**発言者の指定:** 行頭に特定のMarkdown表記を配置することで発言者を指定できます。
-
-| Markdown | 意味 |
-| -------- | ---- |
-| `**User:**` | ユーザ自身の発言であることを指定します |
-| `**Copilot:**` | Markdown Copilotの発言であることを指定します |
-| `**System(Override):**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を上書き指定します |
-| `**System:**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を追加で指定します |
-
-#### ᝰ オーバーライドオプション
+### ᝰ オーバーライドオプション
 
 Markdown Copilotの挙動をオーバーライドオプションでカスタマイズします。これにより、文書内で直接、応答の長さやAIモデルなどの設定をコントロールできます。
 
@@ -120,8 +110,6 @@ Introduce yourself.
 {"model":"llama2","baseURL":"http://localhost:11434/v1"}
 ```
 ~~~
-
-
 
 他の設定オプションについては、[OpenAI API: Create chat completion](https://platform.openai.com/docs/api-reference/chat/create)を参照してください。
 
@@ -185,7 +173,38 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
 
 現在の文書が未保存ときはファイルパスが確定していないため、必ず絶対パスを使用して他のMarkdownファイルを指定する必要があります。
 
-### ⤷ 引用インデント
+### 🎛 コンテキストコントロール
+
+引用インデントと構文カラーを使用して、会話のコンテキストを階層的に管理し、視覚的にコンテキストを強調表示します。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="コンテキストコントロール" width="1024">
+
+#### ♯ Markdownにおけるコンテキスト表記
+
+アクティブなコンテキストは、カーソル行から引用インデントを遡って決定されます。
+`# Copilot Context`で始まる行でコンテキストガードを強制することができます。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="例: take care" width="512">
+
+`Then say "take care".`を選択して`💡 Markdown Copilot: 続ける` を使用すると、次の出力が得られます: `hello` → `good bye` → `take care`。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="例: take care" width="460">
+
+**より複雑な例:** コンテキストは`take care`行を跨いで継続します。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="例: see you again" width="512">
+
+**発言者の指定:** 行頭に特定のMarkdown表記を配置することで発言者を指定できます。
+
+| Markdown | 意味 |
+| -------- | ---- |
+| `**User:**` | ユーザ自身の発言であることを指定します |
+| `**Copilot:**` | Markdown Copilotの発言であることを指定します |
+| `**System(Override):**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を上書き指定します |
+| `**System:**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を追加で指定します |
+
+
+#### ⤷ 引用インデント
 
 引用インデントレベルの編集を直感的なアクションで行えます。
 

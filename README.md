@@ -13,13 +13,14 @@
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024">
 
 Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering superior features such as:
-1. Saving conversation histories in Markdown
-2. Conducting multiple conversations simultaneously
-3. Branching out conversations
-4. Editing previous conversations at any point and continuing the conversation
-5. Nameing files based on conversations
-6. Titling conversations
-7. Pasting clipboard content intelligently based on file type
+1. Using [Model Context Protocol Servers](https://code.visualstudio.com/updates/v1_99#_model-context-protocol-server-support)
+2. Saving conversation histories in Markdown
+3. Conducting multiple conversations simultaneously
+4. Branching out conversations
+5. Editing previous conversations at any point and continuing the conversation
+6. Nameing files based on conversations
+7. Titling conversations
+8. Pasting clipboard content intelligently based on file type
 
 ***Note***: An OpenAI, Azure OpenAI, OpenRouter, or local Ollama instance is required to use this extension. For configuration:
 - [OpenAI API Key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)
@@ -29,17 +30,30 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 
 ## 🌟 Key Features
 
+### ⚡ Model Context Protocol Server Using
+
+Markdown Copilot can extend its functionality through [Model Context Protocol (MCP) servers](https://github.com/modelcontextprotocol/servers).
+By enabling access to external tools and data sources via MCP servers, you can have more powerful and accurate conversations.
+
+To use override tools, include a JSON code block labeled `json copilot-tools` with your desired settings, then select this block along with your text and choose `💡 Markdown Copilot: Continue` from the code action proposals.
+
+**Example:** List available tools using override tools
+
+~~~markdown
+List all tools you can use.
+
+```json copilot-tools
+["^copilot"]
+```
+~~~
+
+For instructions on adding an MCP server, please refer to the [Use MCP servers in VS Code: Add an MCP server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server).
+
 ### 🔀 Parallel Editing
 
 Execute multiple auto-edits simultaneously, enhancing your productivity by not having to wait for one edit to complete before starting another.
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="Parallel Editing" width="1024">
-
-### 🎛 Context Control
-
-Manage conversational contexts hierarchically, using quote indentation and syntax colors for visual context highlighting.
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024">
 
 ### 📝 Contextual Editing
 
@@ -57,31 +71,7 @@ Or use shortcuts for quick access:
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="Contextual Editing Shortcut" width="442">
 
-#### ♯ Context Notation in Markdown
-
-The active context is determined by tracing back the quote indent from the cursor line.
-Can force a context guard with a line starting with `# Copilot Context`.
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512">
-
-If you select `Then say "take care".` and choose `💡 Markdown Copilot: Continue`, you will get the following output: `hello` → `good bye` → `take care`.
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460">
-
-**More complex example:** the context continues across `take care` line.
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512">
-
-**Specifying a speaker:** You can specify a speaker by placing a special Markdown notation at the beginning of a line.
-
-| Markdown | Meaning |
-| -------- | ---- |
-| `**User:**` | User is the speaker |
-| `**Copilot:**` | Markdown Copilot is the speaker |
-| `**System(Override):**` | Overrides [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
-| `**System:**` | Specifies additional [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
-
-#### ᝰ Override Options
+### ᝰ Override Options
 
 Customize Markdown Copilot's behavior with override options. This allows you to control settings like response length or the AI model directly within your document.
 
@@ -182,7 +172,37 @@ To import another Markdown file, use the `@import` directive followed by the pat
 
 When the current document is unsaved and thus lacks a confirmed file path, you must use an absolute path to specify other Markdown files to be imported.
 
-### ⤷ Quote Indentation
+### 🎛 Context Control
+
+Manage conversational contexts hierarchically, using quote indentation and syntax colors for visual context highlighting.
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024">
+
+#### ♯ Context Notation in Markdown
+
+The active context is determined by tracing back the quote indent from the cursor line.
+Can force a context guard with a line starting with `# Copilot Context`.
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512">
+
+If you select `Then say "take care".` and choose `💡 Markdown Copilot: Continue`, you will get the following output: `hello` → `good bye` → `take care`.
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="Example: take care" width="460">
+
+**More complex example:** the context continues across `take care` line.
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="Example: see you again" width="512">
+
+**Specifying a speaker:** You can specify a speaker by placing a special Markdown notation at the beginning of a line.
+
+| Markdown | Meaning |
+| -------- | ---- |
+| `**User:**` | User is the speaker |
+| `**Copilot:**` | Markdown Copilot is the speaker |
+| `**System(Override):**` | Overrides [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
+| `**System:**` | Specifies additional [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
+
+#### ⤷ Quote Indentation
 
 Simplify the editing of quote indentation levels with intuitive actions.
 

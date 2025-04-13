@@ -13,13 +13,14 @@
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本使用" width="1024">
 
 Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越的功能，例如:
-1. 以 Markdown 形式保存对话历史
-2. 同时进行多个对话
-3. 分支对话
-4. 随时编辑之前的对话并继续对话
-5. 根据对话命名文件
-6. 标题对话
-7. 根据文件类型智能粘贴剪贴板内容
+1. 利用Model Context Protocol服务器
+2. 以 Markdown 形式保存对话历史
+3. 同时进行多个对话
+4. 分支对话
+5. 随时编辑之前的对话并继续对话
+6. 根据对话命名文件
+7. 标题对话
+8. 根据文件类型智能粘贴剪贴板内容
 
 ***注意***：使用此扩展需要配置 OpenAI, Azure OpenAI, OpenRouter 或本地 Ollama 实例。配置方法如下：  
 - [OpenAI API Key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key)  
@@ -29,17 +30,30 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 
 ## 🌟 主要特性
 
+### ⚡ 利用 Model Context Protocol 服务器
+
+Markdown Copilot 可以通过覆盖工具与 [Model Context Protocol (MCP) 服务器](https://github.com/modelcontextprotocol/servers) 集成以扩展功能。
+通过 MCP 服务器访问外部工具和数据源，实现更强大、更精准的对话。
+
+要使用覆盖工具，只需包含一个标记为 `json copilot-tools` 的 JSON 代码块，并在其中填入您希望的设置，然后选择此块及您的文本并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
+
+**示例:** 使用覆盖工具列出可用工具:
+
+~~~markdown
+请列出你可以使用的所有工具。
+
+```json copilot-tools
+["^copilot"]
+```
+~~~
+
+关于如何添加 MCP 服务器，请参考 [Use MCP servers in VSCode: Add an MCP server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server)。
+
 ### 🔀 并行编辑
 
 同时执行多个自动编辑，通过不必等待一个编辑完成就开始另一个编辑，从而提高您的生产力。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/parallel-editing.gif" alt="并行编辑" width="1024">
-
-### 🎛 上下文控制
-
-使用引用缩进和语法颜色管理对话上下文，以层次化方式进行，以实现视觉上的上下文突出显示。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="上下文控制" width="1024">
 
 ### 📝 上下文编辑
 
@@ -58,31 +72,7 @@ Markdown Copilot根据上下文回答选文。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/contextual-editing-shortcut.png" alt="上下文编辑快捷方式" width="442">
 
-#### ♯ Markdown 中的上下文标记
-
-通过从光标行回溯引用缩进来确定活动上下文。
-可以通过以 `# Copilot Context` 开头的行强制上下文保护。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="示例: take care" width="512">
-
-如果您选择 `Then say "take care".` 并选择 `💡 Markdown Copilot: 继续`，您将得到以下输出: `hello` → `good bye` → `take care`。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="示例: take care" width="460">
-
-**更复杂的示例:** 上下文跨越 `take care` 行继续。
-
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="示例: see you again" width="512">
-
-**指定发言人:** 您可以在行首使用特殊的 Markdown 符号来指定发言人。
-
-| Markdown | 意思 |
-| -------- | ---- |
-| `**User:**` | 用户是发言人 |
-| `**Copilot:**` | Markdown Copilot 是发言人 |
-| `**System(Override):**` | 覆盖系统消息 |
-| `**System:**` | 指定额外的系统消息 |
-
-#### ᝰ 覆盖选项
+### ᝰ 覆盖选项
 
 使用覆盖选项自定义 Markdown Copilot 的行为。这允许您直接在文档中控制响应长度或 AI 模型等设置。
 
@@ -123,21 +113,7 @@ Markdown Copilot根据上下文回答选文。
 ```
 ~~~
 
-
-
 更多配置选项，请参考 [OpenAI API: 创建聊天完成](https://platform.openai.com/docs/api-reference/chat/create)。
-
-### 📛 Name and Save File
-
-Markdown Copilot allows you to name and save a file based on its contents.
-
-To use, select the editor you want to name and save, and use the `Markdown Copilot: Name and Save As...` command.
-
-Or use shortcuts for quick access:
-
-| Windows / Linux | Mac |
-| :-------------: | :---: |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Name and Save As</kbd> |
 
 ### 📛 命名和另存文件
 
@@ -198,7 +174,37 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
 
 如果当前文档尚未保存，因为文件路径未确定，您必须使用绝对路径来指定要导入的其他 Markdown 文件。
 
-### ⤷ 引用缩进
+### 🎛 上下文控制
+
+使用引用缩进和语法颜色管理对话上下文，以层次化方式进行，以实现视觉上的上下文突出显示。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="上下文控制" width="1024">
+
+#### ♯ Markdown 中的上下文标记
+
+通过从光标行回溯引用缩进来确定活动上下文。
+可以通过以 `# Copilot Context` 开头的行强制上下文保护。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="示例: take care" width="512">
+
+如果您选择 `Then say "take care".` 并选择 `💡 Markdown Copilot: 继续`，您将得到以下输出: `hello` → `good bye` → `take care`。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare-result.gif" alt="示例: take care" width="460">
+
+**更复杂的示例:** 上下文跨越 `take care` 行继续。
+
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-seeyouagain.png" alt="示例: see you again" width="512">
+
+**指定发言人:** 您可以在行首使用特殊的 Markdown 符号来指定发言人。
+
+| Markdown | 意思 |
+| -------- | ---- |
+| `**User:**` | 用户是发言人 |
+| `**Copilot:**` | Markdown Copilot 是发言人 |
+| `**System(Override):**` | 覆盖系统消息 |
+| `**System:**` | 指定额外的系统消息 |
+
+#### ⤷ 引用缩进
 
 通过直观的操作简化引用缩进级别的编辑。
 
