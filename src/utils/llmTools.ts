@@ -6,7 +6,7 @@ import { resolveFragmentUri, resolveRootUri, splitLines } from ".";
 import { ChatMessageBuilder, executeChatCompletionWithTools } from './llm';
 import { logger } from './logging';
 import { parseFunctionSignature } from './signatureParser';
-import { invokeVscodeLanguageModelTool, isVscodeLanguageModelToolAvailable, listVscodeLanguageModelTools } from './vscodeLlmTools';
+import { invokeVscodeLanguageModelTool, isVscodeLanguageModelToolAvailable, listVscodeLanguageModelTools } from './llmToolsVscode';
 
 class ToolContent {
 	toolName: string;
