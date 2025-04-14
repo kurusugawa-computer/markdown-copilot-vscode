@@ -108,8 +108,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(
 		event => {
-			config.onDidChangeConfiguration(event);
-			contextDecorator.onDidChangeConfiguration(event);
+			try { config.onDidChangeConfiguration(event); }
+			catch { /* Ignore errors */ }
+			try { contextDecorator.onDidChangeConfiguration(event); }
+			catch { /* Ignore errors */ }
 		}
 	));
 

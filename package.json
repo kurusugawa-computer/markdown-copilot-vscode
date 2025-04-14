@@ -37,7 +37,7 @@
         "command": "markdown.copilot.editing.nameAndSaveAs",
         "title": "%command.editing.nameAndSaveAs.title%",
         "icon": "$(milestone)",
-        "enablement": "true"
+        "enablement": "editorIsOpen"
       },
       {
         "command": "markdown.copilot.editing.titleActiveContext",
