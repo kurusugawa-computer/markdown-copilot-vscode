@@ -232,7 +232,7 @@ async function executeResponseWithTools(
 	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
 	_toolContext: ToolContext, // Kept for API compatibility
 	onDeltaContent: (deltaContent: string) => Promise<void>,
-	onStream?: (stream: Stream<any>) => Promise<void>,
+	_onStream?: (stream: Stream<any>) => Promise<void>, // Unused but kept for API compatibility
 ) {
 	const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
 	
@@ -249,22 +249,6 @@ async function executeResponseWithTools(
 		})
 		.join("\n\n");
 	
-	// Convert tools to Response API format if tools are provided
-	const tools = override.tools?.map(tool => {
-		if (tool.type === 'function') {
-			return {
-				type: 'function',
-				function: {
-					name: tool.function.name,
-					description: tool.function.description,
-					parameters: tool.function.parameters,
-				}
-			};
-		}
-		return tool;
-	});
-	
-	const useStream = !!onStream;
 	
 	const response = await openai.responses.create({
 		model: override.model || "gpt-4o",
