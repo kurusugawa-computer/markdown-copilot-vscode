@@ -50,7 +50,7 @@ async function createChatCompletion(
 	return openai.chat.completions.create(buildChatParams(chatMessages, override, true));
 }
 
-export async function executeTask(
+async function executeCompletionTask(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
 ): Promise<string> {
@@ -61,7 +61,50 @@ export async function executeTask(
 	return completion.choices[0].message.content!;
 }
 
-export async function executeChatCompletion(
+async function executeResponseTask(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+): Promise<string> {
+	const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
+	
+	const systemMessage = chatMessages.find(m => m.role === "system");
+	const instructions = systemMessage?.content as string || undefined;
+	
+	// Convert chat messages to a string format for the Response API
+	const userMessages = chatMessages
+		.filter(m => m.role !== "system")
+		.map(m => {
+			const role = m.role === "user" ? "User" : "Assistant";
+			const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+			return `${role}: ${content}`;
+		})
+		.join("\n\n");
+	
+	const response = await openai.responses.create({
+		model: override.model || "gpt-4o",
+		max_output_tokens: override.max_tokens,
+		temperature: override.temperature,
+		instructions,
+		input: userMessages
+	});
+	
+	return response.output_text;
+}
+
+export async function executeTask(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+): Promise<string> {
+	const backendProtocol = override.backendProtocol || config.get().backendProtocol;
+	
+	if (backendProtocol === "OpenAI Response") {
+		return executeResponseTask(chatMessages, override);
+	} else {
+		return executeCompletionTask(chatMessages, override);
+	}
+}
+
+async function executeCompletionChatCompletion(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams,
 	onDeltaContent: (deltaContent: string) => Promise<void>,
@@ -81,9 +124,55 @@ export async function executeChatCompletion(
 	}
 }
 
-export async function executeChatCompletionWithTools(
+async function executeResponseChatCompletion(
 	chatMessages: ChatMessage[],
-	override: OpenAI.ChatCompletionCreateParams,
+	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+	onDeltaContent: (deltaContent: string) => Promise<void>,
+) {
+	const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
+	
+	const systemMessage = chatMessages.find(m => m.role === "system");
+	const instructions = systemMessage?.content as string || undefined;
+	
+	// Convert chat messages to a string format for the Response API
+	const userMessages = chatMessages
+		.filter(m => m.role !== "system")
+		.map(m => {
+			const role = m.role === "user" ? "User" : "Assistant";
+			const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+			return `${role}: ${content}`;
+		})
+		.join("\n\n");
+	
+	const response = await openai.responses.create({
+		model: override.model || "gpt-4o",
+		max_output_tokens: override.max_tokens,
+		temperature: override.temperature,
+		instructions,
+		input: userMessages
+	});
+
+	await onDeltaContent(response.output_text);
+}
+
+export async function executeChatCompletion(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+	onDeltaContent: (deltaContent: string) => Promise<void>,
+	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
+) {
+	const backendProtocol = override.backendProtocol || config.get().backendProtocol;
+	
+	if (backendProtocol === "OpenAI Response") {
+		return executeResponseChatCompletion(chatMessages, override, onDeltaContent);
+	} else {
+		return executeCompletionChatCompletion(chatMessages, override, onDeltaContent, onStream);
+	}
+}
+
+async function executeCompletionChatCompletionWithTools(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
 	toolContext: ToolContext,
 	onDeltaContent: (deltaContent: string) => Promise<void>,
 	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
@@ -135,6 +224,55 @@ export async function executeChatCompletionWithTools(
 		);
 		chatMessages.push(...toolResponses);
 		// Loop to process the next round of chat completion with updated messages.
+	}
+}
+
+async function executeResponseChatCompletionWithTools(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+	_toolContext: ToolContext, // Unused but kept for API compatibility
+	onDeltaContent: (deltaContent: string) => Promise<void>,
+) {
+	const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
+	
+	const systemMessage = chatMessages.find(m => m.role === "system");
+	const instructions = systemMessage?.content as string || undefined;
+	
+	// Convert chat messages to a string format for the Response API
+	const userMessages = chatMessages
+		.filter(m => m.role !== "system")
+		.map(m => {
+			const role = m.role === "user" ? "User" : "Assistant";
+			const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+			return `${role}: ${content}`;
+		})
+		.join("\n\n");
+	
+	
+	const response = await openai.responses.create({
+		model: override.model || "gpt-4o",
+		max_output_tokens: override.max_tokens,
+		temperature: override.temperature,
+		instructions,
+		input: userMessages
+	});
+	
+	await onDeltaContent(response.output_text);
+}
+
+export async function executeChatCompletionWithTools(
+	chatMessages: ChatMessage[],
+	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+	toolContext: ToolContext,
+	onDeltaContent: (deltaContent: string) => Promise<void>,
+	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
+) {
+	const backendProtocol = override.backendProtocol || config.get().backendProtocol;
+	
+	if (backendProtocol === "OpenAI Response") {
+		return executeResponseChatCompletionWithTools(chatMessages, override, toolContext, onDeltaContent);
+	} else {
+		return executeCompletionChatCompletionWithTools(chatMessages, override, toolContext, onDeltaContent, onStream);
 	}
 }
 
@@ -386,7 +524,8 @@ async function createOpenAIClient(
 	let apiKey = override.backendApiKey || configuration.backendApiKey;
 
 	switch (backendProtocol) {
-		case "OpenAI":
+		case "OpenAI Completion":
+		case "OpenAI Response":
 			if (!apiKey) {
 				apiKey = await vscode.window.showInputBox({
 					placeHolder: 'Enter your OpenAI API key',
