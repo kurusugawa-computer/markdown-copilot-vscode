@@ -213,35 +213,256 @@ async function executeCompletionWithTools(
 async function executeResponseWithTools(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
-	_toolContext: ToolContext, // Kept for API compatibility
+	toolContext: ToolContext,
 	onDeltaContent: (deltaContent: string) => Promise<void>,
-	_onStream?: (stream: Stream<unknown>) => Promise<void>, // Unused but kept for API compatibility
+	onStream?: (stream: Stream<unknown>) => Promise<void>,
 ) {
 	const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
 	
-	const systemMessage = chatMessages.find(m => m.role === "system");
-	const instructions = systemMessage?.content as string || undefined;
-	
-	// Convert chat messages to a string format for the Response API
-	const userMessages = chatMessages
-		.filter(m => m.role !== "system")
-		.map(m => {
-			const role = m.role === "user" ? "User" : "Assistant";
-			const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
-			return `${role}: ${content}`;
-		})
-		.join("\n\n");
-	
-	
-	const response = await openai.responses.create({
-		model: override.model || "gpt-4o",
-		max_output_tokens: override.max_tokens,
-		temperature: override.temperature,
-		instructions,
-		input: userMessages
-	});
-	
-	await onDeltaContent(response.output_text);
+	// Loop to handle multiple rounds of tool calls
+	while (true) {
+		const systemMessage = chatMessages.find(m => m.role === "system");
+		const instructions = systemMessage?.content as string || undefined;
+		
+		// Convert chat messages to a format for the Response API
+		const messages = chatMessages
+			.filter(m => m.role !== "system")
+			.map(m => {
+				if (m.role === "tool") {
+					return {
+						role: "tool" as const,
+						content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+						tool_call_id: (m as { tool_call_id?: string }).tool_call_id
+					};
+				} else {
+					return {
+						role: m.role === "user" ? "user" as const : "assistant" as const,
+						content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+					};
+				}
+			});
+		
+		// Convert tools to Response API format if provided
+		const tools = override.tools?.map(tool => {
+			if (tool.type === 'function') {
+				return {
+					type: 'function' as const,
+					function: {
+						name: tool.function.name,
+						description: tool.function.description,
+						parameters: tool.function.parameters,
+					}
+				};
+			}
+			return tool;
+		});
+		
+		const streamOptions = { stream: true };
+		interface ResponseParams {
+			model: string;
+			max_output_tokens?: number;
+			temperature?: number;
+			instructions?: string;
+			tools?: {
+				type: string;
+				function: {
+					name: string;
+					description?: string;
+					parameters?: Record<string, unknown>;
+				};
+			}[];
+			messages?: {
+				role: string;
+				content: string;
+				tool_call_id?: string;
+			}[];
+			input?: string;
+		}
+		
+		const responseParams: ResponseParams = {
+			model: override.model || "gpt-4o",
+			max_output_tokens: override.max_tokens === null ? undefined : override.max_tokens,
+			temperature: override.temperature === null ? undefined : override.temperature,
+			instructions
+		};
+		
+		if (tools && tools.length > 0) {
+			responseParams.tools = tools;
+		}
+		
+		// Add messages if they exist
+		if (messages && messages.length > 0) {
+			responseParams.messages = messages;
+		} else {
+			const input = chatMessages
+				.filter(m => m.role !== "system")
+				.map(m => {
+					const role = m.role === "user" ? "User" : "Assistant";
+					const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+					return `${role}: ${content}`;
+				})
+				.join("\n\n");
+			
+			responseParams.input = input;
+		}
+		
+		let finalToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = [];
+		let finalHasToolCalls = false;
+		
+		// Handle streaming vs non-streaming differently
+		if (streamOptions.stream) {
+			// Cast to any to avoid type errors with the Response API
+			interface ResponseStreamEvent {
+				type: string;
+				delta?: string | {
+					id?: string;
+					function?: {
+						name?: string;
+						arguments?: string;
+					};
+				};
+			}
+			
+			// Cast to unknown first to avoid TypeScript errors
+			const createFn = openai.responses.create as unknown as (
+				params: typeof responseParams,
+				options: typeof streamOptions
+			) => Promise<Stream<ResponseStreamEvent>>;
+			const stream = await createFn(responseParams, streamOptions);
+			
+			if (onStream) await onStream(stream as Stream<unknown>);
+			
+			const toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = [];
+			let hasToolCalls = false;
+			
+			// Process the stream
+			for await (const chunk of stream) {
+				// Handle text delta events
+				if (chunk.type && chunk.type.includes('text.delta')) {
+					if (chunk.delta) {
+						await onDeltaContent(chunk.delta as string);
+					}
+				} 
+				// Handle tool calls delta events
+				else if (chunk.type && chunk.type.includes('tool_calls')) {
+					hasToolCalls = true;
+					
+					// Handle tool call deltas with proper type narrowing
+					if (chunk.delta && typeof chunk.delta !== 'string') {
+						interface ToolCallDelta {
+							id: string;
+							function?: {
+								name?: string;
+								arguments?: string;
+							};
+						}
+						
+						if (chunk.delta.id) {
+							const toolCall = chunk.delta as ToolCallDelta;
+							
+							let existingToolCall = toolCalls.find(tc => tc.id === toolCall.id);
+							if (!existingToolCall) {
+								existingToolCall = {
+									id: toolCall.id,
+									type: 'function',
+									function: {
+										name: toolCall.function?.name || '',
+										arguments: toolCall.function?.arguments || ''
+									}
+								} as OpenAI.Chat.Completions.ChatCompletionMessageToolCall;
+								toolCalls.push(existingToolCall);
+							} else if (toolCall.function?.arguments) {
+								existingToolCall.function.arguments += toolCall.function.arguments;
+							}
+						}
+					}
+				}
+			}
+			
+			// If no tool calls, output content and exit
+			if (!hasToolCalls) {
+				return;
+			}
+			
+			finalToolCalls = toolCalls;
+			finalHasToolCalls = hasToolCalls;
+		} else {
+			// Cast to any to avoid type errors with the Response API
+			interface ResponseResult {
+				output: {
+					type: string;
+					id?: string;
+					function_call?: {
+						name: string;
+						arguments: string;
+					};
+				}[];
+				output_text: string;
+			}
+			
+			// Cast to unknown first to avoid TypeScript errors
+			const createFn = openai.responses.create as unknown as (
+				params: typeof responseParams
+			) => Promise<ResponseResult>;
+			const response = await createFn(responseParams);
+			
+			const toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = [];
+			let hasToolCalls = false;
+			
+			// Process the response output for tool calls
+			for (const item of response.output) {
+				interface FunctionCallOutput {
+					type: string;
+					id?: string;
+					function_call?: {
+						name?: string;
+						arguments?: string;
+					};
+				}
+				
+				const outputItem = item as unknown as FunctionCallOutput;
+				if (outputItem.type === 'function_call') {
+					hasToolCalls = true;
+					
+					toolCalls.push({
+						id: outputItem.id || `call-${Date.now()}`,
+						type: 'function',
+						function: {
+							name: outputItem.function_call?.name || '',
+							arguments: outputItem.function_call?.arguments || ''
+						}
+					} as OpenAI.Chat.Completions.ChatCompletionMessageToolCall);
+				}
+			}
+			
+			// If no tool calls, output content and exit
+			if (!hasToolCalls) {
+				await onDeltaContent(response.output_text);
+				return;
+			}
+			
+			finalToolCalls = toolCalls;
+			finalHasToolCalls = hasToolCalls;
+		}
+		
+		// If no tool calls, exit
+		if (!finalHasToolCalls) {
+			return;
+		}
+		
+		chatMessages.push({ role: ChatRole.Assistant, tool_calls: finalToolCalls });
+		
+		// Execute the tool calls
+		const toolResponses = await executeToolCalls(
+			finalToolCalls,
+			toolCallFunction => invokeToolFunction(
+				toolContext,
+				toolCallFunction,
+			),
+		);
+		
+		chatMessages.push(...toolResponses);
+	}
 }
 
 export async function executeChatCompletionWithTools(
