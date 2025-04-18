@@ -104,57 +104,6 @@ export async function executeTask(
 	}
 }
 
-async function executeCompletionChatCompletion(
-	chatMessages: ChatMessage[],
-	override: OpenAI.ChatCompletionCreateParams,
-	onDeltaContent: (deltaContent: string) => Promise<void>,
-	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
-) {
-	const completion = await createChatCompletion(chatMessages, override);
-	if (!(completion instanceof Stream)) {
-		const choice = completion.choices[0];
-		return onDeltaContent(choice.message.content!);
-	}
-
-	await onStream?.(completion);
-	for await (const chunk of completion) {
-		const chunkText = chunk.choices[0]?.delta?.content || '';
-		if (chunkText.length === 0) { continue; }
-		await onDeltaContent(chunkText);
-	}
-}
-
-async function executeResponseChatCompletion(
-	chatMessages: ChatMessage[],
-	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
-	onDeltaContent: (deltaContent: string) => Promise<void>,
-) {
-	const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
-	
-	const systemMessage = chatMessages.find(m => m.role === "system");
-	const instructions = systemMessage?.content as string || undefined;
-	
-	// Convert chat messages to a string format for the Response API
-	const userMessages = chatMessages
-		.filter(m => m.role !== "system")
-		.map(m => {
-			const role = m.role === "user" ? "User" : "Assistant";
-			const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
-			return `${role}: ${content}`;
-		})
-		.join("\n\n");
-	
-	const response = await openai.responses.create({
-		model: override.model || "gpt-4o",
-		max_output_tokens: override.max_tokens,
-		temperature: override.temperature,
-		instructions,
-		input: userMessages
-	});
-
-	await onDeltaContent(response.output_text);
-}
-
 export async function executeChatCompletion(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
@@ -164,13 +113,47 @@ export async function executeChatCompletion(
 	const backendProtocol = override.backendProtocol || config.get().backendProtocol;
 	
 	if (backendProtocol === "OpenAI Response") {
-		return executeResponseChatCompletion(chatMessages, override, onDeltaContent);
+		const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
+		
+		const systemMessage = chatMessages.find(m => m.role === "system");
+		const instructions = systemMessage?.content as string || undefined;
+		
+		// Convert chat messages to a string format for the Response API
+		const userMessages = chatMessages
+			.filter(m => m.role !== "system")
+			.map(m => {
+				const role = m.role === "user" ? "User" : "Assistant";
+				const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+				return `${role}: ${content}`;
+			})
+			.join("\n\n");
+		
+		const response = await openai.responses.create({
+			model: override.model || "gpt-4o",
+			max_output_tokens: override.max_tokens,
+			temperature: override.temperature,
+			instructions,
+			input: userMessages
+		});
+
+		await onDeltaContent(response.output_text);
 	} else {
-		return executeCompletionChatCompletion(chatMessages, override, onDeltaContent, onStream);
+		const completion = await createChatCompletion(chatMessages, override);
+		if (!(completion instanceof Stream)) {
+			const choice = completion.choices[0];
+			return onDeltaContent(choice.message.content!);
+		}
+
+		await onStream?.(completion);
+		for await (const chunk of completion) {
+			const chunkText = chunk.choices[0]?.delta?.content || '';
+			if (chunkText.length === 0) { continue; }
+			await onDeltaContent(chunkText);
+		}
 	}
 }
 
-async function executeCompletionChatCompletionWithTools(
+async function executeCompletionWithTools(
 	chatMessages: ChatMessage[],
 	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
 	toolContext: ToolContext,
@@ -232,7 +215,7 @@ async function executeResponseWithTools(
 	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
 	_toolContext: ToolContext, // Kept for API compatibility
 	onDeltaContent: (deltaContent: string) => Promise<void>,
-	_onStream?: (stream: Stream<any>) => Promise<void>, // Unused but kept for API compatibility
+	_onStream?: (stream: Stream<unknown>) => Promise<void>, // Unused but kept for API compatibility
 ) {
 	const openai: OpenAI = await createOpenAIClient({...override, backendProtocol: "OpenAI Response"});
 	
@@ -271,9 +254,9 @@ export async function executeChatCompletionWithTools(
 	const backendProtocol = override.backendProtocol || config.get().backendProtocol;
 	
 	if (backendProtocol === "OpenAI Response") {
-		return executeResponseWithTools(chatMessages, override, toolContext, onDeltaContent, onStream);
+		return executeResponseWithTools(chatMessages, override, toolContext, onDeltaContent, onStream as unknown as (stream: Stream<unknown>) => Promise<void>);
 	} else {
-		return executeCompletionChatCompletionWithTools(chatMessages, override, toolContext, onDeltaContent, onStream);
+		return executeCompletionWithTools(chatMessages, override, toolContext, onDeltaContent, onStream);
 	}
 }
 
