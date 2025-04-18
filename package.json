@@ -117,8 +117,8 @@
         },
         "markdown.copilot.backend.protocol": {
           "type": "string",
-          "enum": ["OpenAI", "Azure", "Ollama", "OpenRouter"],
-          "default": "OpenAI",
+          "enum": ["OpenAI Completion", "OpenAI Response", "Azure", "Ollama", "OpenRouter"],
+          "default": "OpenAI Completion",
           "markdownDescription": "%config.backend.protocol.description%"
         },
         "markdown.copilot.decorations.inactiveContextOpacity": {

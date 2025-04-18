@@ -74,8 +74,8 @@ export class Configuration {
         this.workspaceConfiguration = workspaceConfiguration;
     }
 
-    get backendProtocol(): "OpenAI" | "Azure" | "Ollama" | "OpenRouter" | undefined {
-        return this.workspaceConfiguration.get<"OpenAI" | "Azure" | "Ollama" | "OpenRouter">("markdown.copilot.backend.protocol");
+    get backendProtocol(): "OpenAI Completion" | "OpenAI Response" | "Azure" | "Ollama" | "OpenRouter" | undefined {
+        return this.workspaceConfiguration.get<"OpenAI Completion" | "OpenAI Response" | "Azure" | "Ollama" | "OpenRouter">("markdown.copilot.backend.protocol");
     }
 
     get backendBaseUrl(): string | undefined {

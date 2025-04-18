@@ -6,8 +6,14 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+- Add support for OpenAI Response API
+  - Rename existing "OpenAI" backend protocol to "OpenAI Completion"
+  - Add new "OpenAI Response" backend protocol option
+  - Support both protocols simultaneously
+
 ### ToDo
-- [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
+- [x] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
   - Azure URIs:
     - Completion: `https://YOUR_RESOURCE_NAME.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT_NAME/chat/completions?api-version=2024-06-01`
     - Responses:  `https://YOUR-RESOURCE-NAME.openai.azure.com/openai/responses?api-version=2025-03-01-preview`
