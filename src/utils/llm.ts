@@ -10,7 +10,7 @@ import { deepMergeJsons } from './json';
 import { invokeToolFunction, ToolContext, ToolDefinitions, toolTextToTools } from './llmTools';
 import { logger } from './logging';
 
-interface OpenAIClientCreateParams {
+interface BackendParams {
 	backendProtocol?: string
 	backendBaseUrl?: string
 	backendApiKey?: string
@@ -18,7 +18,7 @@ interface OpenAIClientCreateParams {
 
 function buildChatParams(
 	chatMessages: ChatMessage[],
-	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+	override: OpenAI.ChatCompletionCreateParams & BackendParams,
 	stream: boolean,
 ): OpenAI.ChatCompletionCreateParams {
 	// Convert `override` to OpenAI.ChatCompletionCreateParams by removing
@@ -28,23 +28,23 @@ function buildChatParams(
 
 	const configuration = config.get();
 	// eslint-disable-next-line prefer-object-spread
-	const chatParams = Object.assign({
+	const params = Object.assign({
 		model: configuration.optionsModelResolved,
 		messages: chatMessages,
 		temperature: configuration.optionsTemperature,
 		stream,
 	}, overrideParams);
 
-	if (chatParams.temperature === null) {
-		chatParams.temperature = undefined as unknown as number;
+	if (params.temperature === null) {
+		params.temperature = undefined as unknown as number;
 	}
 
-	return chatParams;
+	return params;
 }
 
 async function createChatCompletion(
 	chatMessages: ChatMessage[],
-	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+	override: OpenAI.ChatCompletionCreateParams & BackendParams,
 ): Promise<OpenAI.Chat.Completions.ChatCompletion | Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
 	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(override);
 	return openai.chat.completions.create(buildChatParams(chatMessages, override, true));
@@ -52,33 +52,13 @@ async function createChatCompletion(
 
 export async function executeTask(
 	chatMessages: ChatMessage[],
-	override: OpenAI.ChatCompletionCreateParams & OpenAIClientCreateParams,
+	override: OpenAI.ChatCompletionCreateParams & BackendParams,
 ): Promise<string> {
 	const openai: OpenAI | AzureOpenAI = await createOpenAIClient(override);
 	const completion = await openai.chat.completions.create(
 		buildChatParams(chatMessages, override, false) as OpenAI.ChatCompletionCreateParamsNonStreaming
 	);
 	return completion.choices[0].message.content!;
-}
-
-export async function executeChatCompletion(
-	chatMessages: ChatMessage[],
-	override: OpenAI.ChatCompletionCreateParams,
-	onDeltaContent: (deltaContent: string) => Promise<void>,
-	onStream?: (stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) => Promise<void>,
-) {
-	const completion = await createChatCompletion(chatMessages, override);
-	if (!(completion instanceof Stream)) {
-		const choice = completion.choices[0];
-		return onDeltaContent(choice.message.content!);
-	}
-
-	await onStream?.(completion);
-	for await (const chunk of completion) {
-		const chunkText = chunk.choices[0]?.delta?.content || '';
-		if (chunkText.length === 0) { continue; }
-		await onDeltaContent(chunkText);
-	}
 }
 
 export async function executeChatCompletionWithTools(
@@ -378,7 +358,7 @@ export class ChatMessageBuilder {
 }
 
 async function createOpenAIClient(
-	override: OpenAIClientCreateParams
+	override: BackendParams
 ) {
 	const configuration = config.get();
 	const backendProtocol = override.backendProtocol || configuration.backendProtocol;
