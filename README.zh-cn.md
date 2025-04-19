@@ -76,9 +76,9 @@ Markdown Copilot根据上下文回答选文。
 
 使用覆盖选项自定义 Markdown Copilot 的行为。这允许您直接在文档中控制响应长度或 AI 模型等设置。
 
-要使用覆盖选项，只需包含一个标记为 `json copilot-options` 的 JSON 代码块，并在其中填入您希望的设置，然后选择此块及您的文本并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
+要使用覆盖选项，只需包含一个标记为 `json copilot-options` 或 `yaml copilot-options` 的 JSON 或 YAML 代码块，并在其中填入您希望的设置，然后选择此块及您的文本并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
 
-**示例:** 让 Markdown Copilot 用自定义的响应长度和模型介绍自己:
+**示例:** 让 Markdown Copilot 用自定义的响应长度和模型介绍自己 (JSON):
 
 ~~~markdown
 自我介绍。
@@ -88,7 +88,18 @@ Markdown Copilot根据上下文回答选文。
 ```
 ~~~
 
-**示例：** 使用 `o1-preview` 模型
+**示例:** 让 Markdown Copilot 用自定义的响应长度和模型介绍自己 (YAML):
+
+~~~markdown
+自我介绍。
+
+```yaml copilot-options
+max_tokens: 50
+model: gpt-3.5-turbo
+```
+~~~
+
+**示例：** 使用 `o1-preview` 模型 (JSON)
 
 `o1-preview` 模型不支持系统消息，因此我们将使用 `**System(Override):**` 清除系统消息。
 
@@ -103,13 +114,22 @@ Markdown Copilot根据上下文回答选文。
 ```
 ~~~
 
-**示例：** 使用本地 Ollama 的 `llama2` 模型
-
+**示例：** 使用本地 Ollama 的 `llama2` 模型 (JSON)
 ~~~markdown
 自我介绍。
 
 ```json copilot-options
 {"model":"llama2","baseURL":"http://localhost:11434/v1"}
+```
+~~~
+
+**示例：** 使用本地 Ollama 的 `llama2` 模型 (YAML)
+~~~markdown
+自我介绍。
+
+```yaml copilot-options
+model: llama2
+baseURL: http://localhost:11434/v1
 ```
 ~~~
 

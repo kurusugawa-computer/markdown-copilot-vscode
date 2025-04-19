@@ -3,6 +3,7 @@ import mime from 'mime-types';
 import { AzureOpenAI, OpenAI } from 'openai';
 import { Stream } from "openai/streaming";
 import * as vscode from 'vscode';
+import YAML from 'yaml';
 import { LF, resolveFragmentUri } from '../utils';
 import * as l10n from '../utils/localization';
 import * as config from './configuration';
@@ -216,17 +217,26 @@ export class ChatMessageBuilder {
 	}
 
 	private async processJsonBlocks(message: string): Promise<string> {
-		for (const match of message.matchAll(/```json +copilot-(options|tools)\n([^]*?)\n```/gm)) {
-			const [matched, type, jsonText] = match;
+		for (const match of message.matchAll(/```(json|yaml) +copilot-(options|tools)\n([^]*?)\n```/gm)) {
+			const [matched, format, type, content] = match;
 
 			let parsed;
 			try {
-				parsed = JSON.parse(jsonText);
+				switch (format) {
+					case "json":
+						parsed = JSON.parse(content);
+						break;
+					case "yaml":
+						parsed = YAML.parse(content);
+						break;
+					default:
+						throw new AssertionError();
+				}
 			} catch {
 				this.copilotOptions = {} as OpenAI.ChatCompletionCreateParams;
 				this.chatMessages = [];
 				this.isInvalid = true;
-				return "Correct the following JSON and answer in the language of the `" + l10n.getLocale() + "` locale:\n```\n" + jsonText + "\n```";
+				return `Correct the following ${format} and answer in the language of the \`${l10n.getLocale()}\` locale:\n\`\`\`${format}\n${content}\n\`\`\``;
 			}
 
 			message = message.replace(matched, "");

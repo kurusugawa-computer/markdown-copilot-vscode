@@ -75,9 +75,9 @@ Or use shortcuts for quick access:
 
 Customize Markdown Copilot's behavior with override options. This allows you to control settings like response length or the AI model directly within your document.
 
-To use override options, simply include a JSON code block labeled `json copilot-options` with your desired settings, then select this block along with your text and choose `💡 Markdown Copilot: Continue` from the code action proposals.
+To use override options, simply include a JSON or YAML code block labeled `json copilot-options` or `yaml copilot-options` respectively with your desired settings, then select this block along with your text and choose `💡 Markdown Copilot: Continue` from the code action proposals.
 
-**Example:** Let Markdown Copilot introduce itself with customized response length and model
+**Example:** Let Markdown Copilot introduce itself with customized response length and model (JSON)
 
 ~~~markdown
 Introduce yourself.
@@ -87,7 +87,18 @@ Introduce yourself.
 ```
 ~~~
 
-**Example:** Using the `o1-preview` model
+**Example:** Let Markdown Copilot introduce itself with customized response length and model (YAML)
+
+~~~markdown
+Introduce yourself.
+
+```yaml copilot-options
+max_tokens: 50
+model: gpt-3.5-turbo
+```
+~~~
+
+**Example:** Using the `o1-preview` model (JSON)
 
 The `o1-preview` model do not support system messages, so we will use `**System(Override):**` to clear the system messages.
 
@@ -102,12 +113,22 @@ Introduce yourself.
 ```
 ~~~
 
-**Example:** Using local Ollama with `llama2` model
+**Example:** Using local Ollama with `llama2` model (JSON)
 ~~~markdown
 Introduce yourself.
 
 ```json copilot-options
 {"model":"llama2","baseURL":"http://localhost:11434/v1"}
+```
+~~~
+
+**Example:** Using local Ollama with `llama2` model (YAML)
+~~~markdown
+Introduce yourself.
+
+```yaml copilot-options
+model: llama2
+baseURL: http://localhost:11434/v1
 ```
 ~~~
 

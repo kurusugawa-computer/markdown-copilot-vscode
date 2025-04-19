@@ -45,7 +45,7 @@ class ToolContent {
 			functionDefinition.name = ToolContent.toSafeFunctionName(toolDocumentUri);
 		}
 
-		const paramsMatch = toolDocumentText.match(/```json +copilot-tool-parameters\r?\n([^]*?)\r?\n```/m);
+		const paramsMatch = toolDocumentText.match(/```(json|yaml) +copilot-tool-parameters\r?\n([^]*?)\r?\n```/m);
 		if (paramsMatch) {
 			toolDocumentText = toolDocumentText.replace(paramsMatch[0], "");
 		}

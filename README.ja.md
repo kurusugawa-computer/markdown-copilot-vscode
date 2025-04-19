@@ -75,9 +75,9 @@ Markdown Copilotはコンテキストに基づいて選択したテキストに�
 
 Markdown Copilotの挙動をオーバーライドオプションでカスタマイズします。これにより、文書内で直接、応答の長さやAIモデルなどの設定をコントロールできます。
 
-オーバーライドオプションを使用するには、希望する設定を含むJSONコードブロックを `json copilot-options` として含め、このブロックとテキストを一緒に選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
+オーバーライドオプションを使用するには、希望する設定を含むJSONまたはYAMLコードブロックをそれぞれ `json copilot-options` または `yaml copilot-options` として含め、このブロックとテキストを一緒に選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
 
-**例:** カスタマイズされた応答の長さとモデルでMarkdown Copilotに自己紹介させる
+**例:** カスタマイズされた応答の長さとモデルでMarkdown Copilotに自己紹介させる (JSON)
 
 ~~~markdown
 自己紹介してください。
@@ -87,7 +87,18 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 ```
 ~~~
 
-**例:** `o1-preview` モデルを利用する
+**例:** カスタマイズされた応答の長さとモデルでMarkdown Copilotに自己紹介させる (YAML)
+
+~~~markdown
+自己紹介してください。
+
+```yaml copilot-options
+max_tokens: 50
+model: gpt-3.5-turbo
+```
+~~~
+
+**例:** `o1-preview` モデルを利用する (JSON)
 
 `o1-preview` モデルはシステムメッセージをサポートしていないので `**System(Override):**` を使ってシステムメッセージを空にします。
 
@@ -102,12 +113,22 @@ Markdown Copilotの挙動をオーバーライドオプションでカスタマ�
 ```
 ~~~
 
-**例:** ローカル Ollama の `llama2` モデルを使用する
+**例:** ローカル Ollama の `llama2` モデルを使用する (JSON)
 ~~~markdown
 Introduce yourself.
 
 ```json copilot-options
 {"model":"llama2","baseURL":"http://localhost:11434/v1"}
+```
+~~~
+
+**例:** ローカル Ollama の `llama2` モデルを使用する (YAML)
+~~~markdown
+Introduce yourself.
+
+```yaml copilot-options
+model: llama2
+baseURL: http://localhost:11434/v1
 ```
 ~~~
 
