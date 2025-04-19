@@ -1,9 +1,9 @@
 import * as assert from "assert";
-import { suite, test } from "mocha";
+import { describe, it } from "mocha";
 import { parseFunctionSignature } from "../utils/signatureParser";
 
-suite('Signature Parser Test Suite', () => {
-    test('JSDoc', () => {
+describe('Signature Parser Test Suite', () => {
+    it('should parse JSDoc correctly', () => {
         const result = parseFunctionSignature(`/**
  * Recursively searches files in a directory tree that match a regex pattern.
  * @param {vscode.Uri} directoryUri The URI of the directory to search in. This directory will be recursively searched.
@@ -41,7 +41,7 @@ suite('Signature Parser Test Suite', () => {
         });
     });
 
-    test('TS Signature', () => {
+    it('should parse a TypeScript function signature correctly', () => {
         const result = parseFunctionSignature(`function fsSearchTree(directoryUri: vscode.Uri, regexPattern: string, maxDepth: number = 10, ignoreDotfiles: boolean = true)`);
         assert.deepEqual(result, {
             name: 'fsSearchTree',
@@ -68,7 +68,7 @@ suite('Signature Parser Test Suite', () => {
         });
     });
 
-    test('JSDoc complex type', () => {
+    it('should parse JSDoc with complex types', () => {
         const result = parseFunctionSignature(`/**
  * Cluster the people by age.
  * @param {{name: string, age: number}[]} people People to cluster.
@@ -98,7 +98,7 @@ suite('Signature Parser Test Suite', () => {
         });
     });
 
-    test('TS complex type', () => {
+    it('should parse a TypeScript function signature with complex types', () => {
         const result = parseFunctionSignature(`function clusterPeople(people: {name: string, age: number}[])`);
         assert.deepEqual(result, {
             name: 'clusterPeople',
