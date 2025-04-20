@@ -14,6 +14,32 @@ function isContextSeparateLine(lineText: string): boolean {
 	return lineText.match(/^#[ \t]Copilot Context/) !== null;
 }
 
+export async function resolveImport(
+	document: vscode.TextDocument,
+	sourceDocumentContent: string,
+	importedDocumentUriTexts: string[],
+	eol: string = toEolString(document.eol),
+): Promise<string> {
+	const textLines: string[] = [];
+	const documentUriText = document.uri.toString();
+	if (importedDocumentUriTexts.includes(documentUriText)) { return ""; }
+	importedDocumentUriTexts.push(documentUriText);
+	try {
+		for (const line of splitLines(sourceDocumentContent)) {
+			const match = line.match(/^@import\s+"([^"]+)"/);
+			if (match === null) {
+				textLines.push(line);
+				continue;
+			}
+			const importedDocument = await vscode.workspace.openTextDocument(resolveFragmentUri(document.uri, match[1].trim()));
+			textLines.push(await resolveImport(importedDocument, importedDocument.getText(), importedDocumentUriTexts, eol));
+		}
+	} finally {
+		importedDocumentUriTexts.pop();
+	}
+	return textLines.join(eol);
+}
+
 export class ContextOutline {
 	private readonly lineRanges: LineRange[] = [];
 	private readonly activeLineRangeIndices: number[] = [];
@@ -147,25 +173,6 @@ export class ContextOutline {
 		const importedDocumentUriTexts: string[] = [];
 		const activeLineTexts: string[] = [];
 
-		async function resolveImport(document: vscode.TextDocument, lineTexts: string) {
-			const documentUriText = document.uri.toString();
-			if (importedDocumentUriTexts.includes(documentUriText)) { return; }
-			importedDocumentUriTexts.push(documentUriText);
-			try {
-				for (const line of splitLines(lineTexts)) {
-					const match = line.match(/@import\s+"([^"]+)"/);
-					if (match === null) {
-						activeLineTexts.push(line);
-						continue;
-					}
-					const importedDoc = await vscode.workspace.openTextDocument(resolveFragmentUri(document.uri, match[1].trim()));
-					await resolveImport(importedDoc, importedDoc.getText());
-				}
-			} finally {
-				importedDocumentUriTexts.pop();
-			}
-		}
-
 		for (const lineRange of this.toActiveLineRanges()) {
 			if (lineRange.start.isAfterOrEqual(userStart)) { break; }
 			const range = new vscode.Range(
@@ -174,9 +181,12 @@ export class ContextOutline {
 					? document.positionAt(Math.max(document.offsetAt(userStart) - 1, 0))
 					: lineRange.end
 			);
-			const text = document.getText(range);
-			const lineTexts = outdentQuote(text, lineRange.quoteIndent);
-			await resolveImport(document, lineTexts);
+			activeLineTexts.push(await resolveImport(
+				document,
+				outdentQuote(document.getText(range), lineRange.quoteIndent),
+				importedDocumentUriTexts,
+				documentEol,
+			));
 		}
 		return activeLineTexts.join(documentEol).split(documentEol);
 	}

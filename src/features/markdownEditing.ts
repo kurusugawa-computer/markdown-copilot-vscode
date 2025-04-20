@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { countChar, normalizeLineSeparators, toEolString, toOverflowAdjustedRange } from '../utils';
 import * as config from '../utils/configuration';
-import { ContextOutline } from '../utils/context';
+import { ContextOutline, resolveImport } from '../utils/context';
 import { EditCursor } from '../utils/editCursor';
 import { countQuoteIndent, getQuoteIndent, outdentQuote } from '../utils/indention';
 import { ChatMessageBuilder, ChatRole, ChatRoleFlags } from '../utils/llm';
@@ -68,7 +68,7 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 			await chatMessageBuilder.addLines(await outline.collectActiveLines(document, userStart));
 		}
 
-		await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, selectedUserMessage);
+		await chatMessageBuilder.addChatMessage(ChatRoleFlags.User, await resolveImport(document, selectedUserMessage, [], documentEol));
 
 		const { chatMessages, copilotOptions, toolContext } = chatMessageBuilder.build();
 		const completionPromise = cursor.insertCompletion(

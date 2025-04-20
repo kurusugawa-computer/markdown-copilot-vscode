@@ -13,6 +13,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
     - Responses:  `https://YOUR-RESOURCE-NAME.openai.azure.com/openai/responses?api-version=2025-03-01-preview`
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
+### Added
+- Resolve `@import` directives in user selection text
+
+### Changed
+- Make `@import` directives only activate at the beginning of a line
 
 ## [0.12.1] - 2025-04-19
 
