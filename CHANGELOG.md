@@ -14,6 +14,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
 ### Added
+- Add `Summarize and New Context` command
 - Resolve `@import` directives in user selection text
 
 ### Changed

@@ -160,6 +160,16 @@ Markdown Copilot 可以根据对话历史记录为对话添加标题。
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
 
+### 🪄 总结并开启新的上下文
+Markdown Copilot 允许您先对当前上下文进行总结，然后根据该总结开启新的上下文。
+此功能有助于防止对话上下文变得过长，从而影响模型的处理效果，同时也能让您更轻松地掌握对话的要点。
+
+要使用此功能，请将光标移动到要总结的上下文，然后使用 `Markdown Copilot: 总结并开始新上下文` 命令。
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Summarize and New Context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Summarize and New Context</kbd> |
+
 ### 📋⤵ 粘贴为美化文本
 
 Markdown Copilot 允许您以智能方式将剪贴板内容粘贴到文档中，并根据文件类型进行适配。  

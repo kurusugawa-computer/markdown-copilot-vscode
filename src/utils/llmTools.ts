@@ -311,6 +311,34 @@ const DEFAULT_RESPONSE_FORMAT: OpenAI.ResponseFormatJSONSchema = {
 };
 
 const BUILTIN_TOOLS: { [key: string]: OpenAI.ChatCompletionTool[] } = {
+	"context": [
+		{
+			type: "function",
+			function: {
+				name: "context_summary_and_new",
+				description: "Summarizes the current conversation context and starts a new context based on the summary. This is useful for long conversations to maintain focus and efficiency.",
+				parameters: {
+					type: "object",
+					properties: {},
+					required: [],
+					additionalProperties: false
+				}
+			}
+		},
+		{
+			type: "function",
+			function: {
+				name: "context_reset_and_new",
+				description: "Resets the current conversation context and starts a completely new one. This is useful when changing topics or wanting a fresh start without any prior context.",
+				parameters: {
+					type: "object",
+					properties: {},
+					required: [],
+					additionalProperties: false
+				}
+			}
+		}
+	],
 	"file": [
 		{
 			type: "function",

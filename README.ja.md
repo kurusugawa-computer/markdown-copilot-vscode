@@ -159,6 +159,16 @@ Markdown Copilotは会話履歴をもとに会話にタイトルを付けられ�
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
 
+### 🪄 要約と新しいコンテキスト
+Markdown Copilotでは現在のコンテキストを要約し、その要約に基づいて新しいコンテキストを開始できます。
+この機能により、会話のコンテキストが長くなりすぎてモデルの処理能力を阻害しないようにしつつ、会話の要点を把握しやすくなります。
+
+使用するには、要約したいコンテキストにカーソルを合わせた上で `Markdown Copilot: コンテキストを要約して新規開始` コマンドを使用してください。
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Summarize and New Context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Summarize and New Context</kbd> |
+
 ### 📋⤵ いい感じのテキストとして貼り付ける
 
 Markdown Copilotはクリップボードの内容をファイルタイプに応じて賢くドキュメントに貼り付けることができます。

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
 import { continueEditing, titleActiveContext } from './features/markdownEditing';
+import { summarizeAndNewContext } from './features/manipulateContexts';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { pasteAsPrettyText } from './features/pasteAsPrettyText';
 import { adjustStartToLineHead, toOverflowAdjustedRange } from './utils';
@@ -25,6 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT = "markdown.copilot.editing.continueWithoutContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS = "markdown.copilot.editing.nameAndSaveAs";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_SUMMARIZE_AND_NEW_CONTEXT = "markdown.copilot.editing.summarizeAndNewContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF = "markdown.copilot.editing.applyFilePathDiff";
@@ -57,6 +59,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT,
 		() => titleActiveContext(outline)
+	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_SUMMARIZE_AND_NEW_CONTEXT,
+		() => summarizeAndNewContext(outline)
 	));
 
 	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, () => {
@@ -142,6 +148,21 @@ export function activate(context: vscode.ExtensionContext) {
 			if (activeTextEditor.document !== document) { return; }
 			if (activeTextEditor.selection.isEmpty) { return; }
 
+			// Define newCompletionItem function here
+			function newCompletionItem(command: string, name: string, detail: string, title: string, selection: vscode.Selection) {
+				const item = new vscode.CompletionItem(name);
+				item.kind = vscode.CompletionItemKind.Text;
+				item.insertText = document.getText(selection);
+				item.detail = detail;
+				item.keepWhitespace = false;
+				item.command = {
+					command,
+					title,
+					arguments: [selection],
+				};
+				return item;
+			}
+
 			return [
 				newCompletionItem(
 					COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT,
@@ -165,20 +186,6 @@ export function activate(context: vscode.ExtensionContext) {
 					activeTextEditor.selection,
 				),
 			];
-
-			function newCompletionItem(command: string, name: string, detail: string, title: string, selection: vscode.Selection) {
-				const item = new vscode.CompletionItem(name);
-				item.kind = vscode.CompletionItemKind.Text;
-				item.insertText = document.getText(selection);
-				item.detail = detail;
-				item.keepWhitespace = false;
-				item.command = {
-					command,
-					title,
-					arguments: [selection],
-				};
-				return item;
-			}
 		}
 	}));
 }

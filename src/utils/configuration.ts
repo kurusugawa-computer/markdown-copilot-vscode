@@ -142,6 +142,14 @@ export class Configuration {
         return namePathFormat;
     }
 
+    get instructionsSummarizeContextMessage(): string | undefined {
+        const summarizeMessage = this.workspaceConfiguration.get<string>("markdown.copilot.instructions.summarizeContextMessage");
+        if (summarizeMessage === undefined || summarizeMessage.trim().length === 0) {
+            return undefined;
+        }
+        return summarizeMessage;
+    }
+
     get optionsModel(): string | undefined {
         const model = this.workspaceConfiguration.get<string>("markdown.copilot.options.model");
         if (model === undefined || model.trim().length === 0) {

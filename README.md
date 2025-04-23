@@ -159,6 +159,17 @@ Or use shortcuts for quick access:
 | :-------------: | :---: |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Title active context</kbd> |
 
+### 🪄 Summarize and New Context
+
+Markdown Copilot allows you to summarize the current context and start a new context based on the summary.
+This feature helps prevent the conversation context from becoming excessively long, which can impair the model's ability to process the conversation effectively, while also making it easier for you to grasp the conversation's essence.
+
+To use, move the cursor to the context you want to summarize and use the `Markdown Copilot: Summarize and New Context` command.
+
+| Windows / Linux | Mac |
+| :-------------: | :---: |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> > <kbd>Summarize and New Context</kbd> | <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>P</kbd> > <kbd>Summarize and New Context</kbd> |
+
 ### 📋⤵ Paste as Pretty Text
 
 Markdown Copilot allows you to paste clipboard content into your document in an intelligent way, adapting to the file type.

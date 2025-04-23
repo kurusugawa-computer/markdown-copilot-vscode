@@ -64,6 +64,12 @@
         "enablement": "editorLangId == markdown && editorHasSelection"
       },
       {
+        "command": "markdown.copilot.editing.summarizeAndNewContext",
+        "title": "%command.editing.summarizeAndNewContext.title%",
+        "icon": "$(comment-discussion)",
+        "enablement": "editorLangId == markdown"
+      },
+      {
         "command": "markdown.copilot.editing.indentQuote",
         "title": "%command.editing.indentQuote.title%",
         "icon": "$(arrow-small-right)",
@@ -144,6 +150,12 @@
           "default": "Convert the following text to ${languageId}. Follow these rules:\n- Output only ${languageId} content without quotes and explanations.\n- Preserve all content; no summaries or omissions.\n- Use relative URLs for internal links.",
           "editPresentation": "multilineText",
           "markdownDescription": "%config.instructions.pasteAsPrettyTextMessage.description%"
+        },
+        "markdown.copilot.instructions.summarizeContextMessage": {
+          "type": "string",
+          "editPresentation": "multilineText",
+          "default": "Read the above conversation and summarize key points for future reference. Focus on essentials; remove fluff and repetition.\\n\\nGOAL: Provide a quick reference of crucial details\\n\\nGUIDELINES\\n1. Identify user’s main requests\\n2. Note copilot’s proposals or answers\\n3. Keep essential assumptions or constraints\\n4. Remove redundancy but retain critical data\\n5. Preserve important technical details accurately\\n6. Separate distinct topics if needed\\n\\nOUTPUT FORMAT\\n- Bullet or numbered lists\\n- Concise and clear\\n- Reflect user queries and copilot responses",
+          "markdownDescription": "%markdown.copilot.instructions.summarizeContextMessage.description%"
         },
         "markdown.copilot.instructions.systemMessage": {
           "type": "string",
