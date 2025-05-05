@@ -16,8 +16,13 @@ jobs:
     name: 📑 Test
     runs-on: ubuntu-latest
     steps:
-    - run: sudo apt-get update
+    - name: Check xvfb-run is available
+      id: check_xvfb
+      run: echo "result=$(hash xvfb-run 2>/dev/null && echo 1 || echo 0)" >> $GITHUB_OUTPUT
+    - run: sudo apt-get update    
+      if: steps.check_xvfb.outputs.result == 0
     - name: 🛠️ Install OS packages
+      if: steps.check_xvfb.outputs.result == 0
       uses: awalsh128/cache-apt-pkgs-action@latest
       with:
         packages: xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2
