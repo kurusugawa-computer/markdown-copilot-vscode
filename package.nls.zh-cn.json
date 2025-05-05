@@ -37,5 +37,11 @@
     "config.options.model.description": "可指定[Models](https://platform.openai.com/docs/models)中列出的模型, 如果选择 `→ Model Name Text`, 将使用下一个配置。",
     "config.options.modelNameText.description": "可以文本形式指定模型名称, 不同后端可能有不同的命名规则。",
     "config.options.temperature.description": "可指定一个介于`0.0`和`1.0`之间的值或留空。如果留空, 则会省略该设置。`0.8`这样的较高值会使输出更加随机, 而`0.2`这样的较低值会使输出更加集中和确定。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter) 可帮助确定该值。",
-    "config.indentation.quoteCharacter.description": "可以指定用于 Markdown 引用缩进的字符。默认为 `>`，但您可以使用 `>|` 等其他字符组合。"
+    "config.indentation.quoteCharacter.description": "可以指定用于 Markdown 引用缩进的字符。默认为 `>`，但您可以使用 `>|` 等其他字符组合。",
+    "walkthrough.gettingStarted.title": "Markdown Copilot 入门",
+    "walkthrough.gettingStarted.description": "了解如何设置和使用 Markdown Copilot，通过 AI 辅助增强您的 Markdown 编辑体验。",
+    "walkthrough.gettingStarted.configureApiKey.title": "配置 OpenAI API 密钥",
+    "walkthrough.gettingStarted.configureApiKey.description": "设置您的 OpenAI API 密钥以开始使用 Markdown Copilot。您需要从 OpenAI 获取 API 密钥并在扩展设置中配置它。",
+    "walkthrough.gettingStarted.basicUsage.title": "基本用法",
+    "walkthrough.gettingStarted.basicUsage.description": "了解如何使用 Markdown Copilot 增强您的 Markdown 编辑体验。打开 Markdown 文件，选择文本，并使用扩展命令获取 AI 辅助。"
 }
