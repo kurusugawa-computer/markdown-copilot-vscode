@@ -271,38 +271,38 @@
     "vsce:publish-pre-release": "vsce publish --pre-release"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0",
     "@types/express": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.91.0",
-    "@typescript-eslint/eslint-plugin": "^8.30.1",
-    "@typescript-eslint/parser": "^8.30.1",
+    "@typescript-eslint/eslint-plugin": "^8.32.0",
+    "@typescript-eslint/parser": "^8.32.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/test-web": "^0.0.68",
+    "@vscode/test-web": "^0.0.69",
     "@vscode/vsce": "^3.3.2",
-    "eslint": "^9.25.0",
-    "mocha": "^11.1.0",
-    "npm-check-updates": "^17.1.18",
+    "eslint": "^9.26.0",
+    "mocha": "^11.2.2",
+    "npm-check-updates": "^18.0.1",
     "path-browserify": "^1.0.1",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.32.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.30.1",
-    "webpack": "^5.99.6",
     "webpack-cli": "^6.0.1",
-    "webpack-merge": "^6.0.1"
+    "webpack-merge": "^6.0.1",
+    "webpack": "^5.99.7",
+    "zod": "^3.24.4"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.10.1",
     "@types/mime-types": "^2.1.4",
     "@vscode/l10n": "^0.0.18",
     "async-mutex": "^0.5.0",
     "chardet": "^2.1.0",
     "mime-types": "^3.0.1",
-    "openai": "^4.95.1",
+    "openai": "^4.97.0",
     "ts-debounce": "^4.0.0",
-    "yaml": "^2.7.1",
-    "zod": "^3.24.3"
+    "yaml": "^2.7.1"
   }
 }
