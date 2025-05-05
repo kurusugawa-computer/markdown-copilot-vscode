@@ -8,7 +8,7 @@ import { adjustStartToLineHead, toOverflowAdjustedRange } from './utils';
 import * as config from './utils/configuration';
 import { ContextDecorator, ContextOutline } from './utils/context';
 import { EditCursor } from './utils/editCursor';
-import { indentQuote, outdentQuote } from './utils/indention';
+import * as indention from './utils/indention';
 import * as l10n from './utils/localization';
 import * as logging from './utils/logging';
 
@@ -73,7 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
 		textEditor.edit(editBuilder =>
 			editBuilder.replace(
 				range,
-				indentQuote(textEditor.document.getText(range), 1)
+				indention.indentQuote(textEditor.document.getText(range), 1)
 			)
 		);
 	}));
@@ -86,7 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
 		textEditor.edit(editBuilder =>
 			editBuilder.replace(
 				range,
-				outdentQuote(textEditor.document.getText(range), 1)
+				indention.outdentQuote(textEditor.document.getText(range), 1)
 			)
 		);
 	}));
@@ -117,6 +117,8 @@ export function activate(context: vscode.ExtensionContext) {
 			try { config.onDidChangeConfiguration(event); }
 			catch { /* Ignore errors */ }
 			try { contextDecorator.onDidChangeConfiguration(event); }
+			catch { /* Ignore errors */ }
+			try { indention.onDidChangeConfiguration(event); }
 			catch { /* Ignore errors */ }
 		}
 	));
