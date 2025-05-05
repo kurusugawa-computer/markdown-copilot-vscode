@@ -174,4 +174,9 @@ export class Configuration {
     get optionsTemperature(): number {
         return this.workspaceConfiguration.get<number>("markdown.copilot.options.temperature")!;
     }
+
+    get indentationQuoteCharacter(): string {
+        const char = this.workspaceConfiguration.get<string>("markdown.copilot.indentation.quoteCharacter");
+        return char !== undefined && char.trim().length > 0 ? char : ">";
+    }
 }

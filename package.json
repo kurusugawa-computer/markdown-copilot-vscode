@@ -219,6 +219,11 @@
           "minimum": 0,
           "maximum": 1,
           "markdownDescription": "%config.options.temperature.description%"
+        },
+        "markdown.copilot.indentation.quoteCharacter": {
+          "type": "string",
+          "default": ">",
+          "markdownDescription": "%config.indentation.quoteCharacter.description%"
         }
       }
     },
