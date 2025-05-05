@@ -123,7 +123,9 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	));
 
-	context.subscriptions.push(vscode.languages.registerCodeActionsProvider('markdown', {
+	const allDocumentSelector = [{ scheme: 'file' }, { scheme: 'untitled' }];
+
+	context.subscriptions.push(vscode.languages.registerCodeActionsProvider(allDocumentSelector, {
 		provideCodeActions(_document: vscode.TextDocument, range: vscode.Range): vscode.CodeAction[] | undefined {
 			if (range.isEmpty) { return; }
 			return [
@@ -143,7 +145,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}, { providedCodeActionKinds: [vscode.CodeActionKind.Empty] }));
 
-	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('markdown', {
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(allDocumentSelector, {
 		provideCompletionItems(document: vscode.TextDocument, _position: vscode.Position, _token: vscode.CancellationToken, _context: vscode.CompletionContext) {
 			const activeTextEditor = contextDecorator.activeTextEditor;
 			if (activeTextEditor === undefined) { return; }
