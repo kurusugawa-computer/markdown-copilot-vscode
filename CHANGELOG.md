@@ -20,6 +20,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Changed
 - Make `@import` directives only activate at the beginning of a line
+- Remove language restriction to allow extension usage with languages other than Markdown
 
 ## [0.12.1] - 2025-04-19
 

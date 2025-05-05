@@ -43,49 +43,49 @@
         "command": "markdown.copilot.editing.titleActiveContext",
         "title": "%command.editing.titleActiveContext.title%",
         "icon": "$(milestone)",
-        "enablement": "editorLangId == markdown"
+        "enablement": "editorIsOpen"
       },
       {
         "command": "markdown.copilot.editing.continueInContext",
         "title": "%command.editing.continueInContext.title%",
         "icon": "$(comment-discussion)",
-        "enablement": "editorLangId == markdown && editorHasSelection"
+        "enablement": "editorIsOpen && editorHasSelection"
       },
       {
         "command": "markdown.copilot.editing.continueInMultimodalContext",
         "title": "%command.editing.continueInMultimodalContext.title%",
         "icon": "$(comment-discussion)",
-        "enablement": "editorLangId == markdown && editorHasSelection"
+        "enablement": "editorIsOpen && editorHasSelection"
       },
       {
         "command": "markdown.copilot.editing.continueWithoutContext",
         "title": "%command.editing.continueWithoutContext.title%",
         "icon": "$(comment-discussion)",
-        "enablement": "editorLangId == markdown && editorHasSelection"
+        "enablement": "editorIsOpen && editorHasSelection"
       },
       {
         "command": "markdown.copilot.editing.summarizeAndNewContext",
         "title": "%command.editing.summarizeAndNewContext.title%",
         "icon": "$(comment-discussion)",
-        "enablement": "editorLangId == markdown"
+        "enablement": "editorIsOpen"
       },
       {
         "command": "markdown.copilot.editing.indentQuote",
         "title": "%command.editing.indentQuote.title%",
         "icon": "$(arrow-small-right)",
-        "enablement": "editorLangId == markdown && editorHasSelection"
+        "enablement": "editorIsOpen && editorHasSelection"
       },
       {
         "command": "markdown.copilot.editing.outdentQuote",
         "title": "%command.editing.outdentQuote.title%",
         "icon": "$(arrow-small-left)",
-        "enablement": "editorLangId == markdown && editorHasSelection"
+        "enablement": "editorIsOpen && editorHasSelection"
       },
       {
         "command": "markdown.copilot.editing.applyFilePathDiff",
         "title": "%command.editing.applyFilePathDiff.title%",
         "icon": "$(comment-discussion)",
-        "enablement": "editorLangId == markdown && editorHasSelection"
+        "enablement": "editorIsOpen && editorHasSelection"
       },
       {
         "command": "markdown.copilot.editing.listFilePathDiff",
@@ -232,13 +232,13 @@
         "command": "markdown.copilot.editing.indentQuote",
         "key": "ctrl+alt+l",
         "mac": "cmd+alt+l",
-        "when": "editorTextFocus && editorLangId == markdown && !suggestWidgetVisible"
+        "when": "editorTextFocus && !suggestWidgetVisible"
       },
       {
         "command": "markdown.copilot.editing.outdentQuote",
         "key": "ctrl+alt+shift+l",
         "mac": "cmd+alt+shift+l",
-        "when": "editorTextFocus && editorLangId == markdown && !suggestWidgetVisible"
+        "when": "editorTextFocus && !suggestWidgetVisible"
       }
     ],
     "snippets": [
