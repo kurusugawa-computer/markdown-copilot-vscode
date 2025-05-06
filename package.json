@@ -39,6 +39,34 @@
   "main": "./dist/extension.js",
   "browser": "./dist/web-extension.js",
   "contributes": {
+    "walkthroughs": [
+      {
+        "id": "gettingStarted",
+        "title": "%walkthrough.gettingStarted.title%",
+        "description": "%walkthrough.gettingStarted.description%",
+        "steps": [
+          {
+            "id": "configureApiKey",
+            "title": "%walkthrough.gettingStarted.configureApiKey.title%",
+            "description": "%walkthrough.gettingStarted.configureApiKey.description%",
+            "media": {
+              "markdown": "media/walkthroughs/configure-api-key.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:markdown.copilot.backend.apiKey"
+            ]
+          },
+          {
+            "id": "basicUsage",
+            "title": "%walkthrough.gettingStarted.basicUsage.title%",
+            "description": "%walkthrough.gettingStarted.basicUsage.description%",
+            "media": {
+              "markdown": "media/walkthroughs/basic-usage.md"
+            }
+          }
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "markdown.copilot.editing.nameAndSaveAs",

@@ -37,5 +37,11 @@
     "config.options.model.description": "[Models](https://platform.openai.com/docs/models)にリストされているモデルを指定できます。`→ Model Name Text`を選択した場合、次の設定が使用されます。",
     "config.options.modelNameText.description": "バックエンドによって異なるモデル名をテキストとして指定できます。",
     "config.options.temperature.description": "`0.0`から`1.0`までの値、または空を指定できます。空の場合、この設定は省略されます。`0.8`のような高い値を設定すると出力はよりランダムになり、`0.2`のような低い値を設定すると出力はより集中して決定的になります。[FAQ](https://platform.openai.com/docs/guides/text-generation/how-should-i-set-the-temperature-parameter)が値の決定に役立ちます。",
-    "config.indentation.quoteCharacter.description": "Markdownの引用インデントに使用する文字を指定できます。デフォルトは `>` ですが、`>|` などの他の文字も使用できます。"
+    "config.indentation.quoteCharacter.description": "Markdownの引用インデントに使用する文字を指定できます。デフォルトは `>` ですが、`>|` などの他の文字も使用できます。",
+    "walkthrough.gettingStarted.title": "Markdown Copilotを始める",
+    "walkthrough.gettingStarted.description": "Markdown CopilotのセットアップとAIアシスタンスによるMarkdown編集体験の向上方法を学びます。",
+    "walkthrough.gettingStarted.configureApiKey.title": "OpenAI API Keyを設定する",
+    "walkthrough.gettingStarted.configureApiKey.description": "Markdown Copilotを使用するためにOpenAI API Keyを設定します。OpenAIからAPI Keyを取得し、拡張機能の設定で構成する必要があります。",
+    "walkthrough.gettingStarted.basicUsage.title": "基本的な使い方",
+    "walkthrough.gettingStarted.basicUsage.description": "Markdown CopilotでMarkdown編集体験を向上させる方法を学びます。Markdownファイルを開き、テキストを選択し、拡張機能のコマンドを使用してAIアシスタンスを受けます。"
 }
