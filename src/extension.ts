@@ -27,8 +27,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const COMMAND_MARKDOWN_COPILOT_EDITING_NAME_AND_SAVE_AS = "markdown.copilot.editing.nameAndSaveAs";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_TITLE_ACTIVE_CONTEXT = "markdown.copilot.editing.titleActiveContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_SUMMARIZE_AND_NEW_CONTEXT = "markdown.copilot.editing.summarizeAndNewContext";
-	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE = "markdown.copilot.editing.indentQuote";
-	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE = "markdown.copilot.editing.outdentQuote";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_CONTEXT = "markdown.copilot.editing.indentContext";
+	const COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_CONTEXT = "markdown.copilot.editing.outdentContext";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF = "markdown.copilot.editing.applyFilePathDiff";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_LIST_FILE_PATH_DIFF = "markdown.copilot.editing.listFilePathDiff";
 	const COMMAND_MARKDOWN_COPILOT_EDITING_PASTE_AS_PRETTY_TEXT = "markdown.copilot.editing.pasteAsPrettyText";
@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 		() => summarizeAndNewContext(outline)
 	));
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, () => {
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_CONTEXT, () => {
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined || textEditor.selection.isEmpty) { return; }
 
@@ -73,12 +73,12 @@ export function activate(context: vscode.ExtensionContext) {
 		textEditor.edit(editBuilder =>
 			editBuilder.replace(
 				range,
-				indention.indentQuote(textEditor.document.getText(range), 1)
+				indention.indentContext(textEditor.document.getText(range), 1)
 			)
 		);
 	}));
 
-	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, () => {
+	context.subscriptions.push(vscode.commands.registerCommand(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_CONTEXT, () => {
 		const textEditor = vscode.window.activeTextEditor;
 		if (textEditor === undefined || textEditor.selection.isEmpty) { return; }
 
@@ -86,7 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
 		textEditor.edit(editBuilder =>
 			editBuilder.replace(
 				range,
-				indention.outdentQuote(textEditor.document.getText(range), 1)
+				indention.outdentContext(textEditor.document.getText(range), 1)
 			)
 		);
 	}));
@@ -132,8 +132,8 @@ export function activate(context: vscode.ExtensionContext) {
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_CONTEXT, l10n.t("command.editing.continueInContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_IN_MULTIMODAL_CONTEXT, l10n.t("command.editing.continueInMultimodalContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_CONTINUE_WITHOUT_CONTEXT, l10n.t("command.editing.continueWithoutContext.title")),
-				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_QUOTE, l10n.t("command.editing.indentQuote.title")),
-				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_QUOTE, l10n.t("command.editing.outdentQuote.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_INDENT_CONTEXT, l10n.t("command.editing.indentContext.title")),
+				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_OUTDENT_CONTEXT, l10n.t("command.editing.outdentContext.title")),
 				newCodeAction(COMMAND_MARKDOWN_COPILOT_EDITING_APPLY_FILE_PATH_DIFF, l10n.t("command.editing.applyFilePathDiff.title")),
 			];
 

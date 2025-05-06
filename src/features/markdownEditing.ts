@@ -3,7 +3,7 @@ import { countChar, normalizeLineSeparators, toEolString, toOverflowAdjustedRang
 import * as config from '../utils/configuration';
 import { ContextOutline, resolveImport } from '../utils/context';
 import { EditCursor } from '../utils/editCursor';
-import { countQuoteIndent, getQuoteIndent, outdentQuote } from '../utils/indention';
+import { countContextIndentLevel, getContextIndent, outdentContext } from '../utils/indention';
 import { ChatMessageBuilder, ChatRole, ChatRoleFlags } from '../utils/llm';
 
 export async function continueEditing(outline: ContextOutline, useContext: boolean, supportsMultimodal: boolean, selectionOverride?: vscode.Selection) {
@@ -23,19 +23,19 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 
 	const userStartLineText = document.lineAt(userStart.line).text;
 	const userEndLineText = document.lineAt(userEnd.line).text;
-	const userEndLineQuoteIndent = countQuoteIndent(userEndLineText);
+	const userEndLineContextIndent = countContextIndentLevel(userEndLineText);
 
-	const userStartLineQuoteIndentText = getQuoteIndent(userStartLineText);
-	const userEndLineQuoteIndentText = getQuoteIndent(userEndLineText);
+	const userStartLineContextIndentText = getContextIndent(userStartLineText);
+	const userEndLineContextIndentText = getContextIndent(userEndLineText);
 
 	const selectedText = document.getText(userRange);
 
 	const titleText = selectedText.replaceAll(/[\r\n\t]+/g, " ").trim();
 	const editCursor = new EditCursor(textEditor, document.lineAt(userEnd.line).range.end);
 	await editCursor.withProgress(`Markdown Copilot: ${titleText.length > 64 ? titleText.slice(0, 63) + '…' : titleText}`, async (cursor, token) => {
-		let selectedUserMessage = normalizeLineSeparators(outdentQuote(
+		let selectedUserMessage = normalizeLineSeparators(outdentContext(
 			selectedText,
-			userEndLineQuoteIndent
+			userEndLineContextIndent
 		));
 
 		// Check if the last user message already has a `**User:** ` prefix
@@ -48,13 +48,13 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 			await cursor.edit(workspaceEdit => {
 				workspaceEdit.insert(
 					document.uri,
-					document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineQuoteIndentText))),
+					document.positionAt(document.offsetAt(userStart) + (userStart.character > 0 ? 0 : countChar(userStartLineContextIndentText))),
 					"**User:** "
 				);
 			});
 		}
 
-		const userEndLineEol = documentEol + userEndLineQuoteIndentText;
+		const userEndLineEol = documentEol + userEndLineContextIndentText;
 		await cursor.insertText("\n\n**Copilot:** ", userEndLineEol);
 
 		const chatMessageBuilder = new ChatMessageBuilder(document.uri, supportsMultimodal);

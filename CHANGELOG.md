@@ -16,7 +16,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Added
 - Add `Summarize and New Context` command
 - Resolve `@import` directives in user selection text
-- Add configurable quote character for indentation (`markdown.copilot.indentation.quoteCharacter`)
+- Add configurable indent characters for context indentation (`markdown.copilot.context.indentCharacters`)
 - Add walkthroughs for API key setup and basic usage
 
 ### Changed

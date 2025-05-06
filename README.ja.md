@@ -206,14 +206,14 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
 
 ### 🎛 コンテキストコントロール
 
-引用インデントと構文カラーを使用して、会話のコンテキストを階層的に管理し、視覚的にコンテキストを強調表示します。
+コンテキストインデントと構文カラーを使用して、会話のコンテキストを階層的に管理し、視覚的にコンテキストを強調表示します。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="コンテキストコントロール" width="1024">
 
 #### ♯ Markdownにおけるコンテキスト表記
 
-アクティブなコンテキストは、カーソル行から引用インデントを遡って決定されます。
-`# Copilot Context`で始まる行でコンテキストガードを強制することができます。
+アクティブなコンテキストは、カーソル行からコンテキストインデントを遡って決定されます。
+`# Copilot Context`で始まる行でコンテキストガードを強制できます。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="例: take care" width="512">
 
@@ -232,16 +232,16 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
 | `**User:**` | ユーザ自身の発言であることを指定します |
 | `**Copilot:**` | Markdown Copilotの発言であることを指定します |
 | `**System(Override):**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を上書き指定します |
-| `**System:**` | [システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を追加で指定します |
+| `**System:**` | 追加の[システムメッセージ](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona)を指定します |
 
 
-#### ⤷ 引用インデント
+#### ⤷ コンテキストインデント
 
-引用インデントレベルの編集を直感的なアクションで行えます。
+コンテキストインデントレベルの編集を直感的なアクションで行えます。
 
-テキストを選択し、コードアクションの提案から `💡 Markdown Copilot: 引用行をインデント` または `💡 Markdown Copilot: 引用行をアンインデント` を使用します。
+テキストを選択し、コードアクションの提案から `💡 Markdown Copilot: コンテキスト行をインデント` または `💡 Markdown Copilot: コンテキスト行をアウトデント` を選択します。
 
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用インデント" width="512">
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="コンテキストインデント" width="512">
 
 または、次のショートカットキーを使用します:
 
@@ -250,7 +250,7 @@ Markdown Copilotは他のMarkdownファイルを現在の文書に簡単にイ�
 | `Indent Quote Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
 | `Outdent Quote Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="引用インデントのショートカット" width="512">
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="コンテキストインデントのショートカット" width="512">
 
 ## 📋 前提条件
 

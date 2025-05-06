@@ -64,6 +64,14 @@ function migrateConfiguration(workspaceConfiguration: vscode.WorkspaceConfigurat
         const oldTarget = inspectConfigurationTarget("markdown.copilot.openAI.model");
         workspaceConfiguration.update("markdown.copilot.options.model", oldModel, oldTarget);
     }
+
+    const newInactiveOpacity = workspaceConfiguration.get<string>("markdown.copilot.context.inactiveOpacity");
+    const newInactiveOpacityInspection = workspaceConfiguration.inspect<string>("markdown.copilot.context.inactiveOpacity");
+    const oldInactiveOpacity = workspaceConfiguration.get<string>("markdown.copilot.decorations.inactiveContextOpacity");
+    if (newInactiveOpacity === newInactiveOpacityInspection?.defaultValue && oldInactiveOpacity) {
+        const oldTarget = inspectConfigurationTarget("markdown.copilot.decorations.inactiveContextOpacity");
+        workspaceConfiguration.update("markdown.copilot.context.inactiveOpacity", oldInactiveOpacity, oldTarget);
+    }
 }
 
 
@@ -98,8 +106,13 @@ export class Configuration {
         this.workspaceConfiguration.update("markdown.copilot.backend.apiKey", value);
     }
 
-    get decorationsInactiveContextOpacity(): number {
-        return this.workspaceConfiguration.get<number>("markdown.copilot.decorations.inactiveContextOpacity")!;
+    get contextInactiveOpacity(): number {
+        return this.workspaceConfiguration.get<number>("markdown.copilot.context.inactiveOpacity")!;
+    }
+
+    get contextIndentCharacters(): string {
+        const indentCharacters = this.workspaceConfiguration.get<string>("markdown.copilot.context.indentCharacters");
+        return indentCharacters !== undefined && indentCharacters.trim().length > 0 ? indentCharacters : ">";
     }
 
     get instructionsSystemMessage(): string | undefined {
@@ -173,10 +186,5 @@ export class Configuration {
 
     get optionsTemperature(): number {
         return this.workspaceConfiguration.get<number>("markdown.copilot.options.temperature")!;
-    }
-
-    get indentationQuoteCharacter(): string {
-        const char = this.workspaceConfiguration.get<string>("markdown.copilot.indentation.quoteCharacter");
-        return char !== undefined && char.trim().length > 0 ? char : ">";
     }
 }

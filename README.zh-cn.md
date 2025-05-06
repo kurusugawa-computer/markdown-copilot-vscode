@@ -206,14 +206,14 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
 
 ### 🎛 上下文控制
 
-使用引用缩进和语法颜色管理对话上下文，以层次化方式进行，以实现视觉上的上下文突出显示。
+使用上下文缩进和语法颜色进行可视化上下文突出显示。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="上下文控制" width="1024">
 
 #### ♯ Markdown 中的上下文标记
 
-通过从光标行回溯引用缩进来确定活动上下文。
-可以通过以 `# Copilot Context` 开头的行强制上下文保护。
+活动上下文是通过从光标行追溯上下文缩进来确定的。
+可以使用以 `# Copilot Context` 开头的行强制执行上下文保护。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="示例: take care" width="512">
 
@@ -232,24 +232,24 @@ Markdown Copilot 允许您轻松地将其他 Markdown 文件导入当前文档�
 | `**User:**` | 用户是发言人 |
 | `**Copilot:**` | Markdown Copilot 是发言人 |
 | `**System(Override):**` | 覆盖系统消息 |
-| `**System:**` | 指定额外的系统消息 |
+| `**System:**` | 指定附加的[系统消息](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
 
-#### ⤷ 引用缩进
+#### ⤷ 上下文缩进
 
-通过直观的操作简化引用缩进级别的编辑。
+通过直观的操作简化上下文缩进级别的编辑。
 
-选择文本并从代码操作建议中选择 `💡 Markdown Copilot: 缩进引号行` 或 `💡 Markdown Copilot: 减少缩进报价行`。
+选择文本并从代码操作建议中选择 `💡 Markdown Copilot: 缩进上下文行` 或 `💡 Markdown Copilot: 减少上下文行缩进`。
 
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="引用缩进" width="512">
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="上下文缩进" width="512">
 
 或使用这些快捷方式:
 
 |       命令        |                       Windows / Linux                        |                         Mac                         |
 | :------------------: | :----------------------------------------------------------: | :-------------------------------------------------: |
-| `缩进引用行`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
-| `减少引用行缩进` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
+| `缩进上下文行`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
+| `减少上下文行缩进` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="引用缩进快捷方式" width="512">
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="上下文缩进快捷方式" width="512">
 
 ## 📋 先决条件
 

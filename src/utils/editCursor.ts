@@ -2,7 +2,7 @@ import { Mutex } from 'async-mutex';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
 import { LF, replaceLineSeparatorsWith, splitLines, toEolString } from ".";
-import { getQuoteIndent } from './indention';
+import { getContextIndent } from './indention';
 import { ChatMessage, executeChatCompletionWithTools } from './llm';
 import { ToolContext } from './llmTools';
 import { CancelablePromise } from './promise';
@@ -45,7 +45,7 @@ export class EditCursor {
     }
 
     getLineEolWithIndent(): string {
-        return toEolString(this.document.eol) + getQuoteIndent(this.document.lineAt(this.position.line).text);
+        return toEolString(this.document.eol) + getContextIndent(this.document.lineAt(this.position.line).text);
     }
 
     dispose() {

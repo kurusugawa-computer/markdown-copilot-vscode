@@ -105,14 +105,14 @@
         "enablement": "editorIsOpen"
       },
       {
-        "command": "markdown.copilot.editing.indentQuote",
-        "title": "%command.editing.indentQuote.title%",
+        "command": "markdown.copilot.editing.indentContext",
+        "title": "%command.editing.indentContext.title%",
         "icon": "$(arrow-small-right)",
         "enablement": "editorIsOpen && editorHasSelection"
       },
       {
-        "command": "markdown.copilot.editing.outdentQuote",
-        "title": "%command.editing.outdentQuote.title%",
+        "command": "markdown.copilot.editing.outdentContext",
+        "title": "%command.editing.outdentContext.title%",
         "icon": "$(arrow-small-left)",
         "enablement": "editorIsOpen && editorHasSelection"
       },
@@ -162,12 +162,17 @@
           "default": "OpenAI",
           "markdownDescription": "%config.backend.protocol.description%"
         },
-        "markdown.copilot.decorations.inactiveContextOpacity": {
+        "markdown.copilot.context.inactiveOpacity": {
           "type": "number",
           "default": 0.5,
           "minimum": 0,
           "maximum": 1,
-          "markdownDescription": "%config.decorations.inactiveContextOpacity.description%"
+          "markdownDescription": "%config.context.inactiveOpacity.description%"
+        },
+        "markdown.copilot.context.indentCharacters": {
+          "type": "string",
+          "default": ">",
+          "markdownDescription": "%config.context.indentCharacters.description%"
         },
         "markdown.copilot.instructions.nameMessage": {
           "type": "string",
@@ -254,23 +259,18 @@
           "minimum": 0,
           "maximum": 1,
           "markdownDescription": "%config.options.temperature.description%"
-        },
-        "markdown.copilot.indentation.quoteCharacter": {
-          "type": "string",
-          "default": ">",
-          "markdownDescription": "%config.indentation.quoteCharacter.description%"
         }
       }
     },
     "keybindings": [
       {
-        "command": "markdown.copilot.editing.indentQuote",
+        "command": "markdown.copilot.editing.indentContext",
         "key": "ctrl+alt+l",
         "mac": "cmd+alt+l",
         "when": "editorTextFocus && !suggestWidgetVisible"
       },
       {
-        "command": "markdown.copilot.editing.outdentQuote",
+        "command": "markdown.copilot.editing.outdentContext",
         "key": "ctrl+alt+shift+l",
         "mac": "cmd+alt+shift+l",
         "when": "editorTextFocus && !suggestWidgetVisible"
@@ -308,6 +308,7 @@
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.11.0",
     "@types/express": "^5.0.1",
+    "@types/mime-types": "^2.1.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.91.0",
@@ -323,15 +324,14 @@
     "path-browserify": "^1.0.1",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
-    "typescript-eslint": "^8.32.0",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.0",
+    "webpack": "^5.99.7",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1",
-    "webpack": "^5.99.7",
     "zod": "^3.24.4"
   },
   "dependencies": {
-    "@types/mime-types": "^2.1.4",
     "@vscode/l10n": "^0.0.18",
     "async-mutex": "^0.5.0",
     "chardet": "^2.1.0",

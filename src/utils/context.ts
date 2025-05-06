@@ -2,12 +2,12 @@ import { debounce } from "ts-debounce";
 import * as vscode from 'vscode';
 import { isSelectionOverflow, resolveFragmentUri, splitLines, toEolString } from '.';
 import * as config from "./configuration";
-import { countQuoteIndent, outdentQuote } from './indention';
+import { countContextIndentLevel, outdentContext } from './indention';
 
 interface LineRange {
 	start: vscode.Position;
 	end: vscode.Position;
-	quoteIndent: number;
+	contextIndent: number;
 }
 
 function isContextSeparateLine(lineText: string): boolean {
@@ -82,7 +82,7 @@ export class ContextOutline {
 		let lineRange: LineRange = {
 			start: firstLine.range.start,
 			end: firstLine.range.end,
-			quoteIndent: countQuoteIndent(firstLineText),
+			contextIndent: countContextIndentLevel(firstLineText),
 		};
 
 		const lineRanges = this.lineRanges;
@@ -98,7 +98,7 @@ export class ContextOutline {
 				lineRange = {
 					start: textLineRange.start,
 					end: textLineRange.end,
-					quoteIndent: 0,
+					contextIndent: 0,
 				};
 				if (line > activeLine) {
 					lineRanges.push(lineRange);
@@ -108,15 +108,15 @@ export class ContextOutline {
 				lineRanges.push(lineRange);
 			}
 
-			const quoteIndent = countQuoteIndent(textLineText);
+			const contextIndent = countContextIndentLevel(textLineText);
 
-			if (quoteIndent === lineRange.quoteIndent) {
+			if (contextIndent === lineRange.contextIndent) {
 				lineRange.end = textLineRange.end;
 			} else {
 				lineRange = {
 					start: textLineRange.start,
 					end: textLineRange.end,
-					quoteIndent,
+					contextIndent,
 				};
 				lineRanges.push(lineRange);
 				if (line > activeLine) {
@@ -140,13 +140,13 @@ export class ContextOutline {
 		const activeLineRangeIndices = this.activeLineRangeIndices;
 		const inactiveLineRangeIndices = this.inactiveLineRangeIndices;
 
-		let activeQuoteIndent = lineRanges[activeLineRangeIndex].quoteIndent;
+		let activeContextIndent = lineRanges[activeLineRangeIndex].contextIndent;
 		do {
-			if (lineRanges[activeLineRangeIndex].quoteIndent > activeQuoteIndent) {
+			if (lineRanges[activeLineRangeIndex].contextIndent > activeContextIndent) {
 				inactiveLineRangeIndices.push(activeLineRangeIndex);
 			} else {
 				activeLineRangeIndices.push(activeLineRangeIndex);
-				activeQuoteIndent = lineRanges[activeLineRangeIndex].quoteIndent;
+				activeContextIndent = lineRanges[activeLineRangeIndex].contextIndent;
 			}
 		} while (--activeLineRangeIndex >= 0);
 		activeLineRangeIndices.reverse();
@@ -162,7 +162,7 @@ export class ContextOutline {
 				lineRanges.push({
 					start: new vscode.Position(0, 0),
 					end: lineRanges[0].start,
-					quoteIndent: 0
+					contextIndent: 0
 				}) - 1
 			);
 		}
@@ -183,7 +183,7 @@ export class ContextOutline {
 			);
 			activeLineTexts.push(await resolveImport(
 				document,
-				outdentQuote(document.getText(range), lineRange.quoteIndent),
+				outdentContext(document.getText(range), lineRange.contextIndent),
 				importedDocumentUriTexts,
 				documentEol,
 			));
@@ -217,14 +217,14 @@ export class ContextDecorator {
 
 	private static newInactiveDecorationType() {
 		return vscode.window.createTextEditorDecorationType({
-			opacity: `${Math.round(config.get().decorationsInactiveContextOpacity * 100)}%`,
+			opacity: `${Math.round(config.get().contextInactiveOpacity * 100)}%`,
 		});
 	}
 
 	get activeTextEditor() { return this._activeTextEditor; }
 
 	onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
-		if (!event.affectsConfiguration("markdown.copilot.decorations.inactiveContextOpacity")) { return; }
+		if (!event.affectsConfiguration("markdown.copilot.context.inactiveOpacity")) { return; }
 		this._inactiveDecorationType = ContextDecorator.newInactiveDecorationType();
 	}
 

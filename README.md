@@ -206,13 +206,13 @@ When the current document is unsaved and thus lacks a confirmed file path, you m
 
 ### 🎛 Context Control
 
-Manage conversational contexts hierarchically, using quote indentation and syntax colors for visual context highlighting.
+Manage conversational contexts hierarchically, using context indentation and syntax colors for visual context highlighting.
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-switching.gif" alt="Context Control" width="1024">
 
 #### ♯ Context Notation in Markdown
 
-The active context is determined by tracing back the quote indent from the cursor line.
+The active context is determined by tracing back the context indent from the cursor line.
 Can force a context guard with a line starting with `# Copilot Context`.
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/context-notation-example-takecare.png" alt="Example: take care" width="512">
@@ -234,22 +234,22 @@ If you select `Then say "take care".` and choose `💡 Markdown Copilot: Continu
 | `**System(Override):**` | Overrides [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
 | `**System:**` | Specifies additional [system message](https://platform.openai.com/docs/guides/prompt-engineering/tactic-ask-the-model-to-adopt-a-persona) |
 
-#### ⤷ Quote Indentation
+#### ⤷ Context Indentation
 
-Simplify the editing of quote indentation levels with intuitive actions.
+Simplify the editing of context indentation levels with intuitive actions.
 
-Select text and choose `💡 Markdown Copilot: Indent Quote Line` or `💡 Markdown Copilot: Outdent Quote Line` from code action proposals.
+Select text and choose `💡 Markdown Copilot: Indent Context Line` or `💡 Markdown Copilot: Outdent Context Line` from code action proposals.
 
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="Quote Indentation" width="512">
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation.gif" alt="Context Indentation" width="512">
 
 Or use these shortcuts:
 
 |       Command        |                       Windows / Linux                        |                         Mac                         |
 | :------------------: | :----------------------------------------------------------: | :-------------------------------------------------: |
-| `Indent Quote Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
-| `Outdent Quote Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
+| `Indent Context Line`  |         <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>L</kbd>          |       <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>L</kbd>        |
+| `Outdent Context Line` | <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>L</kbd> |
 
-<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="Quote Indentation Shortcut" width="512">
+<img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/quote-indentation-shortcut.gif" alt="Context Indentation Shortcut" width="512">
 
 ## 📋 Prerequisites
 
