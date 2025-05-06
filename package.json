@@ -17,17 +17,24 @@
     "vscode": "^1.91.0"
   },
   "categories": [
-    "Programming Languages",
-    "Machine Learning",
+    "AI",
+    "Chat",
     "Education",
-    "Snippets",
-    "Other"
+    "Machine Learning",
+    "Programming Languages",
+    "Snippets"
   ],
   "keywords": [
-    "markdown"
+    "ai",
+    "co-pilot",
+    "documentation",
+    "markdown",
+    "openai",
+    "snippets"
   ],
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "browser": "./dist/web-extension.js",
