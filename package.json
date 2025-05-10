@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -195,7 +195,7 @@
           "type": "string",
           "editPresentation": "multilineText",
           "default": "Read the above conversation and summarize key points for future reference. Focus on essentials; remove fluff and repetition.\\n\\nGOAL: Provide a quick reference of crucial details\\n\\nGUIDELINES\\n1. Identify user’s main requests\\n2. Note copilot’s proposals or answers\\n3. Keep essential assumptions or constraints\\n4. Remove redundancy but retain critical data\\n5. Preserve important technical details accurately\\n6. Separate distinct topics if needed\\n\\nOUTPUT FORMAT\\n- Bullet or numbered lists\\n- Concise and clear\\n- Reflect user queries and copilot responses",
-          "markdownDescription": "%markdown.copilot.instructions.summarizeContextMessage.description%"
+          "markdownDescription": "%config.instructions.summarizeContextMessage.description%"
         },
         "markdown.copilot.instructions.systemMessage": {
           "type": "string",
@@ -306,7 +306,7 @@
     "vsce:publish-pre-release": "vsce publish --pre-release"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.0",
+    "@modelcontextprotocol/sdk": "^1.11.1",
     "@types/express": "^5.0.1",
     "@types/mime-types": "^2.1.4",
     "@types/mocha": "^10.0.10",
@@ -326,7 +326,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.0",
-    "webpack": "^5.99.7",
+    "webpack": "^5.99.8",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1",
     "zod": "^3.24.4"
@@ -336,7 +336,7 @@
     "async-mutex": "^0.5.0",
     "chardet": "^2.1.0",
     "mime-types": "^3.0.1",
-    "openai": "^4.97.0",
+    "openai": "^4.98.0",
     "ts-debounce": "^4.0.0",
     "yaml": "^2.7.1"
   }

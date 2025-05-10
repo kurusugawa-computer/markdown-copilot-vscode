@@ -13,6 +13,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
     - Responses:  `https://YOUR-RESOURCE-NAME.openai.azure.com/openai/responses?api-version=2025-03-01-preview`
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
+## [0.12.2] - 2025-05-11
+
 ### Added
 - Add `Summarize and New Context` command
 - Resolve `@import` directives in user selection text
@@ -20,6 +22,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Add walkthroughs for API key setup and basic usage
 
 ### Changed
+- Update dependent packages
 - Make `@import` directives only activate at the beginning of a line
 - Remove language restriction to allow extension usage with languages other than Markdown
 
@@ -279,7 +282,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.2...HEAD
+[0.12.2]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.1...v0.12.0
 [0.10.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.0...v0.10.1
