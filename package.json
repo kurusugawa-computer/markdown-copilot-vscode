@@ -245,7 +245,7 @@
             "gpt-3.5-turbo-0613",
             "→ Model Name Text"
           ],
-          "default": "gpt-4o",
+          "default": "gpt-4.1",
           "markdownDescription": "%config.options.model.description%"
         },
         "markdown.copilot.options.modelNameText": {
