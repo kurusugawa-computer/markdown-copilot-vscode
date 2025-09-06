@@ -212,6 +212,13 @@
         "markdown.copilot.options.model": {
           "type": "string",
           "enum": [
+            "gpt-5-chat-latest",
+            "gpt-5-2025-08-07",
+            "gpt-5",
+            "gpt-5-mini-2025-08-07",
+            "gpt-5-mini",
+            "gpt-5-nano-2025-08-07",
+            "gpt-5-nano",
             "gpt-4o",
             "gpt-4o-search-preview",
             "gpt-4o-2024-11-20",
