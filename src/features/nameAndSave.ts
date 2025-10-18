@@ -1,9 +1,9 @@
-import OpenAI from 'openai';
 import path from 'path';
 import * as vscode from 'vscode';
+import { ChatRequest, type ChatIntent } from '../llm/requests';
+import { ChatSession } from '../llm/sessions';
 import { resolveRootUri } from '../utils';
 import * as config from '../utils/configuration';
-import { ChatMessage, ChatRole, executeTask } from '../utils/llm';
 
 export async function nameAndSaveAs() {
 	const textEditor = vscode.window.activeTextEditor;
@@ -27,37 +27,50 @@ export async function nameAndSaveAs() {
 		return;
 	}
 
-	const json = await executeTask(
-		[
+	const selectionChunks = [
+		`Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${rootUri.path}" }\``,
+		`Content:\n${document.getText()}`,
+		'```json copilot-options',
+		JSON.stringify({ temperature: Number.EPSILON, response_format: 'json' }),
+		'```',
+	];
+	const chatIntent: ChatIntent = {
+		documentUri: document.uri,
+		userInput: selectionChunks.join('\n'),
+		overrides: {
 			// eslint-disable-next-line no-template-curly-in-string
-			{ role: ChatRole.System, content: nameMessage.replaceAll("${namePathFormat}", namePathFormat) },
-			{ role: ChatRole.User, content: `Defined variables: \`{ "datetime": "${currentDateTime}", "workspaceFolder": "${rootUri.path}" }\`` },
-			{ role: ChatRole.User, content: `Content:\n${document.getText()}` },
-		] as ChatMessage[],
-		{ "temperature": Number.EPSILON, "response_format": { "type": "json_object" } } as OpenAI.ChatCompletionCreateParams
-	);
-
-	let filepath: string;
+			systemPrompt: nameMessage.replaceAll("${namePathFormat}", namePathFormat),
+		},
+	};
+	const request = await ChatRequest.fromIntent(chatIntent);
+	const session = new ChatSession(request);
 	try {
-		filepath = JSON.parse(json).filepath;
-	} catch {
-		vscode.window.showErrorMessage("Failed to suggest a filepath. Try again.");
-		return;
-	}
+		const json = await session.resultText();
 
-	const saveFileUri = vscode.Uri.joinPath(rootUri, filepath);
-	const saveDirUri = vscode.Uri.joinPath(saveFileUri, "..");
+		let filepath: string;
+		try {
+			filepath = JSON.parse(json).filepath;
+		} catch {
+			vscode.window.showErrorMessage("Failed to suggest a filepath. Try again.");
+			return;
+		}
 
-	const topCreatedDirUri = await makeDirectories(saveDirUri);
-	const uri = await vscode.window.showSaveDialog({ defaultUri: saveFileUri });
+		const saveFileUri = vscode.Uri.joinPath(rootUri, filepath);
+		const saveDirUri = vscode.Uri.joinPath(saveFileUri, "..");
 
-	if (uri) {
-		await vscode.workspace.fs.writeFile(uri, Buffer.from(document.getText()));
-		await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
-		const doc = await vscode.workspace.openTextDocument(uri);
-		await vscode.window.showTextDocument(doc);
-	} else if (topCreatedDirUri !== null) {
-		await pruneEmptyDirectories(topCreatedDirUri, saveDirUri);
+		const topCreatedDirUri = await makeDirectories(saveDirUri);
+		const uri = await vscode.window.showSaveDialog({ defaultUri: saveFileUri });
+
+		if (uri) {
+			await vscode.workspace.fs.writeFile(uri, Buffer.from(document.getText()));
+			await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+			const doc = await vscode.workspace.openTextDocument(uri);
+			await vscode.window.showTextDocument(doc);
+		} else if (topCreatedDirUri !== null) {
+			await pruneEmptyDirectories(topCreatedDirUri, saveDirUri);
+		}
+	} finally {
+		session.dispose();
 	}
 }
 

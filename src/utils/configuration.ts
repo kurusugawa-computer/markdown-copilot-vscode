@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 
 let configurationInstance: Configuration | undefined;
 
+export type BackendProtocol = 'OpenAI' | 'OpenAI Responses' | 'Azure' | 'Ollama' | 'OpenRouter';
+
 export function get(): Configuration {
     return configurationInstance!;
 }
@@ -82,8 +84,8 @@ export class Configuration {
         this.workspaceConfiguration = workspaceConfiguration;
     }
 
-    get backendProtocol(): "OpenAI" | "Azure" | "Ollama" | "OpenRouter" | undefined {
-        return this.workspaceConfiguration.get<"OpenAI" | "Azure" | "Ollama" | "OpenRouter">("markdown.copilot.backend.protocol");
+    get backendProtocol(): BackendProtocol | undefined {
+        return this.workspaceConfiguration.get<BackendProtocol>("markdown.copilot.backend.protocol");
     }
 
     get backendBaseUrl(): string | undefined {

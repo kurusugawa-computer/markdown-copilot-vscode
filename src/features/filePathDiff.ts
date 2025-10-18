@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { resolveRootUri, splitLines, toEolString, toOverflowAdjustedRange } from '../utils';
-import { EditCursor } from '../utils/editCursor';
+import { Cursor } from '../utils/cursor';
 import * as l10n from '../utils/localization';
 
 export async function listFilePathDiff(targetUri: vscode.Uri) {
@@ -10,11 +10,11 @@ export async function listFilePathDiff(targetUri: vscode.Uri) {
 	const document = textEditor.document;
 	const userRange = toOverflowAdjustedRange(textEditor);
 
-	return new EditCursor(textEditor, userRange.end).withProgress("Listing file path diff", async (editCursor, _token) => {
+	return new Cursor(textEditor, userRange.end).withProgress("Listing file path diff", async (cursor) => {
 		const stack: vscode.Uri[] = [targetUri];
 		const documentEol = toEolString(document.eol);
 
-		await editCursor.insertText("```diff\n", documentEol);
+		await cursor.insertText("```diff\n", documentEol);
 
 		while (stack.length > 0) {
 			const dirUri = stack.pop()!;
@@ -29,7 +29,7 @@ export async function listFilePathDiff(targetUri: vscode.Uri) {
 						case vscode.FileType.File:
 						case vscode.FileType.SymbolicLink: {
 							const path = vscode.workspace.asRelativePath(fileUri, false);
-							await editCursor.insertText(`- ${path}\n+ ${path}\n`, documentEol);
+							await cursor.insertText(`- ${path}\n+ ${path}\n`, documentEol);
 							break;
 						}
 						default:
@@ -41,8 +41,8 @@ export async function listFilePathDiff(targetUri: vscode.Uri) {
 			}
 		}
 
-		await editCursor.insertText("```\n", documentEol);
-	});
+		await cursor.insertText("```\n", documentEol);
+	}, true);
 }
 
 export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
@@ -56,11 +56,11 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 	const userRange = toOverflowAdjustedRange(textEditor, effectiveSelection);
 	const rootUri = resolveRootUri(document.uri);
 
-	return new EditCursor(textEditor, userRange.end).withProgress("Applying file path diff", async (editCursor, _token) => {
+	return new Cursor(textEditor, userRange.end).withProgress("Applying file path diff", async (cursor) => {
 		const documentEol = toEolString(document.eol);
 
 		function insertErrorText(message: string) {
-			return editCursor.insertText(`\nERROR: ${message}`, documentEol);
+			return cursor.insertText(`\nERROR: ${message}`, documentEol);
 		}
 
 		// Extract diffs using pair iteration
@@ -136,5 +136,5 @@ export async function applyFilePathDiff(selectionOverride?: vscode.Selection) {
 		}
 
 		vscode.window.showInformationMessage(l10n.t("command.editing.applyFilePathDiff.success"));
-	});
+	}, true);
 }

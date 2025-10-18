@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import type { JSONSchema7 } from "json-schema";
 
 // Types and interfaces
 interface TSDocParam {
@@ -25,6 +25,7 @@ interface JsonSchemaType {
     properties?: Record<string, JsonSchemaType>;
     required?: string[];
     description?: string;
+    additionalProperties?: boolean;
 }
 
 interface ParsedParam {
@@ -92,7 +93,14 @@ function parseJSDoc(code: string): TSDocInfo {
     return docInfo;
 }
 
-export function parseFunctionSignature(code: string): OpenAI.FunctionDefinition {
+export interface ToolFunctionDefinition {
+    name: string;
+    description: string;
+    parameters: JSONSchema7;
+    strict?: boolean;
+}
+
+export function parseFunctionSignature(code: string): ToolFunctionDefinition {
     // Try to extract from function declaration first
     const funcRegex = /(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?function|\((\w+)\)\s*=>)\s*\(([\s\S]*?)\)(?:\s*:\s*([^{]*))?/;
     const match = funcRegex.exec(code);
@@ -110,7 +118,7 @@ export function parseFunctionSignature(code: string): OpenAI.FunctionDefinition 
                 properties,
                 additionalProperties: false,
                 ...(required.length > 0 ? { required } : {})
-            },
+            } as JSONSchema7,
             strict: true,
         };
     }
@@ -150,7 +158,7 @@ export function parseFunctionSignature(code: string): OpenAI.FunctionDefinition 
                 properties,
                 additionalProperties: false,
                 ...(required.length > 0 ? { required } : {})
-            },
+            } as JSONSchema7,
             strict: true,
         };
     }

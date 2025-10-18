@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { parseFunctionSignature } from "../utils/signatureParser";
+import { parseFunctionSignature } from "../../utils/signatureParser";
 
 suite('Signature Parser Test Suite', () => {
     test('should parse JSDoc correctly', () => {

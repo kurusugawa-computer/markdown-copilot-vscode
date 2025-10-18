@@ -8,7 +8,7 @@ import * as l10n from './localization';
 export const LF = '\n';
 export const CRLF = '\r\n';
 
-export function toEolString(eol: vscode.EndOfLine): string {
+export function toEolString(eol: vscode.EndOfLine): typeof LF | typeof CRLF {
 	switch (eol) {
 		case vscode.EndOfLine.LF:
 			return LF;

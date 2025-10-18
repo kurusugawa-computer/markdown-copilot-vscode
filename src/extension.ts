@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { applyFilePathDiff, listFilePathDiff } from './features/filePathDiff';
-import { continueEditing, titleActiveContext } from './features/markdownEditing';
 import { summarizeAndNewContext } from './features/manipulateContexts';
+import { continueEditing, titleActiveContext } from './features/markdownEditing';
 import { nameAndSaveAs } from './features/nameAndSave';
 import { pasteAsPrettyText } from './features/pasteAsPrettyText';
 import { adjustStartToLineHead, toOverflowAdjustedRange } from './utils';
 import * as config from './utils/configuration';
 import { ContextDecorator, ContextOutline } from './utils/context';
-import { EditCursor } from './utils/editCursor';
+import { Cursor } from './utils/cursor';
 import * as indention from './utils/indention';
 import * as l10n from './utils/localization';
 import * as logging from './utils/logging';
@@ -107,7 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
 		event => {
 			try { contextDecorator.onDidChangeTextDocument(event); }
 			catch { /* Ignore errors */ }
-			try { EditCursor.onDidChangeTextDocument(event); }
+			try { Cursor.onDidChangeTextDocument(event); }
 			catch { /* Ignore errors */ }
 		}
 	));
@@ -195,5 +195,5 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-	EditCursor.onDeactivate();
+	Cursor.onDeactivate();
 }
