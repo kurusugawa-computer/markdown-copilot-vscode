@@ -8,7 +8,7 @@
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
 
 
-**Markdown Copilot** 是用于 VSCode 的 OpenAI ChatGPT API 客户端。
+**Markdown Copilot** 是适用于 VS Code 的 LLM API 客户端。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本使用" width="1024">
 
@@ -28,22 +28,63 @@ Markdown Copilot 使您能够完全替代 OpenAI ChatGPT WebUI，提供更优越
 - [OpenRouter API Keys](https://openrouter.ai/keys)：支持 OpenAI, Claude, Gemini, Llama 3 等  
 - [本地 Ollama 实例](https://ollama.com/)：可在本地使用 Llama 3.3, DeepSeek-R1, Phi-4, Mistral, Gemma 2 等模型
 
+## 🛰️ 可用后端
+
+通过 `markdown.copilot.backend.protocol` 选择后端：
+- **OpenAI**：Chat Completions（默认）。
+- **OpenAI Responses**：调用 Responses API，并可使用 OpenAI 内置的 `web_search` 工具。
+- **Azure**：将 `backend.baseUrl` 指向部署的 chat/completions URL；若可用则使用 `webSearchPreview`。
+- **Google Vertex**：将 `backend.baseUrl` 设置为服务账号 JSON 的 URI（如 `file:///path/key.json`），选择 Vertex 模型（如 `gemini-3-pro-preview`）。
+- **OpenRouter** 和 **Ollama**：配置各自的端点和 API Key 以使用托管或本地模型。
+
 ## 🌟 主要特性
 
-### ⚡ 利用 Model Context Protocol 服务器
+### ⚡ MCP 服务器与工具调用
 
-Markdown Copilot 可以通过覆盖工具与 [Model Context Protocol (MCP) 服务器](https://github.com/modelcontextprotocol/servers) 集成以扩展功能。
-通过 MCP 服务器访问外部工具和数据源，实现更强大、更精准的对话。
+Markdown Copilot 支持工具调用（function calling），并可从 [Model Context Protocol (MCP) 服务器](https://github.com/modelcontextprotocol/servers) 获取更多工具。将需要的工具写在 `json copilot-tools` 或 `yaml copilot-tools` 的数组中，与提示一起选中后执行 `💡 Markdown Copilot: 继续`。
 
-要使用覆盖工具，只需包含一个标记为 `json copilot-tools` 的 JSON 代码块，并在其中填入您希望的设置，然后选择此块及您的文本并从代码操作建议中选择 `💡 Markdown Copilot: 继续`。
+**工具前缀**
+- `@` 内置分组：`@context` (context_summary_and_new, context_reset_and_new)，`@file` (fs_read_file, fs_read_dir, fs_find_files)，`@eval!` (eval_js)，`@web` (后端的 web search；在 OpenAI Responses 或具备 `webSearchPreview` 的 Azure 可用)。
+- `^` VS Code LM 工具 **或** 在 VS Code 中添加的 MCP 服务器：值是用于过滤工具提供方的正则，如 `^copilot`（内置 Copilot 工具）或 `^my-mcp-server`（指向已配置的 MCP 服务器）。请参见 [Add an MCP server](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) 了解添加方法。
+- 无前缀：单个工具，如 `web_search`、`fs_read_file`，或在 `copilot-tool-definition` 块中定义的自定义工具。
 
-**示例:** 使用覆盖工具列出可用工具:
+**示例：列出可用工具**
 
 ~~~markdown
 请列出你可以使用的所有工具。
 
 ```json copilot-tools
 ["^copilot"]
+```
+~~~
+
+**示例：组合 Web 搜索与文件读取**
+
+~~~markdown
+请先进行 Web 搜索，再读取文件后回答。
+
+```json copilot-tools
+["@web", "fs_read_file"]
+```
+~~~
+
+**Web 搜索（OpenAI Responses / Azure webSearchPreview）**
+
+~~~markdown
+查找最新的 VS Code 发行说明并进行总结。
+
+```json copilot-tools
+["@web"]
+```
+~~~
+
+也可以显式请求该工具：
+
+~~~markdown
+最新的 Python 稳定版是哪个？
+
+```json copilot-tools
+["web_search"]
 ```
 ~~~
 

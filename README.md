@@ -8,7 +8,7 @@
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
 
 
-**Markdown Copilot** is an OpenAI ChatGPT API client for VSCode.
+**Markdown Copilot** is an LLM API client for VS Code.
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="Basic Usage" width="1024">
 
@@ -28,16 +28,27 @@ Markdown Copilot enables you to fully replace the OpenAI ChatGPT WebUI, offering
 - [OpenRouter API Keys](https://openrouter.ai/keys): supports OpenAI, Claude, Gemini, Llama 3, and more.
 - [Local Ollama instance](https://ollama.com/): supports Llama 3.3, DeepSeek-R1, Phi-4, Mistral, Gemma 2, and other models, locally. 
 
+## 🛰️ Available Backends
+
+Select a backend with `markdown.copilot.backend.protocol`:
+- **OpenAI**: Chat Completions (default) for general use.
+- **OpenAI Responses**: Calls the Responses API and unlocks OpenAI's built-in `web_search` tool.
+- **Azure**: Point `backend.baseUrl` to your deployment URL (chat/completions). Uses `webSearchPreview` when available.
+- **Google Vertex**: Set `backend.baseUrl` to the service-account JSON URI (e.g., `file:///path/key.json`) and pick a Vertex model such as `gemini-3-pro-preview`.
+- **OpenRouter** and **Ollama**: Configure their endpoints and API keys for hosted or local models.
+
 ## 🌟 Key Features
 
-### ⚡ Model Context Protocol Server Using
+### ⚡ MCP Servers and Tool Calls
 
-Markdown Copilot can extend its functionality through [Model Context Protocol (MCP) servers](https://github.com/modelcontextprotocol/servers).
-By enabling access to external tools and data sources via MCP servers, you can have more powerful and accurate conversations.
+Markdown Copilot calls tools (function calling) and can pull additional tools from [Model Context Protocol (MCP) servers](https://github.com/modelcontextprotocol/servers). Declare the tools you want in a `json copilot-tools` or `yaml copilot-tools` block, select it with your prompt, then run `💡 Markdown Copilot: Continue`.
 
-To use override tools, include a JSON code block labeled `json copilot-tools` with your desired settings, then select this block along with your text and choose `💡 Markdown Copilot: Continue` from the code action proposals.
+**Tool prefixes**
+- `@` builtin groups: `@context` (context_summary_and_new, context_reset_and_new), `@file` (fs_read_file, fs_read_dir, fs_find_files), `@eval!` (eval_js), `@web` (backend web search; on OpenAI Responses or Azure with `webSearchPreview`).
+- `^` VS Code LM tools **or** MCP servers added in VS Code: value is a regex that filters tool providers, e.g., `^copilot` (built-in Copilot tools) or `^my-mcp-server` to target a named MCP server you configured. See [Add an MCP server](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) for setup steps.
+- No prefix: single tools like `web_search`, `fs_read_file`, or custom tools from `copilot-tool-definition` blocks.
 
-**Example:** List available tools using override tools
+**Example: list available tools**
 
 ~~~markdown
 List all tools you can use.
@@ -47,7 +58,37 @@ List all tools you can use.
 ```
 ~~~
 
-For instructions on adding an MCP server, please refer to the [Use MCP servers in VS Code: Add an MCP server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server).
+**Example: combine web search and file read**
+
+~~~markdown
+Use web search and read a file before answering.
+
+```json copilot-tools
+["@web", "fs_read_file"]
+```
+~~~
+
+**Web search (OpenAI Responses/Azure webSearchPreview)**
+
+~~~markdown
+Find the latest VS Code release notes and summarize them.
+
+```json copilot-tools
+["@web"]
+```
+~~~
+
+You can also request the tool explicitly:
+
+~~~markdown
+What is the newest Python stable version?
+
+```json copilot-tools
+["web_search"]
+```
+~~~
+
+For instructions on adding an MCP server, see [Use MCP servers in VS Code: Add an MCP server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server).
 
 ### 🔀 Parallel Editing
 

@@ -8,7 +8,7 @@
 [![GitHub Contributors](https://img.shields.io/github/contributors/kurusugawa-computer/markdown-copilot-vscode.svg?style=flat-square)](https://github.com/kurusugawa-computer/markdown-copilot-vscode/graphs/contributors)
 
 
-**Markdown Copilot** はVSCode用のOpenAI ChatGPT APIクライアントです。
+**Markdown Copilot** は VS Code 向けの LLM API クライアントです。
 
 <img src="https://github.com/kurusugawa-computer/markdown-copilot-vscode/raw/main/images/markdown-copilot.gif" alt="基本的な使用方法" width="1024">
 
@@ -28,16 +28,27 @@ Markdown Copilotを使用すると、OpenAI ChatGPT WebUIを完全に置き換�
 - [OpenRouter APIキー](https://openrouter.ai/keys): OpenAI, Claude, Gemini, Llama 3などをサポートしています。
 - [ローカルOllamaインスタンス](https://ollama.com/): Llama 3.3, DeepSeek-R1, Phi-4, Mistral, Gemma 2などのモデルをローカルでサポートしています。
 
+## 🛰️ 利用可能なバックエンド
+
+`markdown.copilot.backend.protocol` でバックエンドを選択できます:
+- **OpenAI**: Chat Completions (デフォルト)。
+- **OpenAI Responses**: Responses API を呼び出し、OpenAI の組み込み `web_search` ツールを利用可能。
+- **Azure**: `backend.baseUrl` にデプロイメントの chat/completions URL を設定。`webSearchPreview` がある場合は利用。
+- **Google Vertex**: `backend.baseUrl` にサービスアカウント JSON の URI (例: `file:///path/key.json`) を設定し、`gemini-3-pro-preview` など Vertex モデルを選択。
+- **OpenRouter** と **Ollama**: エンドポイントと API キーを設定してホスト／ローカルモデルを利用。
+
 ## 🌟 主な機能
 
-### ⚡ Model Context Protocolサーバ利用
+### ⚡ MCPサーバとツール呼び出し
 
-Markdown Copilotはオーバーライドツールで[Model Context Protocol(MCP)サーバ](https://github.com/modelcontextprotocol/servers)と連携して機能を拡張できます。
-MCPサーバを介して外部ツールやデータソースにアクセスできるようにすることで、より強力で的確な会話を可能にします。
+Markdown Copilot はツール呼び出し（function calling）を行い、[Model Context Protocol(MCP)サーバ](https://github.com/modelcontextprotocol/servers)から追加ツールを取り込めます。使いたいツールを `json copilot-tools` もしくは `yaml copilot-tools` の配列で宣言し、プロンプトと一緒に選択して `💡 Markdown Copilot: 続ける` を実行してください。
 
-オーバーライドツールを使用するには、希望する設定を含むJSONコードブロックを `json copilot-tools` として含め、このブロックとテキストを一緒に選択し、コードアクションの提案から `💡 Markdown Copilot: 続ける` を使用します。
+**ツールプレフィックス**
+- `@` 組み込みグループ: `@context` (context_summary_and_new, context_reset_and_new), `@file` (fs_read_file, fs_read_dir, fs_find_files), `@eval!` (eval_js), `@web` (バックエンドの web search。OpenAI Responses または `webSearchPreview` 付き Azure で利用)。
+- `^` VS Code LM ツール **または** VS Code に追加した MCP サーバ: 正規表現でツールプロバイダーをフィルタします。例: `^copilot` (ビルトイン Copilot ツール) や、設定済み MCP サーバ名を指す `^my-mcp-server`。セットアップは [Add an MCP server](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) を参照。
+- プレフィックスなし: `web_search`, `fs_read_file` のような単体ツールや、`copilot-tool-definition` ブロックで定義したカスタムツール。
 
-**例:** オーバーライドツールを使用して利用可能なツールを列挙する
+**例: 利用可能なツールを列挙**
 
 ~~~markdown
 あなたが使えるツールを全て列挙して。
@@ -47,7 +58,37 @@ MCPサーバを介して外部ツールやデータソースにアクセスで�
 ```
 ~~~
 
-MCPサーバの追加方法については、[Use MCP servers in VSCode: Add an MCP server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server)を参照してください。
+**例: Web検索とファイル読み込みを組み合わせ**
+
+~~~markdown
+Web検索を使って、回答前にファイルを読み取ってください。
+
+```json copilot-tools
+["@web", "fs_read_file"]
+```
+~~~
+
+**Web検索 (OpenAI Responses / Azure webSearchPreview)**
+
+~~~markdown
+最新の VS Code リリースノートを探して要約してください。
+
+```json copilot-tools
+["@web"]
+```
+~~~
+
+ツールを明示的に指定することもできます:
+
+~~~markdown
+Python の最新安定版はどれですか？
+
+```json copilot-tools
+["web_search"]
+```
+~~~
+
+MCP サーバの追加方法については、[Use MCP servers in VSCode: Add an MCP server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server) を参照してください。
 
 ### 🔀 並行編集
 

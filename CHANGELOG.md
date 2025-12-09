@@ -7,11 +7,14 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## [Unreleased]
 
 ### ToDo
-- [ ] [Responses API](https://platform.openai.com/docs/quickstart?api-mode=responses) support
-  - Azure URIs:
-    - Completion: `https://YOUR_RESOURCE_NAME.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT_NAME/chat/completions?api-version=2024-06-01`
-    - Responses:  `https://YOUR-RESOURCE-NAME.openai.azure.com/openai/responses?api-version=2025-03-01-preview`
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
+
+### Added
+- Add OpenAI Responses API support and surface the OpenAI-provided Web Search tool.
+- Add Google Vertex API backend with Gemini 3 Pro support.
+
+### Changed
+- Switch backend library from `openai` to `ai-sdk`.
 
 ## [0.12.2] - 2025-05-11
 
