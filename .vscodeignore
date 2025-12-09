@@ -29,3 +29,7 @@ README.*.md
 # VS Code maps local image paths to GitHub paths
 images
 !images/icon-128x128.png
+
+# Coding Agents files
+.agent/**
+AGENTS.md

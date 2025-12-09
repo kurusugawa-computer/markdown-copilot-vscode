@@ -7,15 +7,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## [Unreleased]
 
 ### ToDo
+- [ ] [Image Generation](https://ai-sdk.dev/docs/ai-sdk-core/image-generation) support
 - [ ] [Agents](https://openai.com/index/new-tools-for-building-agents/) support
 
+## [0.13.0] - 2025-12-10
+
 ### Added
-- Add OpenAI Responses API support and surface the OpenAI-provided Web Search tool.
-- Add Google Vertex API backend with Gemini 3 Pro support.
-- Refresh Copilot markdown snippets with clearer descriptions for options and tools.
+- Add OpenAI Responses API support and surface the OpenAI-provided Web Search tool
+- Add Google Vertex API backend with Gemini 3 Pro support
+- Refresh Copilot markdown snippets with clearer descriptions for options and tools
 
 ### Changed
-- Switch backend library from `openai` to `ai-sdk`.
+- Switch backend library from [OpenAI TypeScript and JavaScript API Library](https://github.com/openai/openai-node) to [AI SDK Core](https://ai-sdk.dev/docs/ai-sdk-core)
 
 ## [0.12.2] - 2025-05-11
 
@@ -286,7 +289,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Review Markdown notation
 - Publish to marketplace
 
-[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.2...HEAD
+[Unreleased]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.2...v0.13.0
 [0.12.2]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/kurusugawa-computer/markdown-copilot-vscode/compare/v0.10.1...v0.12.0

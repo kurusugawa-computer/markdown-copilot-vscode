@@ -3,7 +3,7 @@
   "displayName": "Markdown Copilot",
   "description": "%extension.description%",
   "icon": "images/icon-128x128.png",
-  "version": "0.12.2",
+  "version": "0.13.0",
   "publisher": "kurusugawa-computer",
   "license": "MIT",
   "bugs": {
@@ -318,7 +318,7 @@
     "@types/mime-types": "^3.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
-    "@types/vscode": "^1.106.1",
+    "@types/vscode": "^1.91.0",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
     "@vscode/test-cli": "^0.0.12",
