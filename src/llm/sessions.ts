@@ -81,10 +81,11 @@ export class ChatSession {
 	) {
 		this.request = request;
 		this.abortSignal = request.abortSignal;
-		const useStreaming = request.copilotOptions.stream === true;
-		this.newStream = newStream ?? (useStreaming
-			? newStreamingModeStream()
-			: newBatchModeStream());
+		const noStreaming = request.copilotOptions.stream === false;
+		this.newStream = newStream ?? (noStreaming
+			? newBatchModeStream()
+			: newStreamingModeStream()
+		);
 	}
 
 	dispose(): void {

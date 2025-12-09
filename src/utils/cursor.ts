@@ -87,16 +87,28 @@ export class Cursor {
 		return this.position;
 	}
 
-	async consume(parts: AsyncIterable<ChatStreamPart>): Promise<void> {
+	async consume(parts: AsyncIterable<ChatStreamPart>, progress?: vscode.Progress<{ message?: string, increment?: number }>): Promise<void> {
+		let reasoningRingBuffer: string = "";
 		try {
 			for await (const part of parts) {
+				if (this.canceled) {
+					await this.complete('canceled');
+					return;
+				}
+
 				switch (part.type) {
 					case 'text-delta':
-						if (!this.canceled && part.text) {
+						if (part.text) {
 							this.chunkTexts.push(part.text);
 							if (part.text.includes(LF)) {
 								await this.flushChunks();
 							}
+						}
+						break;
+					case 'reasoning-delta':
+						if (progress) {
+							reasoningRingBuffer = reasoningRingBuffer.concat(part.text).slice(-100);
+							progress.report({ message: reasoningRingBuffer });
 						}
 						break;
 					case 'error':
@@ -113,17 +125,17 @@ export class Cursor {
 		}
 	}
 
-	async withProgress(title: string, task: (cursor: Cursor, signal: AbortSignal) => Promise<void>, disposeOnFinally = true): Promise<Cursor> {
+	async withProgress(title: string, task: (cursor: Cursor, signal: AbortSignal, progress: vscode.Progress<{ message?: string, increment?: number }>) => Promise<void>, disposeOnFinally = true): Promise<Cursor> {
 		try {
 			await vscode.window.withProgress({
 				location: vscode.ProgressLocation.Window,
 				title,
 				cancellable: true,
-			}, async (_progress, token) => {
+			}, async (progress, token) => {
 				const controller = new AbortController();
 				this.attachAbortController(controller, token);
 				try {
-					await task(this, controller.signal);
+					await task(this, controller.signal, progress);
 				} finally {
 					this.cleanupAbortController();
 				}

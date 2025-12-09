@@ -33,7 +33,7 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 
 	const titleText = selectedText.replaceAll(/[\r\n\t]+/g, " ").trim();
 	await new Cursor(textEditor, document.lineAt(userEnd.line).range.end)
-		.withProgress(`Markdown Copilot: ${titleText.length > 64 ? titleText.slice(0, 63) + '…' : titleText}`, async (cursor, signal) => {
+		.withProgress(`Markdown Copilot: ${titleText.length > 64 ? titleText.slice(0, 63) + '…' : titleText}`, async (cursor, signal, progress) => {
 			let selectedUserMessage = normalizeLineSeparators(outdentContext(
 				selectedText,
 				userEndLineContextIndent
@@ -82,7 +82,7 @@ export async function continueEditing(outline: ContextOutline, useContext: boole
 			const request = await ChatRequest.fromIntent(chatIntent);
 			const session = new ChatSession(request);
 			try {
-				await cursor.consume(session.stream());
+				await cursor.consume(session.stream(), progress);
 			} finally {
 				session.dispose();
 			}
