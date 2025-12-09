@@ -7,17 +7,27 @@
 			"```",
 			"$0"
 		],
-		"description": "Insert overriding API options block"
+		"description": "Override per-request model, response format, and token limits"
 	},
-	"copilot-options (search)": {
+	"copilot-options (store:false)": {
 		"prefix": "```json copilot-options",
 		"body": [
 			"```json copilot-options",
-			"{\"model\":\"gpt-4o-search-preview\",\"web_search_options\":{\"search_context_size\":\"low\"},\"temperature\":null}",
+			"{\"providerOptions\":{\"openai\":{\"store\":false}}}",
 			"```",
 			"$0"
 		],
-		"description": "Insert overriding API options block"
+		"description": "Disable OpenAI response storage with providerOptions.openai.store"
+	},
+	"copilot-options (reasoning)": {
+		"prefix": "```json copilot-options",
+		"body": [
+			"```json copilot-options",
+			"{\"providerOptions\":{\"openai\":{\"reasoningEffort\":\"high\",\"reasoningSummary\":\"auto\"}}}",
+			"```",
+			"$0"
+		],
+		"description": "Enable OpenAI Responses reasoning (high effort with summaries)"
 	},
 	"copilot-options (o3-mini)": {
 		"prefix": "```json copilot-options",
@@ -27,7 +37,7 @@
 			"```",
 			"$0"
 		],
-		"description": "Insert overriding API options block"
+		"description": "Switch to the o3-mini model with a higher temperature"
 	},
 	"copilot-tool-parameters": {
 		"prefix": "```json copilot-tool-parameters",
@@ -37,7 +47,17 @@
 			"```",
 			"$0"
 		],
-		"description": "Insert overriding API parameters block"
+		"description": "Pass JSON parameters into a copilot-tool-definition block"
+	},
+	"copilot-tools (web_search)": {
+		"prefix": "```json copilot-tools",
+		"body": [
+			"```json copilot-tools",
+			"[\"@web\"]",
+			"```",
+			"$0"
+		],
+		"description": "Expose the OpenAI web search tool (@web) for Responses backend"
 	},
 	"copilot-tools": {
 		"prefix": "```json copilot-tools",
@@ -47,7 +67,7 @@
 			"```",
 			"$0"
 		],
-		"description": "Insert tools for models block"
+		"description": "Declare which built-in tools (file/web/eval) the model may call"
 	},
 	"copilot-import": {
 		"prefix": "@import",
@@ -55,42 +75,42 @@
 			"@import \"${1:$RELATIVE_FILEPATH}\"",
 			"$0"
 		],
-		"description": "Import file to current context"
+		"description": "Inline another markdown file into the current context"
 	},
 	"copilot-copilot": {
 		"prefix": "**Copilot:** ",
 		"body": [
 			"**Copilot:** $0"
 		],
-		"description": "Insert copilot message"
+		"description": "Insert Copilot assistant message marker"
 	},
 	"copilot-system": {
 		"prefix": "**System:** ",
 		"body": [
 			"**System:** $0"
 		],
-		"description": "Insert system message"
+		"description": "Insert system message marker"
 	},
 	"copilot-system-override": {
 		"prefix": "**System(Override):** ",
 		"body": [
 			"**System(Override):** $0"
 		],
-		"description": "Insert overriding system message"
+		"description": "Insert a System(Override) message to replace prior instructions"
 	},
 	"copilot-user": {
 		"prefix": "**User:** ",
 		"body": [
 			"**User:** $0"
 		],
-		"description": "Insert user message"
+		"description": "Insert user message marker"
 	},
 	"copilot-context": {
 		"prefix": "# Copilot Context: ",
 		"body": [
 			"# Copilot Context: $0"
 		],
-		"description": "Insert context guard header"
+		"description": "Start a guarded Copilot context section"
 	},
 	"copilot-tool-markdown-file": {
 		"prefix": "```ts copilot-tool-definition",
@@ -105,7 +125,7 @@
 			"",
 			"${4:Greet `name` for `count` times.}"
 		],
-		"description": "Tool Definition",
+		"description": "Template for authoring a custom Copilot tool definition block",
 		"isFileTemplate": true
 	}
 }

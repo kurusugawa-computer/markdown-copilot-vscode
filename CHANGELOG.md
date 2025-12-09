@@ -12,6 +12,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Added
 - Add OpenAI Responses API support and surface the OpenAI-provided Web Search tool.
 - Add Google Vertex API backend with Gemini 3 Pro support.
+- Refresh Copilot markdown snippets with clearer descriptions for options and tools.
 
 ### Changed
 - Switch backend library from `openai` to `ai-sdk`.
