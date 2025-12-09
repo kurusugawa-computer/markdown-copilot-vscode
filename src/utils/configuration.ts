@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 let configurationInstance: Configuration | undefined;
 
-export type BackendProtocol = 'OpenAI' | 'OpenAI Responses' | 'Azure' | 'Ollama' | 'OpenRouter';
+export type BackendProtocol = 'OpenAI' | 'OpenAI Responses' | 'Azure' | 'Ollama' | 'OpenRouter' | 'Google Vertex';
 
 export function get(): Configuration {
     return configurationInstance!;

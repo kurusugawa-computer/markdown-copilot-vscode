@@ -236,7 +236,7 @@ export class ToolProvider {
 		for (const definition of toolContext.definitions.values()) {
 			if (definition.kind === 'provider') {
 				if (toolFactories?.webSearch && definition.name === 'web_search') {
-					tools[definition.name] = toolFactories.webSearch();
+					tools[definition.name] = toolFactories.webSearch({});
 				}
 				continue;
 			}

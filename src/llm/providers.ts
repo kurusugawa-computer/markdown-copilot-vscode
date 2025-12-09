@@ -2,6 +2,7 @@ import { createAzure } from '@ai-sdk/azure';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { ProviderOptions } from '@ai-sdk/provider-utils';
 import type { CallSettings, LanguageModel, Tool } from 'ai';
+import chardet from 'chardet';
 import * as vscode from 'vscode';
 import type { CopilotOptions } from '.';
 import type { Configuration } from '../utils/configuration';
@@ -161,6 +162,25 @@ export async function newModelWithToolFactories(settings: BackendSettings): Prom
 			};
 		}
 
+		case 'Google Vertex': {
+			const credentials = await loadGoogleServiceAccountCredentials(requireBaseUrl(baseUrl));
+
+			const { createVertex } = await import(/* webpackIgnore: true */ '@ai-sdk/google-vertex/edge');
+			const vertex = createVertex({
+				project: credentials.project_id,
+				location: credentials.location || 'global',
+				googleCredentials: {
+					clientEmail: credentials.client_email,
+					privateKey: credentials.private_key,
+					privateKeyId: credentials.private_key_id,
+				},
+			});
+			return {
+				model: vertex(requireModelId(modelId)),
+				toolFactories: { webSearch: vertex.tools.googleSearch as WebSearchToolFactory },
+			};
+		}
+
 		case 'Ollama': {
 			const openai = createOpenAI({
 				apiKey: apiKey || "ollama",
@@ -234,5 +254,16 @@ export function parseAzureBaseUrl(backendBaseUrl: string) {
 		};
 	} catch {
 		throw new Error(l10n.t("config.backend.baseUrl.error.azure", backendBaseUrl || ""));
+	}
+}
+
+async function loadGoogleServiceAccountCredentials(credentialsPath: string): Promise<Record<string, string>> {
+	try {
+		const buffer = await vscode.workspace.fs.readFile(vscode.Uri.parse(credentialsPath));
+		const encoding = chardet.detect(buffer) || 'utf-8';
+		const json = new TextDecoder(encoding).decode(buffer);
+		return JSON.parse(json);
+	} catch {
+		throw new Error(l10n.t("config.backend.baseUrl.error.vertex", credentialsPath));
 	}
 }
