@@ -51,7 +51,7 @@ export async function nameAndSaveAs() {
 		try {
 			filepath = JSON.parse(json).filepath;
 		} catch {
-			vscode.window.showErrorMessage("Failed to suggest a filepath. Try again.");
+			vscode.window.showErrorMessage(`Failed to suggest a filepath. Try again. ${json}`);
 			return;
 		}
 
